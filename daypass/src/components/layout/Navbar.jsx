@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { supabase, isMock } from '../../lib/supabase'
 import { toast } from 'sonner'
 import {
   LayoutDashboard,
@@ -49,6 +49,11 @@ export default function Navbar() {
             <Waves size={22} />
             <span className="font-bold text-lg tracking-tight">DayPASS</span>
             <span className="hidden md:block text-blue-300 text-sm ml-1">· Hotel San Pedro de Majagua</span>
+            {isMock && (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 text-[11px] font-bold uppercase tracking-wide">
+                Modo demo
+              </span>
+            )}
           </div>
 
           {/* Desktop nav */}

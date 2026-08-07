@@ -4,7 +4,7 @@ import { createMockClient } from './mockSupabase'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const isMock =
+export const isMock =
   !supabaseUrl ||
   supabaseUrl === 'your_supabase_project_url' ||
   supabaseUrl.trim() === ''
