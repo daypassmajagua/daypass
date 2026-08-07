@@ -131,7 +131,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Tentativas</p>
                   <p className="text-3xl font-bold text-gray-900 mt-1">{totalPersonasTentativa}</p>
-                  <p className="text-xs text-gray-400 mt-1">{tentativas.length} registro(s)</p>
+                  <p className="text-xs text-gray-400 mt-1">{plural(tentativas.length, 'reserva', 'reservas')}</p>
                 </div>
                 <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center">
                   <Users size={20} className="text-gray-500" />
@@ -146,7 +146,7 @@ export default function Dashboard() {
                   <p className="text-3xl font-bold text-gray-900 mt-1">
                     {totalGrupos}<span className="text-gray-400 font-normal text-xl"> / </span>{totalIndividuales}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">{activos.length} registros activos</p>
+                  <p className="text-xs text-gray-400 mt-1">{activos.length} reservas activas</p>
                 </div>
                 <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
                   <BarChart2 size={20} className="text-purple-600" />
@@ -159,7 +159,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Ingresos Proyectados</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(ingresosProyectados)}</p>
-                  <p className="text-xs text-gray-400 mt-1">registros confirmados</p>
+                  <p className="text-xs text-gray-400 mt-1">reservas confirmadas</p>
                 </div>
                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
                   <TrendingUp size={20} className="text-emerald-600" />
@@ -176,7 +176,7 @@ export default function Dashboard() {
                 Distribución por Lancha
               </h2>
               {lanchaMap.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">Sin registros</p>
+                <p className="text-sm text-tinta-2 text-center py-4">Sin reservas</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {lanchaMap.map(({ lancha, pax }) => {
@@ -210,7 +210,7 @@ export default function Dashboard() {
                 Mix de Canales
               </h2>
               {canalMap.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">Sin registros</p>
+                <p className="text-sm text-tinta-2 text-center py-4">Sin reservas</p>
               ) : (
                 <div className="flex flex-col gap-2">
                   {canalMap.map(({ canal, pax }) => {
@@ -300,7 +300,7 @@ export default function Dashboard() {
           {registros.length === 0 && (
             <Card className="p-12 text-center">
               <Ship size={40} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500 font-medium">Sin registros para este día</p>
+              <p className="text-tinta-2 font-bold">Todavía no hay reservas para este día</p>
               <p className="text-sm text-gray-400 mt-1">Crea el primer pasadía del día</p>
               <Button className="mt-4" onClick={() => navigate('/nuevo')}>
                 <PlusCircle size={16} />

@@ -56,7 +56,7 @@ export default function Folios() {
       return folio && folio.trim() !== ''
     })
     if (conFolio.length === 0) {
-      toast.error('No hay registros con folio para completar')
+      toast.error('Ninguna reserva tiene folio todavía. Escribe al menos uno para poder completarlas.')
       return
     }
     const promises = conFolio.map(r =>
@@ -64,7 +64,7 @@ export default function Folios() {
     )
     await Promise.all(promises)
     await refetch()
-    toast.success(`${conFolio.length} registro(s) marcados como completados`)
+    toast.success(`${conFolio.length} ${conFolio.length === 1 ? 'reserva marcada' : 'reservas marcadas'} como completadas`)
   }
 
   function copiarListado() {
@@ -155,7 +155,7 @@ export default function Folios() {
         <div className="text-center py-12 text-gray-400">Cargando...</div>
       ) : activos.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500">Sin registros activos para este día</p>
+          <p className="text-tinta-2">No hay reservas activas para este día</p>
         </Card>
       ) : (
         <div className="flex flex-col gap-6">

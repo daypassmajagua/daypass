@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover para el notch; maximum-scale evita el zoom por doble
+         toque en el muelle sin impedir el zoom por accesibilidad del sistema. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1e2045" />
+
+    <!-- Instalable en la pantalla de inicio del iPad, a pantalla completa. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DayPASS" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
     <title>DayPASS · Hotel San Pedro de Majagua</title>
   </head>
   <body>

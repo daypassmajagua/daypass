@@ -89,8 +89,8 @@ export default function Historial() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <PageHeader
-        title="Historial de Registros"
-        subtitle={`${total} registros en total`}
+        title="Historial de reservas"
+        subtitle={`${total} reservas en total`}
         actions={
           <Button variant="secondary" size="sm" onClick={exportCSV} disabled={registros.length === 0}>
             <Download size={14} />
@@ -159,7 +159,7 @@ export default function Historial() {
         <div className="text-center py-12 text-gray-400">Cargando...</div>
       ) : registros.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500">Sin registros con estos filtros</p>
+          <p className="text-tinta-2">Ninguna reserva coincide con estos filtros</p>
         </Card>
       ) : (
         <>
@@ -203,7 +203,7 @@ export default function Historial() {
                       <td className="px-3 py-3">
                         <button
                           onClick={() => navigate(`/editar/${r.id}`)}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
                         >
                           <Edit2 size={14} />
                         </button>
@@ -219,7 +219,7 @@ export default function Historial() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-gray-500">
-                Página {page + 1} de {totalPages} ({total} registros)
+                Página {page + 1} de {totalPages} ({total} reservas)
               </p>
               <div className="flex gap-2">
                 <Button variant="secondary" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 0}>

@@ -13,9 +13,9 @@ const Input = forwardRef(function Input(
       <input
         ref={ref}
         className={classNames(
-          'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-          error ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white',
+          'w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-sm text-tinta placeholder-gray-400 transition-colors',
+          'focus:outline-none focus:border-blue-600',
+          error ? 'border-coral-400 bg-coral-50' : 'border-linea bg-white',
           className
         )}
         {...props}

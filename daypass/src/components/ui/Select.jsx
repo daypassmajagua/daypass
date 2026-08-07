@@ -13,13 +13,17 @@ import useClickOutside from '../../hooks/useClickOutside'
  * `onChange` recibe el VALOR directamente (no un evento).
  * Para react-hook-form, envolver en <Controller> y pasar field.value/field.onChange.
  */
+// En iPad todo control se toca con el dedo: mínimo 44px de alto.
 const sizes = {
-  sm: 'px-2 py-1 text-xs rounded-md',
-  md: 'px-3 py-2 text-sm rounded-lg',
+  sm: 'px-2.5 py-1.5 text-xs rounded-lg min-h-[36px] [@media(pointer:coarse)]:min-h-[44px]',
+  md: 'px-3 py-2.5 text-sm rounded-xl min-h-[44px]',
 }
 
 export default function Select({
   label,
+  // En filas tipo tabla la etiqueta se muestra en iPad (donde la fila se
+  // apila) y se oculta desde 1280px, donde manda el encabezado de columna.
+  labelOculta = false,
   error,
   value,
   onChange,
@@ -64,7 +68,17 @@ export default function Select({
 
   return (
     <div className={classNames('flex flex-col gap-1', className)} ref={wrapRef}>
-      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+      {label && (
+        <label
+          className={classNames(
+            labelOculta
+              ? 'xl:hidden text-[12px] font-bold uppercase tracking-wider text-tinta-2'
+              : 'text-sm font-medium text-gray-700'
+          )}
+        >
+          {label}
+        </label>
+      )}
       <div className="relative">
         <button
           type="button"
@@ -101,7 +115,7 @@ export default function Select({
             role="listbox"
             onKeyDown={onListKeyDown}
             className={classNames(
-              'absolute z-50 mt-1 w-full max-h-64 overflow-auto rounded-lg border border-brand-100 bg-white shadow-lg shadow-brand-900/10 py-1',
+              'absolute z-50 mt-1 w-full max-h-[min(60vh,20rem)] overflow-y-auto overscroll-contain rounded-xl bg-white shadow-[0_12px_32px_rgba(22,24,44,.18)] ring-1 ring-black/5 py-1.5',
               align === 'right' && 'right-0'
             )}
           >
@@ -116,14 +130,14 @@ export default function Select({
                   data-selected={isSel}
                   onClick={() => pick(o.value)}
                   className={classNames(
-                    'w-full flex items-center justify-between gap-2 px-3 py-2 text-left transition-colors',
-                    size === 'sm' ? 'text-xs' : 'text-sm',
-                    isSel ? 'bg-brand-50 text-brand-900 font-medium' : 'text-gray-700 hover:bg-gray-50',
-                    'focus:outline-none focus:bg-brand-50'
+                    'w-full flex items-center justify-between gap-2 px-3.5 py-2.5 min-h-[44px] text-left transition-colors',
+                    size === 'sm' ? 'text-[13px]' : 'text-[15px]',
+                    isSel ? 'bg-blue-50 text-blue-700 font-bold' : 'text-tinta hover:bg-blue-50/60',
+                    'focus:outline-none focus:bg-blue-50'
                   )}
                 >
                   <span className="truncate">{o.label}</span>
-                  {isSel && <Check size={14} className="shrink-0 text-brand-700" />}
+                  {isSel && <Check size={16} className="shrink-0 text-blue-600" />}
                 </button>
               )
             })}

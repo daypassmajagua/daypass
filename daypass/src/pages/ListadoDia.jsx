@@ -8,7 +8,7 @@ import {
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import {
-  formatCurrency, formatDate, classNames,
+  formatCurrency, formatDate, classNames, plural,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
 } from '../lib/utils'
 import { contarPorRegistro } from '../hooks/usePasajeros'
@@ -102,7 +102,7 @@ export default function ListadoDia() {
 
   async function handleEstadoChange(id, newEstado, registro) {
     if (newEstado === 'completada' && !registro.folio_zeus) {
-      toast.error('Debes ingresar el número de folio Zeus antes de completar este registro.')
+      toast.error('Escribe el folio Zeus antes de dar esta reserva por completada.')
       return
     }
     const { error } = await updateRegistro(id, { estado: newEstado })
@@ -121,8 +121,8 @@ export default function ListadoDia() {
 
   async function handleDelete(id) {
     const { error } = await deleteRegistro(id)
-    if (error) toast.error('Error al eliminar')
-    else toast.success('Registro eliminado')
+    if (error) toast.error('No se pudo eliminar la reserva. Inténtalo otra vez.')
+    else toast.success('Reserva eliminada')
     setDeletingId(null)
   }
 
@@ -133,7 +133,7 @@ export default function ListadoDia() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <PageHeader
-        title="Listado del Día"
+        title="Listado del día"
         subtitle={formatDate(fechaActiva)}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
@@ -143,8 +143,8 @@ export default function ListadoDia() {
               Filtros
             </Button>
             <Button size="sm" onClick={() => navigate('/nuevo')}>
-              <PlusCircle size={14} />
-              Nuevo
+              <PlusCircle size={16} />
+              Nueva reserva
             </Button>
           </div>
         }
@@ -152,7 +152,7 @@ export default function ListadoDia() {
 
       {/* Resumen rápido */}
       <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
-        <span><b className="text-gray-900">{filtered.length}</b> registros</span>
+        <span><b className="text-tinta">{filtered.length}</b> {filtered.length === 1 ? 'reserva' : 'reservas'}</span>
         <span>·</span>
         <span><b className="text-gray-900">{totalPax}</b> personas</span>
       </div>
@@ -202,10 +202,10 @@ export default function ListadoDia() {
         <div className="text-center py-12 text-gray-400 text-sm">Cargando...</div>
       ) : filtered.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500">Sin registros para este día</p>
+          <p className="text-tinta-2">Todavía no hay reservas para este día</p>
           <Button className="mt-4" onClick={() => navigate('/nuevo')}>
             <PlusCircle size={16} />
-            Nuevo Registro
+            Crear la primera
           </Button>
         </Card>
       ) : (
@@ -221,7 +221,10 @@ export default function ListadoDia() {
 
               <Card>
                 {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto">
+                {/* Tabla completa solo desde 1280px. En iPad —768 vertical y
+                    1024 horizontal— las tarjetas de abajo son más operables
+                    que diez columnas apretadas. */}
+                <div className="hidden xl:block overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
@@ -346,43 +349,84 @@ export default function ListadoDia() {
                   </table>
                 </div>
 
-                {/* Mobile cards */}
-                <div className="md:hidden divide-y divide-gray-100">
-                  {regs.map(r => (
-                    <div key={r.id} className="p-4 flex flex-col gap-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">{r.nombre_pasajero}</p>
-                          {r.nombre_grupo && <p className="text-xs text-gray-400">{r.nombre_grupo}</p>}
+                {/* Tarjetas: móvil e iPad. Dos por fila en horizontal. */}
+                <div className="xl:hidden divide-y divide-linea lg:divide-y-0 lg:grid lg:grid-cols-2 lg:gap-3 lg:p-3">
+                  {regs.map(r => {
+                    const plan = r.adultos + r.ninos + r.infantes + r.cortesias
+                    const conNombre = nombres[r.id] || 0
+                    return (
+                      <div key={r.id} className="bg-white p-4 lg:rounded-xl lg:ring-1 lg:ring-linea flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-bold text-[15px] text-tinta truncate">{r.nombre_pasajero}</p>
+                            {r.nombre_grupo && <p className="text-[13px] text-tinta-2 truncate">{r.nombre_grupo}</p>}
+                            {r.agencia_nombre && <p className="text-[13px] text-tinta-2 truncate">{r.agencia_nombre}</p>}
+                          </div>
+                          <Badge estado={r.estado} className="shrink-0" />
                         </div>
-                        <Badge estado={r.estado} />
+
+                        <div className="flex items-baseline justify-between gap-3 text-sm">
+                          <span className="text-tinta-2 truncate">{r.planes?.nombre || '—'}</span>
+                          <span className="font-bold text-tinta tabular shrink-0">
+                            {formatCurrency(r.total_calculado)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap text-[13px]">
+                          <span className="tabular text-tinta-2">
+                            {plural(r.adultos, 'adulto', 'adultos')}
+                            {r.ninos > 0 ? ` · ${plural(r.ninos, 'niño', 'niños')}` : ''}
+                          </span>
+                          <span className="text-linea">·</span>
+                          {conNombre >= plan && plan > 0 ? (
+                            <span className="text-verde-500 font-bold tabular">{conNombre}/{plan} nombres</span>
+                          ) : (
+                            <Link
+                              to={`/editar/${r.id}`}
+                              className="rounded-lg bg-coral-50 text-coral-600 font-bold px-2 py-0.5 tabular"
+                            >
+                              {conNombre}/{plan} nombres
+                            </Link>
+                          )}
+                          {!r.forma_pago && (
+                            <>
+                              <span className="text-linea">·</span>
+                              <span className="text-coral-600 font-bold">Sin pago</span>
+                            </>
+                          )}
+                          {!r.folio_zeus && (
+                            <>
+                              <span className="text-linea">·</span>
+                              <span className="text-coral-600 font-bold">Sin folio</span>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={r.estado}
+                            onChange={v => handleEstadoChange(r.id, v, r)}
+                            options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+                            className="flex-1"
+                          />
+                          <button
+                            onClick={() => navigate(`/editar/${r.id}`)}
+                            className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-blue-700 bg-blue-50 rounded-xl"
+                            aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => setDeletingId(r.id)}
+                            className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-tinta-2 bg-fondo rounded-xl"
+                            aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>{r.planes?.nombre}</span>
-                        <span className="font-bold text-gray-900">{formatCurrency(r.total_calculado)}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <span>{r.adultos}A {r.ninos > 0 ? r.ninos+'N' : ''}</span>
-                        <span>{r.forma_pago ? FORMA_PAGO_LABELS[r.forma_pago] : '⚠ Sin pago'}</span>
-                        <span>Imp: {IMPUESTOS_LABELS[r.impuestos_puerto]}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Select
-                          size="sm"
-                          value={r.estado}
-                          onChange={v => handleEstadoChange(r.id, v, r)}
-                          options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
-                          className="flex-1"
-                        />
-                        <button onClick={() => navigate(`/editar/${r.id}`)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                          <Edit2 size={14} />
-                        </button>
-                        <button onClick={() => setDeletingId(r.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </Card>
             </div>
@@ -390,7 +434,7 @@ export default function ListadoDia() {
         </div>
       )}
 
-      <Modal open={Boolean(deletingId)} onClose={() => setDeletingId(null)} title="Eliminar registro">
+      <Modal open={Boolean(deletingId)} onClose={() => setDeletingId(null)} title="Eliminar la reserva">
         <p className="text-sm text-gray-600 mb-4">
           ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
         </p>

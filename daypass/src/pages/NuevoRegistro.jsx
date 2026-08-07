@@ -217,16 +217,16 @@ export default function NuevoRegistro() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       <PageHeader
-        title={isEdit ? 'Editar Registro' : 'Nuevo Pasadía'}
+        title={isEdit ? 'Editar la reserva' : 'Nueva reserva'}
         subtitle={
           temporada ? (
-            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-              temporada === 'alta' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-            }`}>
-              <Info size={12} />
-              Temporada {temporada === 'alta' ? 'ALTA' : 'BAJA'}
+            // El coral está reservado para lo pendiente: la temporada es un
+            // dato, no una alerta. Y se explica sola: la regla actúa aquí.
+            <span className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-[10px] font-bold bg-blue-50 text-blue-700">
+              <Info size={13} />
+              Temporada {temporada === 'alta' ? 'alta' : 'baja'} — precios aplicados
             </span>
           ) : null
         }
@@ -518,7 +518,7 @@ export default function NuevoRegistro() {
             size="lg"
             className="flex-1"
           >
-            {isEdit ? 'Actualizar Registro' : 'Guardar Pasadía'}
+            {isEdit ? 'Guardar cambios' : 'Guardar la reserva'}
           </Button>
           <Button
             type="button"

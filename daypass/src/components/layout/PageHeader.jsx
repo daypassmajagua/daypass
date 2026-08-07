@@ -1,11 +1,13 @@
 export default function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-6">
+      <div className="min-w-0">
+        <h1 className="text-[22px] font-bold tracking-[-.02em] text-tinta">{title}</h1>
+        {subtitle && <div className="text-sm text-tinta-2 mt-0.5 first-letter:uppercase">{subtitle}</div>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {/* En iPad las acciones bajan a su propia línea y pueden envolverse:
+          nunca deben empujar el título ni salirse de la pantalla. */}
+      {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
     </div>
   )
 }

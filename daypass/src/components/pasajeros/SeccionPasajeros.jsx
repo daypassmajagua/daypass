@@ -123,7 +123,7 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
             <button
               type="button"
               onClick={() => { setPegando(false); setTexto('') }}
-              className="p-1.5 rounded-lg text-tinta-2 hover:bg-white"
+              className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 rounded-xl text-tinta-2 hover:bg-white"
               aria-label="Cerrar"
             >
               <X size={16} />
@@ -181,65 +181,88 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
             </p>
           )}
 
-          <div className="hidden md:grid grid-cols-[1.6fr_auto_1fr_1.1fr_1fr_1.2fr_auto] gap-2 px-3 text-[12px] font-bold uppercase tracking-wider text-tinta-2">
-            <span>Nombre</span><span className="w-24">Tipo</span><span>Documento</span>
-            <span>País</span><span>Categoría</span><span>Restricción</span><span className="w-8" />
+          {/* Encabezado solo cuando la fila cabe en una línea (desde 1280px). */}
+          <div className="hidden xl:grid grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto] gap-2 px-3 text-[12px] font-bold uppercase tracking-wider text-tinta-2">
+            <span>Nombre</span><span>Tipo</span><span>Documento</span>
+            <span>País</span><span>Categoría</span><span>Restricción</span><span className="w-11" />
           </div>
 
           {pasajeros.map((p, i) => (
             <div
               key={i}
               className={classNames(
-                'grid grid-cols-1 md:grid-cols-[1.6fr_auto_1fr_1.1fr_1fr_1.2fr_auto] gap-2 items-center rounded-xl px-3 py-2',
+                // iPad: dos columnas apiladas con etiqueta. Escritorio: una fila.
+                'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto] gap-2 items-center rounded-2xl px-3 py-3 xl:py-2',
                 p._dudosa ? 'bg-coral-50' : 'bg-white'
               )}
             >
-              <input
-                value={p.nombre}
-                onChange={e => editar(i, 'nombre', e.target.value)}
-                placeholder="Nombre completo"
-                className={classNames(
-                  'w-full rounded-lg border px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-blue-600',
-                  p._dudosa ? 'border-coral-400' : 'border-linea'
-                )}
-              />
+              <div className="sm:col-span-2 xl:col-span-1">
+                <label className="xl:hidden block text-[12px] font-bold uppercase tracking-wider text-tinta-2 mb-1">
+                  Nombre
+                </label>
+                <input
+                  value={p.nombre}
+                  onChange={e => editar(i, 'nombre', e.target.value)}
+                  placeholder="Nombre completo"
+                  className={classNames(
+                    'w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-sm bg-white focus:outline-none focus:border-blue-600',
+                    p._dudosa ? 'border-coral-400' : 'border-linea'
+                  )}
+                />
+              </div>
+
               <Select
-                size="sm" className="md:w-24"
+                label="Tipo" labelOculta
                 value={p.tipo_documento || ''}
                 onChange={v => editar(i, 'tipo_documento', v || null)}
                 options={TIPOS_DOC}
               />
-              <input
-                value={p.documento || ''}
-                onChange={e => editar(i, 'documento', e.target.value)}
-                placeholder="Documento"
-                className="w-full rounded-lg border border-linea px-2.5 py-1.5 text-sm bg-white tabular focus:outline-none focus:border-blue-600"
-              />
+
+              <div>
+                <label className="xl:hidden block text-[12px] font-bold uppercase tracking-wider text-tinta-2 mb-1">
+                  Documento
+                </label>
+                <input
+                  value={p.documento || ''}
+                  onChange={e => editar(i, 'documento', e.target.value)}
+                  placeholder="Documento"
+                  inputMode="numeric"
+                  className="w-full rounded-xl border border-linea px-3 py-2.5 min-h-[44px] text-sm bg-white tabular focus:outline-none focus:border-blue-600"
+                />
+              </div>
+
               <Select
-                size="sm"
+                label="País" labelOculta
                 value={p.pais_id || ''}
                 onChange={v => editar(i, 'pais_id', v || null)}
                 options={opcionesPais}
               />
               <Select
-                size="sm"
+                label="Categoría" labelOculta
                 value={p.categoria}
                 onChange={v => editar(i, 'categoria', v)}
                 options={CATEGORIAS}
               />
-              <input
-                value={p.restriccion_alimentaria || ''}
-                onChange={e => editar(i, 'restriccion_alimentaria', e.target.value)}
-                placeholder="Ej: sin gluten"
-                className="w-full rounded-lg border border-linea px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:border-blue-600"
-              />
+
+              <div>
+                <label className="xl:hidden block text-[12px] font-bold uppercase tracking-wider text-tinta-2 mb-1">
+                  Restricción
+                </label>
+                <input
+                  value={p.restriccion_alimentaria || ''}
+                  onChange={e => editar(i, 'restriccion_alimentaria', e.target.value)}
+                  placeholder="Ej: sin gluten"
+                  className="w-full rounded-xl border border-linea px-3 py-2.5 min-h-[44px] text-sm bg-white focus:outline-none focus:border-blue-600"
+                />
+              </div>
+
               <button
                 type="button"
                 onClick={() => quitar(i)}
-                className="p-1.5 rounded-lg text-tinta-2 hover:text-[#d2322d] hover:bg-[#fce9e8] justify-self-end"
+                className="icono-tactil w-11 h-11 flex items-center justify-center rounded-xl text-tinta-2 bg-fondo xl:bg-transparent justify-self-end sm:col-span-2 xl:col-span-1 sm:justify-self-start xl:justify-self-end"
                 aria-label={`Quitar a ${p.nombre || 'esta persona'}`}
               >
-                <Trash2 size={15} />
+                <Trash2 size={17} />
               </button>
             </div>
           ))}

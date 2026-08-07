@@ -481,7 +481,7 @@ export default function Informes() {
         {/* Contador de resultados */}
         <div className="px-4 py-2.5 flex items-center gap-3 text-xs text-gray-500">
           <span>
-            <b className="text-gray-800">{filtrados.length}</b> registros ·
+            <b className="text-tinta">{filtrados.length}</b> reservas ·
             <b className="text-gray-800 ml-1">{kpis.totalPax}</b> pasajeros
             {filtrosActivos > 0 && (
               <span className="text-blue-600 ml-1">
@@ -497,7 +497,7 @@ export default function Informes() {
       ) : filtrados.length === 0 ? (
         <Card className="p-16 text-center">
           <BarChart2 size={40} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500 font-medium">Sin registros con estos filtros</p>
+          <p className="text-tinta-2 font-bold">Ninguna reserva coincide con estos filtros</p>
           {filtrosActivos > 0 && (
             <button onClick={limpiarFiltros} className="text-sm text-blue-600 hover:underline mt-2">
               Limpiar filtros
@@ -516,10 +516,10 @@ export default function Informes() {
               sub={`${formatCurrency(kpis.ingPorPax)} / pax`} />
             <KpiCard icon={<CalendarDays size={20} className="text-purple-600" />} bg="bg-purple-50"
               label="Completados" value={kpis.completadas.toLocaleString('es-CO')}
-              sub={`de ${filtrados.length} registros`} />
+              sub={`de ${filtrados.length} reservas`} />
             <KpiCard icon={<Percent size={20} className="text-orange-500" />} bg="bg-orange-50"
               label="No-show / Cancelados" value={`${kpis.tasaNoShow}%`}
-              sub={`${kpis.canceladas} registro(s)`} />
+              sub={`${kpis.canceladas} reservas`} />
           </div>
 
           {/* ── Ingresos por día ── */}
@@ -568,7 +568,7 @@ export default function Informes() {
                         <Cell key={i} fill={ESTADO_COLORS_PIE[e.estado] || C[i]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v, n) => [v + ' registros', n]} />
+                    <Tooltip formatter={(v, n) => [v + ' reservas', n]} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="flex flex-col gap-2 text-sm flex-1">
@@ -722,7 +722,7 @@ export default function Informes() {
                 <thead className="border-b border-gray-100">
                   <tr>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Registros</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Reservas</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pasajeros</th>
                     <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ingresos</th>
                     <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Ing. / pax</th>

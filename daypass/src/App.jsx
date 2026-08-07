@@ -16,7 +16,8 @@ function AppLayout({ children }) {
   return (
     <div className="min-h-screen bg-fondo">
       <Navbar />
-      <main className="py-2">
+      {/* Espacio para el indicador de inicio del iPad. */}
+      <main className="py-2 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         {children}
       </main>
     </div>

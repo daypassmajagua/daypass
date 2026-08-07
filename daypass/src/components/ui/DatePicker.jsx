@@ -31,8 +31,8 @@ function formatDisplay(str) {
 }
 
 const sizes = {
-  sm: 'px-2 py-1 text-xs rounded-md',
-  md: 'px-3 py-2 text-sm rounded-lg',
+  sm: 'px-2.5 py-1.5 text-xs rounded-lg min-h-[36px] [@media(pointer:coarse)]:min-h-[44px]',
+  md: 'px-3 py-2.5 text-sm rounded-xl min-h-[44px]',
 }
 
 export default function DatePicker({
@@ -116,7 +116,8 @@ export default function DatePicker({
             role="dialog"
             onKeyDown={e => { if (e.key === 'Escape') setOpen(false) }}
             className={classNames(
-              'absolute z-50 mt-1 w-72 rounded-xl border border-brand-100 bg-white shadow-lg shadow-brand-900/10 p-3',
+              // Ancho suficiente para que cada día sea un objetivo táctil real.
+              'absolute z-50 mt-1 w-[21rem] max-w-[calc(100vw-2rem)] rounded-2xl bg-white shadow-[0_12px_32px_rgba(22,24,44,.18)] ring-1 ring-black/5 p-3',
               align === 'right' && 'right-0'
             )}
           >
@@ -125,21 +126,21 @@ export default function DatePicker({
               <button
                 type="button"
                 onClick={() => moveMonth(-1)}
-                className="p-1.5 rounded-lg text-gray-500 hover:bg-brand-50 hover:text-brand-900 transition-colors"
+                className="w-11 h-11 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                 aria-label="Mes anterior"
               >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={20} />
               </button>
-              <span className="text-sm font-semibold text-brand-900">
+              <span className="text-[15px] font-bold text-tinta">
                 {MESES[view.m]} {view.y}
               </span>
               <button
                 type="button"
                 onClick={() => moveMonth(1)}
-                className="p-1.5 rounded-lg text-gray-500 hover:bg-brand-50 hover:text-brand-900 transition-colors"
+                className="w-11 h-11 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-blue-50 hover:text-blue-700 transition-colors"
                 aria-label="Mes siguiente"
               >
-                <ChevronRight size={16} />
+                <ChevronRight size={20} />
               </button>
             </div>
 
@@ -166,12 +167,12 @@ export default function DatePicker({
                     type="button"
                     onClick={() => pick(day)}
                     className={classNames(
-                      'h-9 w-full rounded-lg text-sm transition-colors',
+                      'h-11 w-full rounded-xl text-[15px] tabular transition-colors',
                       isSel
-                        ? 'bg-brand-900 text-white font-semibold'
+                        ? 'bg-blue-600 text-white font-bold'
                         : isHoy
-                          ? 'ring-1 ring-inset ring-brand-400 text-brand-900 font-semibold hover:bg-brand-50'
-                          : 'text-gray-700 hover:bg-brand-50'
+                          ? 'ring-2 ring-inset ring-blue-300 text-blue-700 font-bold hover:bg-blue-50'
+                          : 'text-tinta hover:bg-blue-50'
                     )}
                   >
                     {day}
@@ -181,11 +182,11 @@ export default function DatePicker({
             </div>
 
             {/* Pie: atajo a hoy */}
-            <div className="mt-2 pt-2 border-t border-gray-100 flex justify-center">
+            <div className="mt-2 pt-2 border-t border-linea flex justify-center">
               <button
                 type="button"
                 onClick={() => { onChange(hoy); setOpen(false) }}
-                className="px-3 py-1 text-xs font-medium text-brand-700 rounded-lg hover:bg-brand-50 transition-colors"
+                className="px-4 min-h-[44px] text-[13px] font-bold text-blue-700 rounded-xl hover:bg-blue-50 transition-colors capitalize"
               >
                 Hoy · {formatDisplay(hoy)}
               </button>

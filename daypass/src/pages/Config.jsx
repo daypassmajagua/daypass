@@ -139,8 +139,8 @@ function PlanesTable({ data, onEdit, onDelete, onToggle }) {
               </td>
               <td className="px-3 py-3">
                 <div className="flex gap-1">
-                  <button onClick={() => onEdit(p)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50"><Edit2 size={14} /></button>
-                  <button onClick={() => onDelete(p.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50"><Trash2 size={14} /></button>
+                  <button onClick={() => onEdit(p)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"><Edit2 size={16} /></button>
+                  <button onClick={() => onDelete(p.id)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-[#d2322d] rounded-xl hover:bg-[#fce9e8]"><Trash2 size={16} /></button>
                 </div>
               </td>
             </tr>
@@ -177,8 +177,8 @@ function LanchasTable({ data, onEdit, onDelete, onToggle }) {
               </td>
               <td className="px-3 py-3">
                 <div className="flex gap-1">
-                  <button onClick={() => onEdit(l)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50"><Edit2 size={14} /></button>
-                  <button onClick={() => onDelete(l.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50"><Trash2 size={14} /></button>
+                  <button onClick={() => onEdit(l)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"><Edit2 size={16} /></button>
+                  <button onClick={() => onDelete(l.id)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-[#d2322d] rounded-xl hover:bg-[#fce9e8]"><Trash2 size={16} /></button>
                 </div>
               </td>
             </tr>
@@ -217,8 +217,8 @@ function TemporadasTable({ data, onEdit, onDelete }) {
               <td className="px-3 py-3 font-mono text-xs text-gray-600">{t.fecha_fin}</td>
               <td className="px-3 py-3">
                 <div className="flex gap-1">
-                  <button onClick={() => onEdit(t)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50"><Edit2 size={14} /></button>
-                  <button onClick={() => onDelete(t.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50"><Trash2 size={14} /></button>
+                  <button onClick={() => onEdit(t)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"><Edit2 size={16} /></button>
+                  <button onClick={() => onDelete(t.id)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-[#d2322d] rounded-xl hover:bg-[#fce9e8]"><Trash2 size={16} /></button>
                 </div>
               </td>
             </tr>
@@ -255,8 +255,8 @@ function AgenciasTable({ data, onEdit, onDelete, onToggle }) {
               </td>
               <td className="px-3 py-3">
                 <div className="flex gap-1">
-                  <button onClick={() => onEdit(a)} className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50"><Edit2 size={14} /></button>
-                  <button onClick={() => onDelete(a.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50"><Trash2 size={14} /></button>
+                  <button onClick={() => onEdit(a)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"><Edit2 size={16} /></button>
+                  <button onClick={() => onDelete(a.id)} className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-[#d2322d] rounded-xl hover:bg-[#fce9e8]"><Trash2 size={16} /></button>
                 </div>
               </td>
             </tr>

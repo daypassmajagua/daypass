@@ -52,6 +52,11 @@ export function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+/** "1 adulto" / "2 adultos". En pantalla nada suena a máquina. */
+export function plural(n, singular, plural) {
+  return `${n} ${n === 1 ? singular : plural}`
+}
+
 // Lenguaje de la operación, no de la base de datos: en pantalla nunca
 // aparece "noshow" ni "en_isla".
 export const ESTADO_LABELS = {

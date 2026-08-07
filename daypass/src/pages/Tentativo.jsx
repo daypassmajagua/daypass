@@ -129,7 +129,7 @@ export default function Tentativo() {
         <div className="text-center py-12 text-gray-400">Cargando...</div>
       ) : activos.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500">Sin registros activos para este día</p>
+          <p className="text-tinta-2">No hay reservas activas para este día</p>
         </Card>
       ) : (
         <Card className="p-6">
