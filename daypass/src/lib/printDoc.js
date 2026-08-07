@@ -1,6 +1,6 @@
 ﻿import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils'
 
-// â”€â”€â”€ Estilos base compartidos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Estilos base compartidos ──────────────────────────────────────────────────
 const BASE_CSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -10,7 +10,7 @@ const BASE_CSS = `
   }
   .page { padding: 28px 32px; max-width: 820px; margin: 0 auto; }
 
-  /* â”€â”€ Header â”€â”€ */
+  /* ── Header ── */
   .doc-header {
     display: flex; justify-content: space-between; align-items: flex-start;
     padding-bottom: 14px; border-bottom: 3px solid #1e2045; margin-bottom: 20px;
@@ -22,7 +22,7 @@ const BASE_CSS = `
   .doc-date   { font-size: 11.5px; color: #374151; text-align: right; margin-top: 3px; }
   .doc-stamp  { font-size: 10px; color: #9ca3af; text-align: right; margin-top: 2px; }
 
-  /* â”€â”€ Summary box â”€â”€ */
+  /* ── Summary box ── */
   .summary {
     background: #f4f5fa; border: 1px solid #cdd1e6;
     border-radius: 10px; padding: 14px 22px;
@@ -33,7 +33,7 @@ const BASE_CSS = `
   .stat-value { font-size: 26px; font-weight: 900; color: #1e2045; display: block; line-height: 1.1; }
   .stat-label { font-size: 9.5px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 3px; display: block; }
 
-  /* â”€â”€ Section â”€â”€ */
+  /* ── Section ── */
   .section-title {
     font-size: 10px; font-weight: 800; text-transform: uppercase;
     letter-spacing: 1.2px; color: #1e2045;
@@ -41,7 +41,7 @@ const BASE_CSS = `
     padding-bottom: 5px; margin-bottom: 10px; margin-top: 20px;
   }
 
-  /* â”€â”€ Lancha header â”€â”€ */
+  /* ── Lancha header ── */
   .lancha-header {
     background: #1e2045; color: white;
     padding: 7px 14px; border-radius: 6px 6px 0 0;
@@ -50,7 +50,7 @@ const BASE_CSS = `
   }
   .lancha-pax { font-size: 11px; font-weight: 400; opacity: 0.85; }
 
-  /* â”€â”€ Tables â”€â”€ */
+  /* ── Tables ── */
   table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
   th {
     background: #1e2045; color: white;
@@ -63,7 +63,7 @@ const BASE_CSS = `
   tr:last-child td { border-bottom: none; }
   .table-wrap { border: 1px solid #e5e7eb; border-radius: 0 0 6px 6px; overflow: hidden; }
 
-  /* â”€â”€ Tags â”€â”€ */
+  /* ── Tags ── */
   .tag {
     display: inline-block; padding: 1px 7px; border-radius: 4px;
     font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px;
@@ -75,7 +75,7 @@ const BASE_CSS = `
   .tag-no   { background: #fee2e2; color: #991b1b; }
   .tag-exe  { background: #f3f4f6; color: #4b5563; }
 
-  /* â”€â”€ Folio blank â”€â”€ */
+  /* ── Folio blank ── */
   .folio-blank {
     display: inline-block; min-width: 90px; border-bottom: 1.5px solid #374151;
     color: #374151; font-family: monospace; font-size: 11px;
@@ -86,14 +86,14 @@ const BASE_CSS = `
     color: #065f46; background: #d1fae5; padding: 2px 8px; border-radius: 4px;
   }
 
-  /* â”€â”€ Registro row (tentativo) â”€â”€ */
+  /* ── Registro row (tentativo) ── */
   .reg { padding: 7px 0; border-bottom: 1px dashed #e5e7eb; }
   .reg:last-child { border-bottom: none; }
   .reg-name   { font-weight: 700; color: #111827; font-size: 12px; }
   .reg-sub    { color: #6b7280; font-size: 10.5px; margin-top: 1px; }
   .reg-detail { color: #374151; font-size: 11px; margin-top: 2px; }
 
-  /* â”€â”€ Warning â”€â”€ */
+  /* ── Warning ── */
   .warning-box {
     background: #fffbeb; border: 1.5px solid #fcd34d;
     border-radius: 8px; padding: 12px 16px; margin-top: 20px;
@@ -101,7 +101,7 @@ const BASE_CSS = `
   .warning-title { color: #92400e; font-weight: 800; font-size: 12px; margin-bottom: 8px; }
   .warning-row { color: #78350f; font-size: 11.5px; padding: 2px 0; }
 
-  /* â”€â”€ Canal table â”€â”€ */
+  /* ── Canal table ── */
   .canal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
   .canal-item {
     background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
@@ -110,7 +110,7 @@ const BASE_CSS = `
   .canal-name { color: #374151; font-size: 11px; }
   .canal-pax  { font-weight: 800; color: #1e2045; font-size: 14px; }
 
-  /* â”€â”€ Footer â”€â”€ */
+  /* ── Footer ── */
   .doc-footer {
     margin-top: 28px; padding-top: 12px;
     border-top: 1px solid #e5e7eb;
@@ -120,7 +120,7 @@ const BASE_CSS = `
   .footer-right { font-size: 9.5px; color: #9ca3af; text-align: right; }
   .footer-brand { font-weight: 700; color: #1e2045; }
 
-  /* â”€â”€ Print â”€â”€ */
+  /* ── Print ── */
   @media print {
     body { font-size: 11px; }
     .no-print { display: none !important; }
@@ -141,8 +141,8 @@ function esc(str) {
 }
 
 function impTag(imp) {
-  if (imp === 'si')  return `<span class="tag tag-si">SÃ</span>`
-  if (imp === 'no')  return `<span class="tag tag-no">NO âš </span>`
+  if (imp === 'si')  return `<span class="tag tag-si">SÍ</span>`
+  if (imp === 'no')  return `<span class="tag tag-no">NO ⚠</span>`
   if (imp === 'exe') return `<span class="tag tag-exe">EXE</span>`
   return ''
 }
@@ -154,11 +154,11 @@ function now() {
   })
 }
 
-// â”€â”€â”€ Abre ventana de impresiÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Abre ventana de impresión ─────────────────────────────────────────────────
 export function openPrintWindow(title, bodyHtml) {
   const win = window.open('', '_blank', 'width=860,height=1050,scrollbars=yes')
   if (!win) {
-    alert('El navegador bloqueÃ³ la ventana emergente. Por favor, permite ventanas emergentes para esta pÃ¡gina y vuelve a intentarlo.')
+    alert('El navegador bloqueó la ventana emergente. Por favor, permite ventanas emergentes para esta página y vuelve a intentarlo.')
     return false
   }
   win.document.write(`<!DOCTYPE html>
@@ -179,7 +179,7 @@ export function openPrintWindow(title, bodyHtml) {
   return true
 }
 
-// â”€â”€â”€ Tentativo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Tentativo ─────────────────────────────────────────────────────────────────
 export function buildTentativoHTML(registros, fecha) {
   const activos    = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
   const confirmados = registros.filter(r => ['confirmada', 'en_isla', 'completada'].includes(r.estado))
@@ -226,14 +226,14 @@ export function buildTentativoHTML(registros, fecha) {
       <div class="reg">
         <div class="reg-name">
           <span class="tag tag-grp">GRUPO</span> ${esc(r.nombre_pasajero)}
-          ${r.nombre_grupo ? `Â· <em>${esc(r.nombre_grupo)}</em>` : ''}
+          ${r.nombre_grupo ? `· <em>${esc(r.nombre_grupo)}</em>` : ''}
         </div>
         <div class="reg-detail">
-          ${r.agencia_nombre ? `<strong>${esc(r.agencia_nombre)}</strong> Â·` : ''}
-          ${r.adultos} adultos${r.ninos > 0 ? ` + ${r.ninos} niÃ±os` : ''}${r.cortesias > 0 ? ` + ${r.cortesias} cortesÃ­as` : ''} Â·
-          ${esc(r.planes?.nombre || '')} Â·
+          ${r.agencia_nombre ? `<strong>${esc(r.agencia_nombre)}</strong> ·` : ''}
+          ${r.adultos} adultos${r.ninos > 0 ? ` + ${r.ninos} niños` : ''}${r.cortesias > 0 ? ` + ${r.cortesias} cortesías` : ''} ·
+          ${esc(r.planes?.nombre || '')} ·
           ${impTag(r.impuestos_puerto)}
-          ${r.forma_pago ? `<span style="color:#6b7280">Â· ${esc(FORMA_PAGO_LABELS[r.forma_pago] || '')}</span>` : ''}
+          ${r.forma_pago ? `<span style="color:#6b7280">· ${esc(FORMA_PAGO_LABELS[r.forma_pago] || '')}</span>` : ''}
         </div>
         ${r.voucher_os ? `<div class="reg-sub">Voucher / OS: <strong>${esc(r.voucher_os)}</strong></div>` : ''}
         ${r.observaciones ? `<div class="reg-sub">Obs: ${esc(r.observaciones)}</div>` : ''}
@@ -245,11 +245,11 @@ export function buildTentativoHTML(registros, fecha) {
           <span class="tag tag-ind">IND</span> ${esc(r.nombre_pasajero)}
         </div>
         <div class="reg-detail">
-          ${r.adultos} adultos${r.ninos > 0 ? ` + ${r.ninos} niÃ±os` : ''}${r.cortesias > 0 ? ` + ${r.cortesias} cortesÃ­as` : ''} Â·
-          ${esc(r.planes?.nombre || '')} Â·
-          ${r.agencia_nombre ? esc(r.agencia_nombre) + ' Â·' : ''}
+          ${r.adultos} adultos${r.ninos > 0 ? ` + ${r.ninos} niños` : ''}${r.cortesias > 0 ? ` + ${r.cortesias} cortesías` : ''} ·
+          ${esc(r.planes?.nombre || '')} ·
+          ${r.agencia_nombre ? esc(r.agencia_nombre) + ' ·' : ''}
           ${impTag(r.impuestos_puerto)}
-          ${r.forma_pago ? `<span style="color:#6b7280">Â· ${esc(FORMA_PAGO_LABELS[r.forma_pago] || '')}</span>` : ''}
+          ${r.forma_pago ? `<span style="color:#6b7280">· ${esc(FORMA_PAGO_LABELS[r.forma_pago] || '')}</span>` : ''}
         </div>
         ${r.observaciones ? `<div class="reg-sub">Obs: ${esc(r.observaciones)}</div>` : ''}
       </div>`).join('')
@@ -266,11 +266,11 @@ export function buildTentativoHTML(registros, fecha) {
 
   const tentativasSection = tentativas.length > 0 ? `
     <div class="warning-box">
-      <div class="warning-title">âš ï¸ TENTATIVAS â€” ${totalTentPax} personas sin confirmar</div>
+      <div class="warning-title">⚠ TENTATIVAS — ${totalTentPax} personas sin confirmar</div>
       ${tentativas.map(r => `
         <div class="warning-row">
-          Â· ${esc(r.nombre_pasajero)}${r.nombre_grupo ? ` (${esc(r.nombre_grupo)})` : ''} â€”
-          ${r.adultos + r.ninos} pax â€” ${esc(r.planes?.nombre || '')} â€” ${esc(r.lanchas?.nombre || '')}
+          · ${esc(r.nombre_pasajero)}${r.nombre_grupo ? ` (${esc(r.nombre_grupo)})` : ''} —
+          ${r.adultos + r.ninos} pax — ${esc(r.planes?.nombre || '')} — ${esc(r.lanchas?.nombre || '')}
         </div>`).join('')}
     </div>` : ''
 
@@ -279,7 +279,7 @@ export function buildTentativoHTML(registros, fecha) {
   <div class="doc-header">
     <div>
       <div class="hotel-name"><span class="hotel-wave">ðŸŒŠ</span> Hotel San Pedro de Majagua</div>
-      <div class="hotel-sub">Islas del Rosario Â· Cartagena de Indias, Colombia</div>
+      <div class="hotel-sub">Islas del Rosario · Cartagena de Indias, Colombia</div>
     </div>
     <div>
       <div class="doc-title">TENTATIVO DAYPASS</div>
@@ -299,11 +299,11 @@ export function buildTentativoHTML(registros, fecha) {
     </div>
     <div class="stat">
       <span class="stat-value">${totalNinos}</span>
-      <span class="stat-label">NiÃ±os</span>
+      <span class="stat-label">Niños</span>
     </div>
     <div class="stat">
       <span class="stat-value">${totalCortesias}</span>
-      <span class="stat-label">CortesÃ­as</span>
+      <span class="stat-label">Cortesías</span>
     </div>
     <div class="stat">
       <span class="stat-value">${totalInfantes}</span>
@@ -316,7 +316,7 @@ export function buildTentativoHTML(registros, fecha) {
     </div>` : ''}
   </div>
 
-  <div class="section-title">DistribuciÃ³n por canal</div>
+  <div class="section-title">Distribución por canal</div>
   <div class="canal-grid">${canalItems}</div>
 
   <div class="section-title">Detalle por lancha y pasajero</div>
@@ -326,16 +326,16 @@ export function buildTentativoHTML(registros, fecha) {
 
   <div class="doc-footer">
     <div class="footer-left">
-      ${activos.length} registros activos Â· ${grupos.length} grupos Â· ${individuales.length} individuales
+      ${activos.length} registros activos · ${grupos.length} grupos · ${individuales.length} individuales
     </div>
     <div class="footer-right">
-      <span class="footer-brand">DayPASS</span> Â· Hotel San Pedro de Majagua
+      <span class="footer-brand">DayPASS</span> · Hotel San Pedro de Majagua
     </div>
   </div>
 </div>`
 }
 
-// â”€â”€â”€ Listado para Folios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Listado para Folios ───────────────────────────────────────────────────────
 export function buildFoliosHTML(registros, fecha) {
   const activos = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
 
@@ -368,11 +368,11 @@ export function buildFoliosHTML(registros, fecha) {
             ${r.nombre_grupo ? `<div style="font-size:10px; color:#6b7280;">${esc(r.nombre_grupo)}</div>` : ''}
             ${r.agencia_nombre ? `<div style="font-size:10px; color:#6b7280;">${esc(r.agencia_nombre)}</div>` : ''}
           </td>
-          <td style="font-size:11px; color:#374151;">${esc(r.planes?.nombre || 'â€”')}</td>
+          <td style="font-size:11px; color:#374151;">${esc(r.planes?.nombre || '—')}</td>
           <td style="text-align:center; font-weight:700; width:50px;">${paxStr}</td>
           <td style="text-align:center; width:46px;">${impTag(r.impuestos_puerto)}</td>
           <td style="width:48px; font-size:10.5px; color:#6b7280; text-align:center;">
-            ${r.forma_pago ? esc(FORMA_PAGO_LABELS[r.forma_pago] || '') : '<span style="color:#f59e0b;">â€”</span>'}
+            ${r.forma_pago ? esc(FORMA_PAGO_LABELS[r.forma_pago] || '') : '<span style="color:#f59e0b;">—</span>'}
           </td>
           <td style="text-align:center; width:120px; padding: 6px 8px;">${folio}</td>
         </tr>`
@@ -381,7 +381,7 @@ export function buildFoliosHTML(registros, fecha) {
     return `
       <div class="lancha-header">
         <span>${esc(nombre)}</span>
-        <span class="lancha-pax">${pax} personas Â· ${regs.length} registro(s)</span>
+        <span class="lancha-pax">${pax} personas · ${regs.length} registro(s)</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -409,7 +409,7 @@ export function buildFoliosHTML(registros, fecha) {
   <div class="doc-header">
     <div>
       <div class="hotel-name"><span class="hotel-wave">ðŸŒŠ</span> Hotel San Pedro de Majagua</div>
-      <div class="hotel-sub">Islas del Rosario Â· Cartagena de Indias, Colombia</div>
+      <div class="hotel-sub">Islas del Rosario · Cartagena de Indias, Colombia</div>
     </div>
     <div>
       <div class="doc-title">LISTADO PARA FOLIOS ZEUS</div>
@@ -439,9 +439,9 @@ export function buildFoliosHTML(registros, fecha) {
 
   ${impuestoNo.length > 0 ? `
     <div class="warning-box" style="margin-bottom: 16px;">
-      <div class="warning-title">âš ï¸ IMPUESTOS DE PUERTO PENDIENTES â€” cobrar en muelle</div>
+      <div class="warning-title">⚠ IMPUESTOS DE PUERTO PENDIENTES — cobrar en muelle</div>
       ${impuestoNo.map(r => `
-        <div class="warning-row">Â· ${esc(r.nombre_pasajero)} â€” ${r.adultos + r.ninos} pax â€” ${esc(r.lanchas?.nombre || '')}</div>
+        <div class="warning-row">· ${esc(r.nombre_pasajero)} — ${r.adultos + r.ninos} pax — ${esc(r.lanchas?.nombre || '')}</div>
       `).join('')}
     </div>` : ''}
 
@@ -449,10 +449,10 @@ export function buildFoliosHTML(registros, fecha) {
 
   <div class="doc-footer">
     <div class="footer-left">
-      ${activos.length} registros Â· ${totalPax} personas en ${Object.keys(lanchaMap).length} lanchas
+      ${activos.length} registros · ${totalPax} personas en ${Object.keys(lanchaMap).length} lanchas
     </div>
     <div class="footer-right">
-      <span class="footer-brand">DayPASS</span> Â· Hotel San Pedro de Majagua
+      <span class="footer-brand">DayPASS</span> · Hotel San Pedro de Majagua
     </div>
   </div>
 </div>`
