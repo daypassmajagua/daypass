@@ -2,19 +2,21 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  ChevronLeft, ChevronRight, PlusCircle, Edit2, Trash2,
+  PlusCircle, Edit2, Trash2,
   AlertTriangle, CheckCircle2, Filter
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import {
-  formatCurrency, formatDate, aFechaLocal,
+  formatCurrency, formatDate,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
 } from '../lib/utils'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
+import Select from '../components/ui/Select'
+import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
 import { supabase } from '../lib/supabase'
 
@@ -93,17 +95,6 @@ export default function ListadoDia() {
     setDeletingId(null)
   }
 
-  function prevDay() {
-    const d = new Date(fechaActiva + 'T00:00:00')
-    d.setDate(d.getDate() - 1)
-    setFechaActiva(aFechaLocal(d))
-  }
-  function nextDay() {
-    const d = new Date(fechaActiva + 'T00:00:00')
-    d.setDate(d.getDate() + 1)
-    setFechaActiva(aFechaLocal(d))
-  }
-
   const totalPax = filtered
     .filter(r => !['cancelada', 'noshow'].includes(r.estado))
     .reduce((s, r) => s + r.adultos + r.ninos, 0)
@@ -115,16 +106,7 @@ export default function ListadoDia() {
         subtitle={formatDate(fechaActiva)}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <button onClick={prevDay} className="p-2 hover:bg-gray-50 rounded-l-lg"><ChevronLeft size={16} /></button>
-              <input
-                type="date"
-                value={fechaActiva}
-                onChange={e => setFechaActiva(e.target.value)}
-                className="text-sm border-0 outline-none bg-transparent px-2 py-1.5 text-gray-700"
-              />
-              <button onClick={nextDay} className="p-2 hover:bg-gray-50 rounded-r-lg"><ChevronRight size={16} /></button>
-            </div>
+            <DateNav value={fechaActiva} onChange={setFechaActiva} />
             <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
               <Filter size={14} />
               Filtros
@@ -148,39 +130,33 @@ export default function ListadoDia() {
       {showFilters && (
         <Card className="p-4 mb-4">
           <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Lancha</label>
-              <select
-                value={filtroLancha}
-                onChange={e => setFiltroLancha(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
-              >
-                <option value="">Todas</option>
-                {lanchas.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Estado</label>
-              <select
-                value={filtroEstado}
-                onChange={e => setFiltroEstado(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
-              >
-                <option value="">Todos</option>
-                {ESTADOS.map(e => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Canal</label>
-              <select
-                value={filtroCanal}
-                onChange={e => setFiltroCanal(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white"
-              >
-                <option value="">Todos</option>
-                {canales.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
-            </div>
+            <Select
+              label="Lancha"
+              value={filtroLancha}
+              onChange={setFiltroLancha}
+              options={[
+                { value: '', label: 'Todas' },
+                ...lanchas.map(l => ({ value: l.id, label: l.nombre })),
+              ]}
+            />
+            <Select
+              label="Estado"
+              value={filtroEstado}
+              onChange={setFiltroEstado}
+              options={[
+                { value: '', label: 'Todos' },
+                ...ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] })),
+              ]}
+            />
+            <Select
+              label="Canal"
+              value={filtroCanal}
+              onChange={setFiltroCanal}
+              options={[
+                { value: '', label: 'Todos' },
+                ...canales.map(c => ({ value: c.id, label: c.nombre })),
+              ]}
+            />
           </div>
           <button
             onClick={() => { setFiltroLancha(''); setFiltroEstado(''); setFiltroCanal('') }}
@@ -267,15 +243,13 @@ export default function ListadoDia() {
                             </span>
                           </td>
                           <td className="px-3 py-3">
-                            <select
+                            <Select
+                              size="sm"
                               value={r.estado}
-                              onChange={e => handleEstadoChange(r.id, e.target.value, r)}
-                              className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
-                            >
-                              {ESTADOS.map(e => (
-                                <option key={e} value={e}>{ESTADO_LABELS[e]}</option>
-                              ))}
-                            </select>
+                              onChange={v => handleEstadoChange(r.id, v, r)}
+                              options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+                              className="w-32"
+                            />
                           </td>
                           <td className="px-3 py-3">
                             {editingFolio[r.id] !== undefined ? (
@@ -358,13 +332,13 @@ export default function ListadoDia() {
                         <span>Imp: {IMPUESTOS_LABELS[r.impuestos_puerto]}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <select
+                        <Select
+                          size="sm"
                           value={r.estado}
-                          onChange={e => handleEstadoChange(r.id, e.target.value, r)}
-                          className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white"
-                        >
-                          {ESTADOS.map(e => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
-                        </select>
+                          onChange={v => handleEstadoChange(r.id, v, r)}
+                          options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+                          className="flex-1"
+                        />
                         <button onClick={() => navigate(`/editar/${r.id}`)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
                           <Edit2 size={14} />
                         </button>

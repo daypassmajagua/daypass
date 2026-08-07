@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, formatDateShort, aFechaLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
+import Select from '../components/ui/Select'
+import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -14,11 +16,13 @@ import {
 } from 'lucide-react'
 
 // ─── Paleta ───────────────────────────────────────────────────────────────────
-const C = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#06b6d4','#84cc16','#a855f7']
+// Ancla: navy de marca #1E2045 (LogoAzul) + dorado #B5904D (LogoCafe),
+// con acentos que armonizan con ambos.
+const C = ['#1e2045','#b5904d','#545d97','#0d9488','#7a82b3','#c2703f','#3f477c','#8a6a33','#a6accf','#5f8575']
 
 const ESTADO_COLORS_PIE = {
-  completada: '#10b981', confirmada: '#3b82f6', en_isla: '#14b8a6',
-  tentativa: '#9ca3af', noshow: '#f97316', cancelada: '#ef4444',
+  completada: '#0d9488', confirmada: '#1e2045', en_isla: '#545d97',
+  tentativa: '#9ca3af', noshow: '#c2703f', cancelada: '#b91c1c',
 }
 
 const fmtCOP = v => {
@@ -304,14 +308,16 @@ export default function Informes() {
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
             <span>Desde</span>
-            <input type="date" value={fechaDesde}
-              onChange={e => { setPreset('custom'); setFechaDesde(e.target.value) }}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            <DatePicker
+              value={fechaDesde}
+              onChange={v => { setPreset('custom'); setFechaDesde(v) }}
+              className="w-44"
             />
             <span>Hasta</span>
-            <input type="date" value={fechaHasta}
-              onChange={e => { setPreset('custom'); setFechaHasta(e.target.value) }}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            <DatePicker
+              value={fechaHasta}
+              onChange={v => { setPreset('custom'); setFechaHasta(v) }}
+              className="w-44"
             />
           </div>
           <button
@@ -476,7 +482,7 @@ export default function Informes() {
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} />
                 <YAxis tickFormatter={fmtCOP} tick={{ fontSize: 11, fill: '#6b7280' }} width={60} />
                 <Tooltip content={<CurrencyTooltip />} />
-                <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Ingresos" fill="#1e2045" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -489,15 +495,15 @@ export default function Informes() {
                 <AreaChart data={porDia} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="paxGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="#1e2045" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#1e2045" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#6b7280' }} />
                   <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} width={35} />
                   <Tooltip content={<CurrencyTooltip />} />
-                  <Area type="monotone" dataKey="Pasajeros" stroke="#3b82f6" strokeWidth={2} fill="url(#paxGrad)" />
+                  <Area type="monotone" dataKey="Pasajeros" stroke="#1e2045" strokeWidth={2} fill="url(#paxGrad)" />
                 </AreaChart>
               </ResponsiveContainer>
             </Card>
@@ -589,7 +595,7 @@ export default function Informes() {
                   <PieChart>
                     <Pie data={porTipo} dataKey="value" nameKey="name"
                       cx="50%" cy="50%" innerRadius={48} outerRadius={78} paddingAngle={3}>
-                      {porTipo.map((_, i) => <Cell key={i} fill={['#8b5cf6','#3b82f6'][i]} />)}
+                      {porTipo.map((_, i) => <Cell key={i} fill={['#b5904d','#1e2045'][i]} />)}
                     </Pie>
                     <Tooltip formatter={(v, n) => [v + ' pax', n]} />
                   </PieChart>
@@ -598,7 +604,7 @@ export default function Informes() {
                   {porTipo.map((d, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full flex-none"
-                        style={{ background: ['#8b5cf6','#3b82f6'][i] }} />
+                        style={{ background: ['#b5904d','#1e2045'][i] }} />
                       <div>
                         <div className="font-semibold text-gray-800">{d.value} pax</div>
                         <div className="text-xs text-gray-500">{d.name}</div>
@@ -701,18 +707,11 @@ function FilterSelect({ label, value, onChange, options }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-medium text-gray-500">{label}</label>
-      <select
+      <Select
         value={value}
-        onChange={e => onChange(e.target.value)}
-        className={`text-sm border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
-          value ? 'border-blue-400 text-blue-700 bg-blue-50' : 'border-gray-300 text-gray-700'
-        }`}
-      >
-        <option value="">Todos</option>
-        {options.map(o => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
+        onChange={onChange}
+        options={[{ value: '', label: 'Todos' }, ...options]}
+      />
     </div>
   )
 }

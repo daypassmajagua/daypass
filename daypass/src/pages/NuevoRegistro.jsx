@@ -10,6 +10,7 @@ import { formatCurrency, FORMA_PAGO_LABELS } from '../lib/utils'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
+import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import { Calculator, Info } from 'lucide-react'
@@ -209,20 +210,37 @@ export default function NuevoRegistro() {
         {/* Fecha y estado */}
         <Card className="p-4 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Fecha"
-              type="date"
-              {...register('fecha')}
-              error={errors.fecha?.message}
+            <Controller
+              name="fecha"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  label="Fecha"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.fecha?.message}
+                />
+              )}
             />
-            <Select label="Estado" {...register('estado')}>
-              <option value="confirmada">Confirmada</option>
-              <option value="tentativa">Tentativa</option>
-              <option value="en_isla">En Isla</option>
-              <option value="completada">Completada</option>
-              <option value="noshow">No Show</option>
-              <option value="cancelada">Cancelada</option>
-            </Select>
+            <Controller
+              name="estado"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Estado"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { value: 'confirmada', label: 'Confirmada' },
+                    { value: 'tentativa', label: 'Tentativa' },
+                    { value: 'en_isla', label: 'En Isla' },
+                    { value: 'completada', label: 'Completada' },
+                    { value: 'noshow', label: 'No Show' },
+                    { value: 'cancelada', label: 'Cancelada' },
+                  ]}
+                />
+              )}
+            />
           </div>
         </Card>
 
@@ -270,12 +288,22 @@ export default function NuevoRegistro() {
               placeholder="CC, Pasaporte..."
               {...register('identificacion')}
             />
-            <Select label="País" {...register('pais_id')}>
-              <option value="">— País —</option>
-              {paises.map(p => (
-                <option key={p.id} value={p.id}>{p.nombre}</option>
-              ))}
-            </Select>
+            <Controller
+              name="pais_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="País"
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="— País —"
+                  options={[
+                    { value: '', label: '— País —' },
+                    ...paises.map(p => ({ value: p.id, label: p.nombre })),
+                  ]}
+                />
+              )}
+            />
           </div>
         </Card>
 
@@ -283,18 +311,34 @@ export default function NuevoRegistro() {
         <Card className="p-4 flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-gray-700">Logística</h3>
           <div className="grid grid-cols-2 gap-4">
-            <Select label="Lancha *" {...register('lancha_id')} error={errors.lancha_id?.message}>
-              <option value="">— Lancha —</option>
-              {lanchas.map(l => (
-                <option key={l.id} value={l.id}>{l.nombre}</option>
-              ))}
-            </Select>
-            <Select label="Canal de venta *" {...register('canal_id')} error={errors.canal_id?.message}>
-              <option value="">— Canal —</option>
-              {canales.map(c => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </Select>
+            <Controller
+              name="lancha_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Lancha *"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.lancha_id?.message}
+                  placeholder="— Lancha —"
+                  options={lanchas.map(l => ({ value: l.id, label: l.nombre }))}
+                />
+              )}
+            />
+            <Controller
+              name="canal_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Canal de venta *"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.canal_id?.message}
+                  placeholder="— Canal —"
+                  options={canales.map(c => ({ value: c.id, label: c.nombre }))}
+                />
+              )}
+            />
           </div>
           <div>
             <Input
@@ -319,12 +363,20 @@ export default function NuevoRegistro() {
         {/* Plan y precios */}
         <Card className="p-4 flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-gray-700">Plan y Precios</h3>
-          <Select label="Plan *" {...register('plan_id')} error={errors.plan_id?.message}>
-            <option value="">— Seleccionar plan —</option>
-            {planes.map(p => (
-              <option key={p.id} value={p.id}>{p.nombre}</option>
-            ))}
-          </Select>
+          <Controller
+            name="plan_id"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Plan *"
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.plan_id?.message}
+                placeholder="— Seleccionar plan —"
+                options={planes.map(p => ({ value: p.id, label: p.nombre }))}
+              />
+            )}
+          />
 
           {/* Personas */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -354,12 +406,22 @@ export default function NuevoRegistro() {
         {/* Pago e impuestos */}
         <Card className="p-4 flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-gray-700">Pago</h3>
-          <Select label="Forma de pago" {...register('forma_pago')}>
-            <option value="">— Seleccionar —</option>
-            {Object.entries(FORMA_PAGO_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </Select>
+          <Controller
+            name="forma_pago"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Forma de pago"
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="— Seleccionar —"
+                options={[
+                  { value: '', label: '— Seleccionar —' },
+                  ...Object.entries(FORMA_PAGO_LABELS).map(([v, l]) => ({ value: v, label: l })),
+                ]}
+              />
+            )}
+          />
 
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-2">Impuestos de Puerto *</label>

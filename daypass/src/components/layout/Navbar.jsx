@@ -10,13 +10,13 @@ import {
   History,
   Settings,
   LogOut,
-  Waves,
   Menu,
   X,
   BarChart2,
 } from 'lucide-react'
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
+import logoBlanco from '../../assets/logo-blanco.png'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -45,8 +45,8 @@ export default function Navbar() {
       {/* Top bar */}
       <header className="bg-blue-700 text-white sticky top-0 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-          <div className="flex items-center gap-2">
-            <Waves size={22} />
+          <div className="flex items-center gap-2.5">
+            <img src={logoBlanco} alt="Hotel San Pedro de Majagua" className="h-10 w-auto" />
             <span className="font-bold text-lg tracking-tight">DayPASS</span>
             <span className="hidden md:block text-blue-300 text-sm ml-1">· Hotel San Pedro de Majagua</span>
             {isMock && (

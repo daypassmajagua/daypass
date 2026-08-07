@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Copy, CheckCircle2, ChevronLeft, ChevronRight, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
+import { Copy, CheckCircle2, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { formatDate, aFechaLocal, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
+import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
+import DateNav from '../components/ui/DateNav'
 import { openPrintWindow, buildFoliosHTML } from '../lib/printDoc'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -88,17 +89,6 @@ export default function Folios() {
     toast.success('Listado copiado al portapapeles')
   }
 
-  function prevDay() {
-    const d = new Date(fechaActiva + 'T00:00:00')
-    d.setDate(d.getDate() - 1)
-    setFechaActiva(aFechaLocal(d))
-  }
-  function nextDay() {
-    const d = new Date(fechaActiva + 'T00:00:00')
-    d.setDate(d.getDate() + 1)
-    setFechaActiva(aFechaLocal(d))
-  }
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <PageHeader
@@ -106,16 +96,7 @@ export default function Folios() {
         subtitle={formatDate(fechaActiva)}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg shadow-sm">
-              <button onClick={prevDay} className="p-2 hover:bg-gray-50 rounded-l-lg"><ChevronLeft size={16} /></button>
-              <input
-                type="date"
-                value={fechaActiva}
-                onChange={e => setFechaActiva(e.target.value)}
-                className="text-sm border-0 outline-none bg-transparent px-2 py-1.5 text-gray-700"
-              />
-              <button onClick={nextDay} className="p-2 hover:bg-gray-50 rounded-r-lg"><ChevronRight size={16} /></button>
-            </div>
+            <DateNav value={fechaActiva} onChange={setFechaActiva} />
             <Button variant="secondary" size="sm" onClick={refetch}>
               <RefreshCw size={14} />
             </Button>

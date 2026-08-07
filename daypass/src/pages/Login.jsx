@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase, isMock } from '../lib/supabase'
 import { toast } from 'sonner'
-import { Waves, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
+import logoAzul from '../assets/logo-azul.png'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -30,11 +31,8 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mb-4">
-              <Waves size={28} className="text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">DayPASS</h1>
-            <p className="text-sm text-gray-500 mt-1">Hotel San Pedro de Majagua</p>
+            <img src={logoAzul} alt="Hotel San Pedro de Majagua" className="h-32 w-auto mb-3" />
+            <h1 className="text-2xl font-bold text-brand-900 tracking-tight">DayPASS</h1>
           </div>
 
           {isMock && (

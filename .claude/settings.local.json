@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(npm run build)"
+      "PowerShell(npm run build)",
+      "PowerShell(gh auth status)",
+      "PowerShell($k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVidG1peGdxd2Z3dmFydGNpcXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDQ2MzMsImV4cCI6MjEwMTY4MDYzM30.qt4vxvBImWTowrwxc_-M075jgOBaiRkcAWjgOZnxwxE'; try { $r = Invoke-WebRequest -Uri 'https://ubtmixgqwfwvartciqyr.supabase.co/rest/v1/lanchas?select=codigo,nombre&limit=3' -Headers @{apikey=$k; Authorization=\"Bearer $k\"} -UseBasicParsing -TimeoutSec 15; \"HTTP $\\($r.StatusCode\\): $\\($r.Content\\)\" } catch { \"ERROR: $\\($_.Exception.Response.StatusCode.value__\\) - $\\($_.ErrorDetails.Message\\)\" })",
+      "PowerShell($k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVidG1peGdxd2Z3dmFydGNpcXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDQ2MzMsImV4cCI6MjEwMTY4MDYzM30.qt4vxvBImWTowrwxc_-M075jgOBaiRkcAWjgOZnxwxE'; try { Invoke-RestMethod -Uri 'https://ubtmixgqwfwvartciqyr.supabase.co/rest/v1/lanchas?select=codigo&limit=1' -Headers @{apikey=$k; Authorization=\"Bearer $k\"} -TimeoutSec 15 } catch { $s = $_.Exception.Response.GetResponseStream\\(\\); $rd = New-Object System.IO.StreamReader\\($s\\); $rd.ReadToEnd\\(\\) })",
+      "PowerShell($k = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVidG1peGdxd2Z3dmFydGNpcXlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDQ2MzMsImV4cCI6MjEwMTY4MDYzM30.qt4vxvBImWTowrwxc_-M075jgOBaiRkcAWjgOZnxwxE'; $h = @{apikey=$k; Authorization=\"Bearer $k\"; Prefer='count=exact'}; foreach \\($t in 'lanchas','canales','planes','paises','temporadas','agencias','clientes','registros'\\) { try { $r = Invoke-WebRequest -Uri \"https://ubtmixgqwfwvartciqyr.supabase.co/rest/v1/${t}?select=id&limit=1\" -Headers $h -UseBasicParsing -TimeoutSec 15; $count = \\($r.Headers['Content-Range'] -split '/'\\)[-1]; \"{0,-12} {1} filas\" -f $t, $count } catch { \"{0,-12} ERROR\" -f $t } })",
+      "PowerShell($m = \\(Invoke-WebRequest -Uri 'http://localhost:5173/src/lib/supabase.js' -UseBasicParsing -TimeoutSec 10\\).Content; if \\($m -match 'ubtmixgqwfwvartciqyr'\\) { 'ENV OK: URL real inyectada' } else { 'ENV NO cargado' })",
+      "PowerShell(\"GIT_ASKPASS=$env:GIT_ASKPASS\"; \"helper config:\"; git config -l --show-origin | Select-String -Pattern \"credential|askpass\")",
+      "PowerShell($f = \"$env:USERPROFILE\\\\.git-credentials\"; if \\(Test-Path $f\\) { Get-Content $f | ForEach-Object { $u = [uri]$_; \"{0} -> usuario: {1}\" -f $u.Host, $u.UserInfo.Split\\(':'\\)[0] } } else { \"no existe .git-credentials\" })",
+      "PowerShell($f = \"$env:USERPROFILE\\\\.git-credentials\"; $lines = Get-Content $f; $kept = $lines | Where-Object { $_ -notmatch 'github\\\\.com' }; if \\($kept\\) { Set-Content -Path $f -Value $kept -Encoding ascii } else { Remove-Item $f -Confirm:$false }; \"Entradas github.com eliminadas. Quedan: $\\(if \\(Test-Path $f\\) { \\(Get-Content $f | Measure-Object -Line\\).Lines } else { 0 }\\) lineas\")",
+      "PowerShell(gh auth login -h github.com --git-protocol https --web)",
+      "PowerShell(gh auth setup-git)",
+      "PowerShell(git push -u origin master)",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\Logos\\\\LogoAzul.png\" \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\daypass\\\\src\\\\assets\\\\logo-azul.png\")",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\Logos\\\\LOGO-BLANCO_1.png\" \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\daypass\\\\src\\\\assets\\\\logo-blanco.png\")",
+      "PowerShell(Copy-Item \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\Logos\\\\LogoCafe.png\" \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\daypass\\\\src\\\\assets\\\\logo-cafe.png\")",
+      "PowerShell($f = \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\\\\daypass\\\\src\\\\lib\\\\printDoc.js\"; $c = Get-Content $f -Raw; $c = $c -replace '#1e40af', '#1e2045' -replace '#1e3a8a', '#1e2045' -replace '#eff6ff', '#f4f5fa' -replace '#bfdbfe', '#cdd1e6' -replace '#dbeafe', '#e8eaf4'; Set-Content -Path $f -Value $c -Encoding utf8 -NoNewline; \\(Select-String -Path $f -Pattern '#1e2045|#f4f5fa|#cdd1e6|#e8eaf4' -AllMatches\\).Matches.Count)"
     ]
   }
 }

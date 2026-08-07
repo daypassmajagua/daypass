@@ -10,7 +10,7 @@ export const isMock =
   supabaseUrl.trim() === ''
 
 if (isMock) {
-  console.info('%c[DayPASS] Modo demo — usando datos de muestra', 'color: #3b82f6; font-weight: bold')
+  console.info('%c[DayPASS] Modo demo — usando datos de muestra', 'color: #1e2045; font-weight: bold')
 }
 
 export const supabase = isMock

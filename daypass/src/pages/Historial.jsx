@@ -6,6 +6,8 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
+import Select from '../components/ui/Select'
+import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const PAGE_SIZE = 50
@@ -110,36 +112,32 @@ export default function Historial() {
               className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
-          <input
-            type="date"
+          <DatePicker
             value={filtros.fechaInicio}
-            onChange={e => { setFiltros(f => ({ ...f, fechaInicio: e.target.value })); setPage(0) }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onChange={v => { setFiltros(f => ({ ...f, fechaInicio: v })); setPage(0) }}
+            placeholder="Fecha desde"
           />
-          <input
-            type="date"
+          <DatePicker
             value={filtros.fechaFin}
-            onChange={e => { setFiltros(f => ({ ...f, fechaFin: e.target.value })); setPage(0) }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onChange={v => { setFiltros(f => ({ ...f, fechaFin: v })); setPage(0) }}
+            placeholder="Fecha hasta"
           />
-          <select
+          <Select
             value={filtros.estado}
-            onChange={e => { setFiltros(f => ({ ...f, estado: e.target.value })); setPage(0) }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">Todos los estados</option>
-            {Object.entries(ESTADO_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-          <select
+            onChange={v => { setFiltros(f => ({ ...f, estado: v })); setPage(0) }}
+            options={[
+              { value: '', label: 'Todos los estados' },
+              ...Object.entries(ESTADO_LABELS).map(([v, l]) => ({ value: v, label: l })),
+            ]}
+          />
+          <Select
             value={filtroLancha}
-            onChange={e => { setFiltroLancha(e.target.value); setPage(0) }}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">Todas las lanchas</option>
-            {lanchas.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
-          </select>
+            onChange={v => { setFiltroLancha(v); setPage(0) }}
+            options={[
+              { value: '', label: 'Todas las lanchas' },
+              ...lanchas.map(l => ({ value: l.id, label: l.nombre })),
+            ]}
+          />
         </div>
         <button
           onClick={() => { setFiltros({ fechaInicio:'', fechaFin:'', estado:'', vendidaPor:'', search:'' }); setFiltroLancha(''); setFiltroCanal(''); setPage(0) }}

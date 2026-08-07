@@ -6,6 +6,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
+import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import Modal from '../components/ui/Modal'
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Settings } from 'lucide-react'
@@ -298,18 +299,24 @@ function EditModal({ tab, item, onClose, onSaved }) {
         {tab === 'Planes' && (
           <>
             <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
-            <Select label="Categoría" value={form.categoria || ''} onChange={e => set('categoria', e.target.value)}>
-              <option value="">— Categoría —</option>
-              {['rack','rack_descuento','mayorista','mayorista_exterior','fidelidad','corporativo','grupo_neto','almuerzo_sin_transporte','guia','solo_transporte','blue_dive'].map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </Select>
-            <Select label="Nivel" value={form.nivel || 'na'} onChange={e => set('nivel', e.target.value)}>
-              <option value="na">N/A</option>
-              <option value="silver">Silver</option>
-              <option value="gold">Gold</option>
-              <option value="diamond">Diamond</option>
-            </Select>
+            <Select
+              label="Categoría"
+              value={form.categoria || ''}
+              onChange={v => set('categoria', v)}
+              placeholder="— Categoría —"
+              options={['rack','rack_descuento','mayorista','mayorista_exterior','fidelidad','corporativo','grupo_neto','almuerzo_sin_transporte','guia','solo_transporte','blue_dive'].map(c => ({ value: c, label: c }))}
+            />
+            <Select
+              label="Nivel"
+              value={form.nivel || 'na'}
+              onChange={v => set('nivel', v)}
+              options={[
+                { value: 'na', label: 'N/A' },
+                { value: 'silver', label: 'Silver' },
+                { value: 'gold', label: 'Gold' },
+                { value: 'diamond', label: 'Diamond' },
+              ]}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Input label="Precio Adulto Baja" type="number" value={form.precio_adulto_baja || 0} onChange={e => set('precio_adulto_baja', +e.target.value)} />
               <Input label="Precio Adulto Alta" type="number" value={form.precio_adulto_alta || 0} onChange={e => set('precio_adulto_alta', +e.target.value)} />
@@ -338,12 +345,17 @@ function EditModal({ tab, item, onClose, onSaved }) {
         {tab === 'Temporadas' && (
           <>
             <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
-            <Select label="Tipo" value={form.tipo || 'baja'} onChange={e => set('tipo', e.target.value)}>
-              <option value="baja">Baja</option>
-              <option value="alta">Alta</option>
-            </Select>
-            <Input label="Fecha inicio" type="date" value={form.fecha_inicio || ''} onChange={e => set('fecha_inicio', e.target.value)} />
-            <Input label="Fecha fin" type="date" value={form.fecha_fin || ''} onChange={e => set('fecha_fin', e.target.value)} />
+            <Select
+              label="Tipo"
+              value={form.tipo || 'baja'}
+              onChange={v => set('tipo', v)}
+              options={[
+                { value: 'baja', label: 'Baja' },
+                { value: 'alta', label: 'Alta' },
+              ]}
+            />
+            <DatePicker label="Fecha inicio" value={form.fecha_inicio || ''} onChange={v => set('fecha_inicio', v)} />
+            <DatePicker label="Fecha fin" value={form.fecha_fin || ''} onChange={v => set('fecha_fin', v)} />
           </>
         )}
 

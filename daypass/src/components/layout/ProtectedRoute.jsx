@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { Waves } from 'lucide-react'
+import logoAzul from '../../assets/logo-azul.png'
 
 export default function ProtectedRoute({ children }) {
   const [session, setSession] = useState(undefined)
@@ -20,9 +20,7 @@ export default function ProtectedRoute({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center animate-pulse">
-            <Waves size={24} className="text-white" />
-          </div>
+          <img src={logoAzul} alt="" className="h-20 w-auto animate-pulse" />
           <p className="text-sm text-gray-500">Cargando...</p>
         </div>
       </div>

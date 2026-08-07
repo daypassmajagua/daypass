@@ -1,5 +1,42 @@
 @import "tailwindcss";
 
+/* ─── Paleta de marca ─────────────────────────────────────────────────────────
+   Azul tomado del logo del Hotel San Pedro de Majagua (LogoAzul.png): #1E2045.
+   Se sobreescribe la escala `blue` de Tailwind para que TODA la app use el
+   navy de marca sin tocar las clases existentes. `brand` es un alias de la
+   misma escala para uso explícito en componentes nuevos. */
+@theme {
+  --color-blue-50: #f4f5fa;
+  --color-blue-100: #e8eaf4;
+  --color-blue-200: #cdd1e6;
+  --color-blue-300: #a6accf;
+  --color-blue-400: #7a82b3;
+  --color-blue-500: #545d97;
+  --color-blue-600: #3f477c;
+  --color-blue-700: #313763;
+  --color-blue-800: #272b51;
+  --color-blue-900: #1e2045;
+  --color-blue-950: #131427;
+
+  --color-brand-50: #f4f5fa;
+  --color-brand-100: #e8eaf4;
+  --color-brand-200: #cdd1e6;
+  --color-brand-300: #a6accf;
+  --color-brand-400: #7a82b3;
+  --color-brand-500: #545d97;
+  --color-brand-600: #3f477c;
+  --color-brand-700: #313763;
+  --color-brand-800: #272b51;
+  --color-brand-900: #1e2045;
+  --color-brand-950: #131427;
+
+  /* Dorado del LogoCafe, como acento secundario */
+  --color-arena-100: #f5eddc;
+  --color-arena-300: #ddc294;
+  --color-arena-500: #b5904d;
+  --color-arena-700: #8a6a33;
+}
+
 * {
   box-sizing: border-box;
 }
