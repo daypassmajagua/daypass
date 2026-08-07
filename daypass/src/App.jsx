@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Hoy from './pages/Hoy'
 import Reserva from './pages/Reserva'
 import CerrarDia from './pages/CerrarDia'
+import Embarque from './pages/Embarque'
 import ListadoDia from './pages/ListadoDia'
 import Tentativo from './pages/Tentativo'
 import Folios from './pages/Folios'
@@ -65,6 +66,16 @@ export default function App() {
               <AppLayout>
                 <Reserva />
               </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* El muelle no lleva el marco de la oficina: pantalla completa,
+            alto contraste y objetivos grandes. */}
+        <Route
+          path="/embarque"
+          element={
+            <ProtectedRoute>
+              <Embarque />
             </ProtectedRoute>
           }
         />

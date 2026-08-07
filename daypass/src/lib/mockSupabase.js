@@ -510,6 +510,8 @@ const STORE = {
   pasajeros:  [],
   dias_operativos: [],
   cambios_estado:  [],
+  zarpes:     [],
+  embarques:  [],
 }
 
 // Cada fecha con reservas abre su día, igual que el trigger en Postgres.
@@ -526,6 +528,43 @@ STORE.registros.forEach(r => {
     })
   }
 })
+
+// El día de hoy arranca con sus zarpes programados y algunos nombres
+// cargados: sin eso, la pantalla del muelle no se puede mostrar.
+;(function sembrarOperacionDeHoy() {
+  const hoy = hoyLocal()
+  const deHoy = STORE.registros.filter(
+    r => r.fecha === hoy && !['cancelada', 'noshow'].includes(r.estado))
+
+  ;[...new Set(deHoy.map(r => r.lancha_id))].forEach(lancha_id => {
+    STORE.zarpes.push({
+      id: genId(), fecha: hoy, lancha_id, sentido: 'ida',
+      hora_programada: '09:00', hora_real_salida: null, hora_real_regreso: null,
+      capitan: null, tripulacion: null, estado: 'programado',
+      cerrado_por: null, cerrado_at: null,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    })
+  })
+
+  const NOMBRES_DEMO = [
+    'Carolina Martínez Ruiz', 'Tomás Herrera Peña', 'Ana Sofía Gómez',
+    'Luis Fernando Cano', 'Marcela Ospina', 'Javier Restrepo Díaz',
+    'Paula Andrea Ríos', 'Santiago Vélez', 'Isabel Cristina Mora',
+  ]
+  deHoy.slice(0, 4).forEach((r, i) => {
+    const cuantos = Math.min(r.adultos, 3)
+    for (let j = 0; j < cuantos; j++) {
+      STORE.pasajeros.push({
+        id: genId(), registro_id: r.id,
+        nombre: NOMBRES_DEMO[(i * 3 + j) % NOMBRES_DEMO.length],
+        tipo_documento: 'cc', documento: String(40000000 + i * 1000 + j),
+        pais_id: 'pa-col', categoria: 'adulto',
+        restriccion_alimentaria: i === 1 && j === 0 ? 'Sin gluten' : null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      })
+    }
+  })
+})()
 
 // ─── Tiempo real simulado ──────────────────────────────────────────────────────
 // Un bus en memoria que imita a Postgres Changes y a Presence, para que el modo
@@ -617,6 +656,30 @@ function diaDe(fecha) {
   return dia
 }
 
+/**
+ * Espeja a la vista estado_embarques de 006: el último evento de cada
+ * persona manda. La clave es el pasajero si lo hay, o el client_id.
+ */
+function derivarEstadoEmbarques() {
+  const ultimo = new Map()
+  ;[...STORE.embarques]
+    .sort((a, b) => new Date(a.ocurrido_at) - new Date(b.ocurrido_at))
+    .forEach(e => {
+      ultimo.set(`${e.zarpe_id}|${e.pasajero_id || e.client_id}`, e)
+    })
+  return [...ultimo.values()].map(e => ({
+    zarpe_id: e.zarpe_id,
+    pasajero_id: e.pasajero_id || null,
+    registro_id: e.registro_id || null,
+    client_id: e.client_id,
+    estado: e.evento,
+    nombre: e.nombre || null,
+    documento: e.documento || null,
+    categoria: e.categoria || null,
+    ocurrido_at: e.ocurrido_at,
+  }))
+}
+
 /** Espeja al trigger registrar_cambio_estado de 003_dia_operativo.sql. */
 function anotarCambioEstado(registro, anterior, nuevo, origen, motivo = null) {
   STORE.cambios_estado.push({
@@ -665,6 +728,75 @@ const RPC = {
     return { data: dia, error: null }
   },
 
+  programar_zarpes({ p_fecha, p_hora = '09:00' }) {
+    const lanchas = [...new Set(
+      STORE.registros
+        .filter(r => r.fecha === p_fecha && !['cancelada', 'noshow'].includes(r.estado))
+        .map(r => r.lancha_id)
+    )]
+    lanchas.forEach(lancha_id => {
+      const ya = STORE.zarpes.some(z =>
+        z.fecha === p_fecha && z.lancha_id === lancha_id && z.sentido === 'ida' && z.hora_programada === p_hora)
+      if (ya) return
+      const z = {
+        id: genId(), fecha: p_fecha, lancha_id, sentido: 'ida',
+        hora_programada: p_hora, hora_real_salida: null, hora_real_regreso: null,
+        capitan: null, tripulacion: null, estado: 'programado',
+        cerrado_por: null, cerrado_at: null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      }
+      STORE.zarpes.push(z)
+      emitirCambio('zarpes', 'INSERT', z)
+    })
+    return { data: STORE.zarpes.filter(z => z.fecha === p_fecha), error: null }
+  },
+
+  cerrar_zarpe({ p_zarpe_id }) {
+    const z = STORE.zarpes.find(x => x.id === p_zarpe_id)
+    if (!z) return { data: null, error: { message: 'No existe ese zarpe' } }
+    if (['zarpado', 'regresado', 'cancelado'].includes(z.estado)) {
+      return { data: null, error: { message: `Ese zarpe ya está ${z.estado}` } }
+    }
+
+    const estados = derivarEstadoEmbarques().filter(e => e.zarpe_id === p_zarpe_id)
+
+    if (z.sentido === 'ida') {
+      z.estado = 'zarpado'
+      z.hora_real_salida = z.hora_real_salida || new Date().toISOString()
+
+      const subieron = new Set(
+        estados.filter(e => ['check_in', 'walk_in'].includes(e.estado) && e.registro_id).map(e => e.registro_id))
+      const noLlegaron = new Set(
+        estados.filter(e => e.estado === 'no_show' && e.registro_id).map(e => e.registro_id))
+
+      STORE.registros
+        .filter(r => r.fecha === z.fecha && ['confirmada', 'tentativa'].includes(r.estado))
+        .forEach(r => {
+          const antes = { ...r }
+          if (subieron.has(r.id)) r.estado = 'en_isla'
+          else if (noLlegaron.has(r.id)) r.estado = 'noshow'
+          if (r.estado !== antes.estado) {
+            anotarCambioEstado(r, antes.estado, r.estado, 'sistema')
+            emitirCambio('registros', 'UPDATE', r, antes)
+          }
+        })
+
+      const dia = STORE.dias_operativos.find(d => d.fecha === z.fecha)
+      if (dia && dia.estado === 'tentativo_cerrado') {
+        dia.estado = 'en_operacion'
+        emitirCambio('dias_operativos', 'UPDATE', dia)
+      }
+    } else {
+      z.estado = 'regresado'
+      z.hora_real_regreso = new Date().toISOString()
+    }
+
+    z.cerrado_por = MOCK_SESSION.user.id
+    z.cerrado_at = new Date().toISOString()
+    emitirCambio('zarpes', 'UPDATE', z)
+    return { data: z, error: null }
+  },
+
   cambiar_estado_manual({ p_registro_id, p_estado, p_motivo }) {
     const reg = STORE.registros.find(r => r.id === p_registro_id)
     if (!reg) return { data: null, error: { message: 'No existe la reserva' } }
@@ -709,6 +841,13 @@ class QB {
   update(data) {
     this._op = 'update'
     this._updatePayload = data
+    return this
+  }
+
+  /** Reenviar la cola del iPad no debe duplicar hechos. */
+  upsert(data, _opciones) {
+    this._op = 'insert'
+    this._insertPayload = Array.isArray(data) ? data : [data]
     return this
   }
 
@@ -777,6 +916,9 @@ class QB {
   }
 
   _getRows() {
+    // La vista estado_embarques no es una tabla: se deriva del último
+    // evento de cada persona, igual que en Postgres.
+    if (this._table === 'estado_embarques') return derivarEstadoEmbarques()
     return STORE[this._table] || []
   }
 
@@ -801,6 +943,12 @@ class QB {
       return rows.map(p => ({
         ...p,
         paises: STORE.paises.find(x => x.id === p.pais_id) || null,
+      }))
+    }
+    if (this._table === 'zarpes') {
+      return rows.map(z => ({
+        ...z,
+        lanchas: STORE.lanchas.find(l => l.id === z.lancha_id) || null,
       }))
     }
     return rows
@@ -832,8 +980,19 @@ class QB {
   }
 
   _run() {
+    // Append-only, igual que los triggers de 006: los embarques no se
+    // corrigen, se registra un evento nuevo.
+    if (this._table === 'embarques' && (this._op === 'update' || this._op === 'delete')) {
+      return { data: null, error: { message: 'Los embarques no se corrigen: se registra un evento nuevo' } }
+    }
+
     if (this._op === 'insert') {
       const inserted = this._insertPayload.map(item => {
+        // client_id único: reenviar la misma cola dos veces no duplica nada.
+        if (this._table === 'embarques' && item.client_id) {
+          const ya = STORE.embarques.find(e => e.client_id === item.client_id)
+          if (ya) return ya
+        }
         const row = {
           ...item,
           id: genId(),

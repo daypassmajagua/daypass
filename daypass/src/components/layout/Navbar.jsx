@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   BarChart2,
+  Anchor,
 } from 'lucide-react'
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Hoy', icon: LayoutDashboard },
   { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
   { to: '/dia', label: 'El día', icon: List },
+  { to: '/embarque', label: 'Embarque', icon: Anchor },
   { to: '/tentativo', label: 'Tentativo', icon: FileText },
   { to: '/folios', label: 'Folios', icon: ClipboardList },
   { to: '/historial', label: 'Historial', icon: History },
