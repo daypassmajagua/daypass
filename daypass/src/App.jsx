@@ -7,6 +7,7 @@ import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
 import Hoy from './pages/Hoy'
 import Reserva from './pages/Reserva'
+import CerrarDia from './pages/CerrarDia'
 import ListadoDia from './pages/ListadoDia'
 import Tentativo from './pages/Tentativo'
 import Folios from './pages/Folios'
@@ -63,6 +64,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Reserva />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cerrar"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CerrarDia />
               </AppLayout>
             </ProtectedRoute>
           }

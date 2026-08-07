@@ -58,9 +58,11 @@ export default function FranjaDia() {
         {ESTADO_DIA_LABELS[estado]}
       </span>
 
+      {/* El sello: cuándo se cerró y quién lo cerró. */}
       {cerradoA && estado !== 'planeando' && (
         <span className="text-[13px] opacity-75 tabular">
           a las {cerradoA}
+          {dia?.cerrado_tentativo_por_nombre && ` por ${dia.cerrado_tentativo_por_nombre}`}
         </span>
       )}
 

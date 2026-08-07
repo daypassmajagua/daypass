@@ -650,6 +650,7 @@ const RPC = {
     dia.estado = 'tentativo_cerrado'
     dia.cerrado_tentativo_at = new Date().toISOString()
     dia.cerrado_tentativo_por = MOCK_SESSION.user.id
+    dia.cerrado_tentativo_por_nombre = MOCK_SESSION.user.user_metadata.full_name
     emitirCambio('dias_operativos', 'UPDATE', dia)
     return { data: dia, error: null }
   },
@@ -659,6 +660,7 @@ const RPC = {
     dia.estado = 'cerrado'
     dia.cerrado_at = new Date().toISOString()
     dia.cerrado_por = MOCK_SESSION.user.id
+    dia.cerrado_por_nombre = MOCK_SESSION.user.user_metadata.full_name
     emitirCambio('dias_operativos', 'UPDATE', dia)
     return { data: dia, error: null }
   },

@@ -42,7 +42,12 @@
       "Bash(perl -i -pe ' *)",
       "Bash(perl -i -pe 's/\\\\xC3\\\\xA2\\\\xC2\\\\x80\\\\xC2\\\\x94/\\\\xE2\\\\x94\\\\x80/g' printDoc.js)",
       "Bash(perl -i -pe 's/\\\\xC3\\\\xA2\\\\xE2\\\\x80\\\\x9D\\\\xE2\\\\x82\\\\xAC/\\\\xE2\\\\x94\\\\x80/g' printDoc.js)",
-      "Bash(perl -i -pe 's/\\\\xC3\\\\xA2\\\\xE2\\\\x82\\\\xAC\\\\xE2\\\\x80\\\\x9D/\\\\xE2\\\\x80\\\\x94/g' printDoc.js)"
+      "Bash(perl -i -pe 's/\\\\xC3\\\\xA2\\\\xE2\\\\x82\\\\xAC\\\\xE2\\\\x80\\\\x9D/\\\\xE2\\\\x80\\\\x94/g' printDoc.js)",
+      "Bash(perl -i -pe 's/^\\\\xEF\\\\xBB\\\\xBF// if $. == 1' printDoc.js)",
+      "Bash(xxd)",
+      "PowerShell($edge = \"C:\\\\Program Files \\(x86\\)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\"; $out = \"C:\\\\Users\\\\ragui\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-ragui-Documents-Claude-Projects-Reservas-DayPASS\\\\c5cc36e3-af4f-4387-b6e7-aa61444873eb\\\\scratchpad\"; & $edge --headless=new --disable-gpu --no-sandbox --virtual-time-budget=9000 --screenshot=\"$out\\\\ux4-cerrar.png\" --window-size=900,1700 \"http://localhost:5174/cerrar\" 2>&1 | Out-Null; \"listo\")",
+      "Bash(perl -i -pe \"s{from './utils'}{from './utils.js'}\" printDoc.js)",
+      "PowerShell([Console]::OutputEncoding = [Text.Encoding]::UTF8; node \"C:\\\\Users\\\\ragui\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-ragui-Documents-Claude-Projects-Reservas-DayPASS\\\\c5cc36e3-af4f-4387-b6e7-aa61444873eb\\\\scratchpad\\\\test-cocina.mjs\")"
     ]
   }
 }

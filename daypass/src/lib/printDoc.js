@@ -1,4 +1,4 @@
-﻿import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils'
+import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils.js'
 
 // ─── Estilos base compartidos ──────────────────────────────────────────────────
 const BASE_CSS = `
@@ -454,6 +454,134 @@ export function buildFoliosHTML(registros, fecha) {
     <div class="footer-right">
       <span class="footer-brand">DayPASS</span> · Hotel San Pedro de Majagua
     </div>
+  </div>
+</div>`
+}
+
+// ─── Conteo de cocina (D-1) ────────────────────────────────────────────────────
+/**
+ * Lo que cocina necesita saber la noche anterior: cuántos almuerzos por plan y
+ * qué restricciones alimentarias vienen. Se imprime en impresoras viejas, así
+ * que la jerarquía no depende del color.
+ *
+ * @param registros Reservas del día, con planes(nombre) resuelto.
+ * @param pasajeros Pasajeros nominales del día, con su restricción si tienen.
+ */
+export function buildCocinaHTML(registros, pasajeros, fecha) {
+  const activos = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
+
+  // Almuerzos por plan. Los infantes no almuerzan; las cortesías sí comen.
+  const porPlan = {}
+  activos.forEach(r => {
+    const nombre = r.planes?.nombre || 'Sin plan'
+    if (!porPlan[nombre]) porPlan[nombre] = { adultos: 0, ninos: 0, cortesias: 0 }
+    porPlan[nombre].adultos   += r.adultos
+    porPlan[nombre].ninos     += r.ninos
+    porPlan[nombre].cortesias += r.cortesias
+  })
+
+  const filas = Object.entries(porPlan).sort((a, b) => {
+    const ta = a[1].adultos + a[1].ninos + a[1].cortesias
+    const tb = b[1].adultos + b[1].ninos + b[1].cortesias
+    return tb - ta
+  })
+
+  const totalAdultos   = activos.reduce((s, r) => s + r.adultos, 0)
+  const totalNinos     = activos.reduce((s, r) => s + r.ninos, 0)
+  const totalCortesias = activos.reduce((s, r) => s + r.cortesias, 0)
+  const totalInfantes  = activos.reduce((s, r) => s + r.infantes, 0)
+  const totalAlmuerzos = totalAdultos + totalNinos + totalCortesias
+
+  const idsActivos = new Set(activos.map(r => r.id))
+  const porRegistro = {}
+  activos.forEach(r => { porRegistro[r.id] = r })
+
+  const restricciones = (pasajeros || [])
+    .filter(p => idsActivos.has(p.registro_id) && (p.restriccion_alimentaria || '').trim())
+    .map(p => {
+      const r = porRegistro[p.registro_id]
+      return {
+        nombre: p.nombre,
+        grupo: r?.nombre_grupo || r?.agencia_nombre || '',
+        lancha: r?.lanchas?.nombre || '',
+        nota: p.restriccion_alimentaria.trim(),
+      }
+    })
+    .sort((a, b) => a.nota.localeCompare(b.nota))
+
+  return `
+<div class="page">
+  <div class="doc-header">
+    <div>
+      <div class="hotel-name">Hotel San Pedro de Majagua</div>
+      <div class="hotel-sub">Islas del Rosario · Cartagena</div>
+    </div>
+    <div>
+      <div class="doc-title">CONTEO DE COCINA</div>
+      <div class="doc-date">${esc(formatDate(fecha))}</div>
+      <div class="doc-stamp">Generado ${now()}</div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="stat"><span class="stat-value">${totalAlmuerzos}</span><span class="stat-label">Almuerzos</span></div>
+    <div class="stat"><span class="stat-value">${totalAdultos}</span><span class="stat-label">Adultos</span></div>
+    <div class="stat"><span class="stat-value">${totalNinos}</span><span class="stat-label">Niños</span></div>
+    <div class="stat"><span class="stat-value">${totalCortesias}</span><span class="stat-label">Cortesías</span></div>
+    <div class="stat"><span class="stat-value">${totalInfantes}</span><span class="stat-label">Infantes</span></div>
+  </div>
+
+  <div class="section-title">Almuerzos por plan</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Plan</th>
+          <th style="text-align:center">Adultos</th>
+          <th style="text-align:center">Niños</th>
+          <th style="text-align:center">Cortesías</th>
+          <th style="text-align:center">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filas.map(([plan, c]) => `
+        <tr>
+          <td style="font-weight:700">${esc(plan)}</td>
+          <td style="text-align:center">${c.adultos || '—'}</td>
+          <td style="text-align:center">${c.ninos || '—'}</td>
+          <td style="text-align:center">${c.cortesias || '—'}</td>
+          <td style="text-align:center; font-weight:800">${c.adultos + c.ninos + c.cortesias}</td>
+        </tr>`).join('')}
+        <tr>
+          <td style="font-weight:800; border-top:2px solid #1e2045">TOTAL</td>
+          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalAdultos}</td>
+          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalNinos}</td>
+          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalCortesias}</td>
+          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalAlmuerzos}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:10.5px; color:#6b7280; margin-top:6px">
+    Los infantes menores de 3 años no cuentan como almuerzo. Las cortesías sí comen.
+  </p>
+
+  ${restricciones.length ? `
+  <div class="warning-box">
+    <div class="warning-title">RESTRICCIONES ALIMENTARIAS — ${restricciones.length} ${restricciones.length === 1 ? 'persona' : 'personas'}</div>
+    ${restricciones.map(r => `
+      <div class="warning-row">
+        <strong>${esc(r.nota.toUpperCase())}</strong> · ${esc(r.nombre)}${r.grupo ? ` (${esc(r.grupo)})` : ''}${r.lancha ? ` · ${esc(r.lancha)}` : ''}
+      </div>`).join('')}
+  </div>` : `
+  <div class="section-title">Restricciones alimentarias</div>
+  <p style="font-size:11.5px; color:#374151">
+    Ninguna reportada. Ojo: solo aparecen las de pasajeros con nombre cargado.
+  </p>`}
+
+  <div class="doc-footer">
+    <div class="footer-left">Conteo del día anterior · confirmar cambios de última hora con la oficina</div>
+    <div class="footer-right"><span class="footer-brand">DayPASS</span> · Hotel San Pedro de Majagua</div>
   </div>
 </div>`
 }
