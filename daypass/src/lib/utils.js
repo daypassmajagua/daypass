@@ -57,6 +57,40 @@ export function plural(n, singular, plural) {
   return `${n} ${n === 1 ? singular : plural}`
 }
 
+/**
+ * Cómo nombra la asesora un día: "hoy", "mañana", o la fecha.
+ * El 95% del trabajo vive entre hoy y mañana.
+ */
+export function diaRelativo(fecha) {
+  const hoy = hoyLocal()
+  const [y, m, d] = hoy.split('-').map(Number)
+  const manana = aFechaLocal(new Date(y, m - 1, d + 1))
+  const ayer = aFechaLocal(new Date(y, m - 1, d - 1))
+
+  if (fecha === hoy) return { clave: 'hoy', etiqueta: 'Hoy' }
+  if (fecha === manana) return { clave: 'manana', etiqueta: 'Mañana' }
+  if (fecha === ayer) return { clave: 'ayer', etiqueta: 'Ayer' }
+  return { clave: 'otro', etiqueta: null }
+}
+
+/** "hoy viernes 7 de agosto" · "mañana sábado 8 de agosto" · "el 12 de agosto" */
+export function fraseFecha(fecha) {
+  const { clave, etiqueta } = diaRelativo(fecha)
+  const date = new Date(fecha + 'T00:00:00')
+  const largo = new Intl.DateTimeFormat('es-CO', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  }).format(date)
+  if (clave === 'otro') return `El ${largo}`
+  return `${etiqueta} ${largo}`
+}
+
+export function hora12(iso) {
+  if (!iso) return null
+  return new Date(iso).toLocaleTimeString('es-CO', {
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  })
+}
+
 // Lenguaje de la operación, no de la base de datos: en pantalla nunca
 // aparece "noshow" ni "en_isla".
 export const ESTADO_LABELS = {

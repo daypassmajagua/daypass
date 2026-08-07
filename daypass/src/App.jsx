@@ -5,7 +5,7 @@ import { useSincronizarDia, usePresencia } from './hooks/useDiaOperativo'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
+import Hoy from './pages/Hoy'
 import NuevoRegistro from './pages/NuevoRegistro'
 import ListadoDia from './pages/ListadoDia'
 import Tentativo from './pages/Tentativo'
@@ -42,7 +42,7 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <Dashboard />
+                <Hoy />
               </AppLayout>
             </ProtectedRoute>
           }
