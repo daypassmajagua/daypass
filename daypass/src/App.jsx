@@ -6,7 +6,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
 import Hoy from './pages/Hoy'
-import NuevoRegistro from './pages/NuevoRegistro'
+import Reserva from './pages/Reserva'
 import ListadoDia from './pages/ListadoDia'
 import Tentativo from './pages/Tentativo'
 import Folios from './pages/Folios'
@@ -52,7 +52,7 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <NuevoRegistro />
+                <Reserva />
               </AppLayout>
             </ProtectedRoute>
           }
@@ -62,7 +62,7 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <NuevoRegistro />
+                <Reserva />
               </AppLayout>
             </ProtectedRoute>
           }
