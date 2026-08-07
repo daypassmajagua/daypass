@@ -84,6 +84,19 @@ export function fraseFecha(fecha) {
   return `${etiqueta} ${largo}`
 }
 
+/**
+ * Los campos vacíos del formulario llegan como '' y Postgres no acepta
+ * cadena vacía en una columna uuid ni en una con lista de valores: hay que
+ * mandar null. En modo demo esto no se nota porque el mock no valida tipos.
+ */
+export function limpiarVacios(obj) {
+  const salida = {}
+  for (const [clave, valor] of Object.entries(obj)) {
+    salida[clave] = typeof valor === 'string' && valor.trim() === '' ? null : valor
+  }
+  return salida
+}
+
 export function hora12(iso) {
   if (!iso) return null
   return new Date(iso).toLocaleTimeString('es-CO', {

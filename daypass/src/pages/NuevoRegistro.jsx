@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 import { useTemporada } from '../hooks/useTemporada'
 import { usePasajeros, guardarPasajeros } from '../hooks/usePasajeros'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
-import { formatCurrency, FORMA_PAGO_LABELS } from '../lib/utils'
+import { formatCurrency, limpiarVacios, FORMA_PAGO_LABELS } from '../lib/utils'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
@@ -149,12 +149,12 @@ export default function NuevoRegistro() {
     const { data: sessionData } = await supabase.auth.getSession()
     const userId = sessionData?.session?.user?.id
 
-    const payload = {
+    const payload = limpiarVacios({
       ...data,
       temporada: temporada || 'baja',
       generada_por: userId,
       nombre_grupo: data.tipo === 'grupo' ? data.nombre_grupo : null,
-    }
+    })
 
     let error
     let registroId = id
