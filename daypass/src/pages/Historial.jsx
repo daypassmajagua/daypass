@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatCurrency, formatDateShort, todayISO, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
+import { formatCurrency, formatDateShort, hoyLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -77,7 +77,7 @@ export default function Historial() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `daypass_historial_${todayISO()}.csv`
+    a.download = `daypass_historial_${hoyLocal()}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }

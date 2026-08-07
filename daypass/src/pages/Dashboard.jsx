@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { formatCurrency, formatDate, todayISO } from '../lib/utils'
+import { formatCurrency, formatDate, hoyLocal, aFechaLocal } from '../lib/utils'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
 import Button from '../components/ui/Button'
@@ -85,12 +85,12 @@ export default function Dashboard() {
   function prevDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() - 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
   function nextDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() + 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
 
   return (
@@ -114,8 +114,8 @@ export default function Dashboard() {
                 <ChevronRight size={16} />
               </button>
             </div>
-            {fechaActiva !== todayISO() && (
-              <Button variant="ghost" size="sm" onClick={() => setFechaActiva(todayISO())}>
+            {fechaActiva !== hoyLocal() && (
+              <Button variant="ghost" size="sm" onClick={() => setFechaActiva(hoyLocal())}>
                 Hoy
               </Button>
             )}

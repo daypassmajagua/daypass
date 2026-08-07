@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Copy, CheckCircle2, ChevronLeft, ChevronRight, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
+import { formatDate, aFechaLocal, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
 import { openPrintWindow, buildFoliosHTML } from '../lib/printDoc'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -91,12 +91,12 @@ export default function Folios() {
   function prevDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() - 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
   function nextDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() + 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
 
   return (

@@ -8,7 +8,7 @@ import {
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import {
-  formatCurrency, formatDate, todayISO,
+  formatCurrency, formatDate, aFechaLocal,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
 } from '../lib/utils'
 import Badge from '../components/ui/Badge'
@@ -96,12 +96,12 @@ export default function ListadoDia() {
   function prevDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() - 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
   function nextDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() + 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
 
   const totalPax = filtered

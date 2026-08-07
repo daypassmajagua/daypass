@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { todayISO } from '../lib/utils'
+import { hoyLocal } from '../lib/utils'
 
 const useAppStore = create((set) => ({
-  fechaActiva: todayISO(),
+  fechaActiva: hoyLocal(),
   setFechaActiva: (fecha) => set({ fechaActiva: fecha }),
 
   filtroLancha: '',

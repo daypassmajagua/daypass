@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { formatCurrency, formatDateShort, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
+import { formatCurrency, formatDateShort, aFechaLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -48,7 +48,7 @@ function CurrencyTooltip({ active, payload, label }) {
 
 function getPreset(preset) {
   const today = new Date()
-  const fmt = d => d.toISOString().split('T')[0]
+  const fmt = aFechaLocal
   if (preset === '7d')  { const f = new Date(today); f.setDate(f.getDate() - 6);  return { from: fmt(f), to: fmt(today) } }
   if (preset === '15d') { const f = new Date(today); f.setDate(f.getDate() - 14); return { from: fmt(f), to: fmt(today) } }
   if (preset === '30d') { const f = new Date(today); f.setDate(f.getDate() - 29); return { from: fmt(f), to: fmt(today) } }

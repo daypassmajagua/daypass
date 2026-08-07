@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Copy, RefreshCw, ChevronLeft, ChevronRight, Printer } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { formatDate, todayISO } from '../lib/utils'
+import { formatDate, aFechaLocal } from '../lib/utils'
 import { openPrintWindow, buildTentativoHTML } from '../lib/printDoc'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -108,12 +108,12 @@ export default function Tentativo() {
   function prevDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() - 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
   function nextDay() {
     const d = new Date(fechaActiva + 'T00:00:00')
     d.setDate(d.getDate() + 1)
-    setFechaActiva(d.toISOString().split('T')[0])
+    setFechaActiva(aFechaLocal(d))
   }
 
   return (

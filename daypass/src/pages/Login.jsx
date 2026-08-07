@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, isMock } from '../lib/supabase'
 import { toast } from 'sonner'
 import { Waves, Eye, EyeOff } from 'lucide-react'
 import Button from '../components/ui/Button'
@@ -36,6 +36,13 @@ export default function Login() {
             <h1 className="text-2xl font-bold text-gray-900">DayPASS</h1>
             <p className="text-sm text-gray-500 mt-1">Hotel San Pedro de Majagua</p>
           </div>
+
+          {isMock && (
+            <div className="mb-4 rounded-lg bg-amber-50 border border-amber-300 px-3 py-2 text-xs text-amber-800 text-center">
+              <span className="font-bold uppercase">Modo demo</span> — datos de muestra, sin conexión a Supabase.
+              Cualquier credencial funciona.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input

@@ -1,4 +1,4 @@
-import { todayISO } from './utils'
+import { hoyLocal, aFechaLocal } from './utils'
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ function joinRegistro(r) {
 function daysAgo(n) {
   const d = new Date()
   d.setDate(d.getDate() - n)
-  return d.toISOString().split('T')[0]
+  return aFechaLocal(d)
 }
 
 // ─── Generador de histórico ────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ function generateHistorico() {
 // ─── Registros de muestra ─────────────────────────────────────────────────────
 
 function buildRegistros() {
-  const hoy = todayISO()
+  const hoy = hoyLocal()
   return [
     // ── HOY ──
     {

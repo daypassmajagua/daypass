@@ -29,9 +29,23 @@ export function formatDateShort(dateStr) {
   }).format(date)
 }
 
-export function todayISO() {
-  const now = new Date()
-  return now.toISOString().split('T')[0]
+// ─── Fechas de calendario ──────────────────────────────────────────────────────
+// Toda fecha de calendario en este proyecto es hora de Colombia (UTC−5), que es
+// la hora local de los dispositivos de la operación. NUNCA derivar una fecha con
+// toISOString(): devuelve UTC, y entre las 19:00 y medianoche hora local ya va
+// en el día siguiente — justo la ventana en la que se cierra el tentativo.
+
+/** Convierte un Date a 'YYYY-MM-DD' usando la fecha local del dispositivo. */
+export function aFechaLocal(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/** Fecha de hoy en 'YYYY-MM-DD', hora local del dispositivo. */
+export function hoyLocal() {
+  return aFechaLocal(new Date())
 }
 
 export function classNames(...classes) {
