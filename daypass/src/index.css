@@ -1,23 +1,23 @@
 @import "tailwindcss";
+/* Manrope auto-alojada (no CDN): el muelle y la isla operan sin señal. */
+@import "@fontsource-variable/manrope";
 
-/* ─── Paleta de marca ─────────────────────────────────────────────────────────
-   Azul tomado del logo del Hotel San Pedro de Majagua (LogoAzul.png): #1E2045.
-   Se sobreescribe la escala `blue` de Tailwind para que TODA la app use el
-   navy de marca sin tocar las clases existentes. `brand` es un alias de la
-   misma escala para uso explícito en componentes nuevos. */
+/* ─── Sistema visual DayPASS v2 ───────────────────────────────────────────────
+   Aprobado 2026-08-07. Reglas de color que no se rompen:
+     · coral  → SOLO pendiente y tardío (único acento)
+     · verde  → SOLO cerrado y guardado
+     · rojo   → error real y sobrecupo
+     · arena  → solo series de datos en gráficas e impresos, nunca estados
+   La escala `blue` de Tailwind se sobreescribe con el color de acción para que
+   el código existente herede el sistema; `brand` es el navy de marca del logo. */
 @theme {
-  --color-blue-50: #f4f5fa;
-  --color-blue-100: #e8eaf4;
-  --color-blue-200: #cdd1e6;
-  --color-blue-300: #a6accf;
-  --color-blue-400: #7a82b3;
-  --color-blue-500: #545d97;
-  --color-blue-600: #3f477c;
-  --color-blue-700: #313763;
-  --color-blue-800: #272b51;
-  --color-blue-900: #1e2045;
-  --color-blue-950: #131427;
+  /* Fondo y tinta */
+  --color-fondo: #f8f8f6;
+  --color-linea: #ececE8;
+  --color-tinta: #16182c;
+  --color-tinta-2: #62667a;
 
+  /* Marca — estructura (navbar, franja del día, login) */
   --color-brand-50: #f4f5fa;
   --color-brand-100: #e8eaf4;
   --color-brand-200: #cdd1e6;
@@ -30,11 +30,44 @@
   --color-brand-900: #1e2045;
   --color-brand-950: #131427;
 
-  /* Dorado del LogoCafe, como acento secundario */
+  /* Acción — el navy encendido. Sobreescribe `blue` de Tailwind. */
+  --color-blue-50: #eef0fe;
+  --color-blue-100: #e1e4fc;
+  --color-blue-200: #c6ccf9;
+  --color-blue-300: #a2abf4;
+  --color-blue-400: #7b87ee;
+  --color-blue-500: #4a5ae8;
+  --color-blue-600: #4a5ae8;
+  --color-blue-700: #3a49d6;
+  --color-blue-800: #2f3bad;
+  --color-blue-900: #1e2045;
+  --color-blue-950: #131427;
+
+  /* Coral — SOLO pendiente y tardío */
+  --color-coral-50: #fdede8;
+  --color-coral-100: #fbdcd3;
+  --color-coral-400: #e4573d;
+  --color-coral-500: #d84a30;
+  --color-coral-600: #c13a22;
+  --color-coral-700: #9e2f1c;
+
+  /* Verde — SOLO cerrado y guardado */
+  --color-verde-50: #e5f6ee;
+  --color-verde-100: #cceede;
+  --color-verde-500: #12915e;
+  --color-verde-600: #0f7d51;
+  --color-verde-700: #0b6340;
+
+  /* Arena (LogoCafe) — solo datos */
   --color-arena-100: #f5eddc;
   --color-arena-300: #ddc294;
   --color-arena-500: #b5904d;
   --color-arena-700: #8a6a33;
+
+  --font-sans: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
+
+  --radius-control: 12px;
+  --radius-tarjeta: 16px;
 }
 
 * {
@@ -43,16 +76,44 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
 }
 
 #root {
   min-height: 100vh;
 }
 
+/* Los números son el contenido principal de esta app: siempre en columna. */
+.tabular,
+table,
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Piso de calidad: foco visible en todo control, del color de acción. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-blue-600) 40%, transparent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Los documentos se imprimen en impresoras viejas: jerarquía sin depender del color. */
 @media print {
   header, nav, .print\:hidden { display: none !important; }
   body { background: white; }
-  .bg-gray-50 { background: white !important; }
+  .bg-gray-50, .bg-fondo { background: white !important; }
 }

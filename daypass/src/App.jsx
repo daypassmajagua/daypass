@@ -14,7 +14,7 @@ import Config from './pages/Config'
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-fondo">
       <Navbar />
       <main className="py-2">
         {children}

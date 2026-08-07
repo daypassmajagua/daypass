@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,6 +6,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { useTemporada } from '../hooks/useTemporada'
+import { usePasajeros, guardarPasajeros } from '../hooks/usePasajeros'
+import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
 import { formatCurrency, FORMA_PAGO_LABELS } from '../lib/utils'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -59,6 +61,10 @@ export default function NuevoRegistro() {
   const [agencias, setAgencias] = useState([])
   const [loadingCatalogs, setLoadingCatalogs] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // Los nombres viven junto a la reserva; en una nueva se trabajan en memoria
+  // y se guardan al crearla.
+  const { pasajeros, setPasajeros } = usePasajeros(id)
 
   const {
     register,
@@ -151,19 +157,39 @@ export default function NuevoRegistro() {
     }
 
     let error
+    let registroId = id
     if (isEdit) {
       const res = await supabase.from('registros').update(payload).eq('id', id)
       error = res.error
     } else {
-      const res = await supabase.from('registros').insert(payload)
+      const res = await supabase.from('registros').insert(payload).select().single()
       error = res.error
+      registroId = res.data?.id
+    }
+
+    if (!error && registroId) {
+      const res = await guardarPasajeros(registroId, pasajeros)
+      if (res.error) {
+        toast.error(
+          'La reserva quedó guardada, pero los nombres no. Vuelve a intentarlo desde la reserva.'
+        )
+      }
     }
 
     if (error) {
-      toast.error('Error al guardar: ' + error.message)
+      toast.error('No se pudo guardar la reserva. ' + error.message)
     } else {
-      toast.success(isEdit ? 'Registro actualizado' : 'Pasadía registrado correctamente')
+      const lancha = lanchas.find(l => l.id === data.lancha_id)?.nombre
+      const pax = (Number(data.adultos) || 0) + (Number(data.ninos) || 0)
+      const quien = data.agencia_nombre?.trim() || data.nombre_pasajero
+      toast.success(
+        isEdit
+          ? `Reserva de ${quien} actualizada`
+          : `Reserva de ${quien} guardada — ${pax} pax${lancha ? ' en ' + lancha : ''}`
+      )
       if (!isEdit) {
+        // Ella carga reservas en tanda: el formulario queda listo para la siguiente.
+        setPasajeros([])
         reset({
           fecha: data.fecha,
           tipo: 'individual',
@@ -184,8 +210,8 @@ export default function NuevoRegistro() {
 
   if (loadingCatalogs) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-center text-gray-400 text-sm">
-        Cargando catálogos...
+      <div className="max-w-2xl mx-auto px-4 py-8 text-center text-tinta-2 text-sm">
+        Cargando lanchas, planes y tarifas...
       </div>
     )
   }
@@ -394,13 +420,33 @@ export default function NuevoRegistro() {
           </div>
 
           {/* Total */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <div className="bg-blue-50 rounded-xl px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-blue-700">
               <Calculator size={18} />
-              <span className="text-sm font-medium">Total calculado</span>
+              <span className="text-sm font-bold">Total</span>
             </div>
-            <span className="text-xl font-bold text-blue-800">{formatCurrency(totalCalculado)}</span>
+            <span className="text-xl font-bold text-blue-700 tabular">{formatCurrency(totalCalculado)}</span>
           </div>
+        </Card>
+
+        {/* Pasajeros con nombre propio */}
+        <Card className="p-4 flex flex-col gap-4">
+          <div>
+            <h3 className="text-sm font-bold">Pasajeros</h3>
+            <p className="text-sm text-tinta-2">
+              Los nombres de quienes viajan. Puedes dejarlos para después.
+            </p>
+          </div>
+          <SeccionPasajeros
+            plan={{
+              adultos: adultosValue, ninos: ninosValue,
+              infantes: Number(watch('infantes')) || 0,
+              cortesias: Number(watch('cortesias')) || 0,
+            }}
+            pasajeros={pasajeros}
+            onChange={setPasajeros}
+            paises={paises}
+          />
         </Card>
 
         {/* Pago e impuestos */}

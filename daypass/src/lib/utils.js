@@ -52,22 +52,26 @@ export function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// Lenguaje de la operación, no de la base de datos: en pantalla nunca
+// aparece "noshow" ni "en_isla".
 export const ESTADO_LABELS = {
   tentativa: 'Tentativa',
   confirmada: 'Confirmada',
-  en_isla: 'En Isla',
+  en_isla: 'En la isla',
   completada: 'Completada',
-  noshow: 'No Show',
+  noshow: 'No llegó',
   cancelada: 'Cancelada',
 }
 
+// Un color fijo por estado, idéntico en tablas, gráficas y documentos:
+// la asesora aprende el código una sola vez.
 export const ESTADO_COLORS = {
-  tentativa: 'bg-gray-100 text-gray-600',
-  confirmada: 'bg-blue-100 text-blue-700',
-  en_isla: 'bg-green-100 text-green-700',
-  completada: 'bg-emerald-100 text-emerald-800',
-  noshow: 'bg-orange-100 text-orange-700',
-  cancelada: 'bg-red-100 text-red-700',
+  tentativa: 'bg-[#ececE8] text-tinta-2',
+  confirmada: 'bg-blue-50 text-blue-700',
+  en_isla: 'bg-[#e7f3fb] text-[#1d6fa5]',
+  completada: 'bg-verde-50 text-verde-500',
+  noshow: 'bg-coral-50 text-coral-600',
+  cancelada: 'bg-[#fce9e8] text-[#d2322d]',
 }
 
 export const FORMA_PAGO_LABELS = {

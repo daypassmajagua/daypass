@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, formatDateShort, hoyLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
@@ -101,7 +101,7 @@ export default function Historial() {
 
       {/* Filtros */}
       <Card className="p-4 mb-5">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
           <div className="relative lg:col-span-2">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -136,6 +136,14 @@ export default function Historial() {
             options={[
               { value: '', label: 'Todas las lanchas' },
               ...lanchas.map(l => ({ value: l.id, label: l.nombre })),
+            ]}
+          />
+          <Select
+            value={filtroCanal}
+            onChange={v => { setFiltroCanal(v); setPage(0) }}
+            options={[
+              { value: '', label: 'Todos los canales' },
+              ...canales.map(c => ({ value: c.id, label: c.nombre })),
             ]}
           />
         </div>

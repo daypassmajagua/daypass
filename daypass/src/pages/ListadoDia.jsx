@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   PlusCircle, Edit2, Trash2,
@@ -8,9 +8,10 @@ import {
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import {
-  formatCurrency, formatDate,
+  formatCurrency, formatDate, classNames,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
 } from '../lib/utils'
+import { contarPorRegistro } from '../hooks/usePasajeros'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -18,9 +19,31 @@ import Modal from '../components/ui/Modal'
 import Select from '../components/ui/Select'
 import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
-import { supabase } from '../lib/supabase'
 
 const ESTADOS = ['tentativa', 'confirmada', 'en_isla', 'completada', 'noshow', 'cancelada']
+
+/**
+ * Cuántos nombres tiene la reserva contra lo planeado. Coral cuando faltan:
+ * es un pendiente, no un error — los listados llegan tarde y eso es normal.
+ */
+function ContadorNombres({ registro, conteo }) {
+  const plan = registro.adultos + registro.ninos + registro.infantes + registro.cortesias
+  if (conteo >= plan && plan > 0) {
+    return <span className="text-verde-500 font-bold text-xs tabular">{conteo}/{plan}</span>
+  }
+  return (
+    <Link
+      to={`/editar/${registro.id}`}
+      className={classNames(
+        'inline-block rounded-lg px-2 py-0.5 text-xs font-bold tabular',
+        conteo === 0 ? 'bg-coral-50 text-coral-600' : 'bg-coral-50 text-coral-600'
+      )}
+      title="Agregar los nombres de esta reserva"
+    >
+      {conteo}/{plan}
+    </Link>
+  )
+}
 
 export default function ListadoDia() {
   const navigate = useNavigate()
@@ -31,11 +54,19 @@ export default function ListadoDia() {
     filtroCanal, setFiltroCanal,
   } = useAppStore()
 
-  const { registros, loading, updateRegistro, deleteRegistro, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, updateRegistro, deleteRegistro } = useRegistros(fechaActiva)
 
   const [editingFolio, setEditingFolio] = useState({})
   const [deletingId, setDeletingId] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
+  const [nombres, setNombres] = useState({})
+
+  useEffect(() => {
+    let vigente = true
+    contarPorRegistro(registros.map(r => r.id))
+      .then(conteo => { if (vigente) setNombres(conteo) })
+    return () => { vigente = false }
+  }, [registros])
 
   const lanchas = useMemo(() => {
     const map = {}
@@ -197,6 +228,7 @@ export default function ListadoDia() {
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pasajero</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
                         <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pax</th>
+                        <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Nombres</th>
                         <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pago</th>
                         <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Imp.</th>
@@ -222,6 +254,9 @@ export default function ListadoDia() {
                           <td className="px-3 py-3 text-center">
                             <span className="font-medium">{r.adultos}</span>
                             {r.ninos > 0 && <span className="text-gray-400 text-xs ml-1">+{r.ninos}n</span>}
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <ContadorNombres registro={r} conteo={nombres[r.id] || 0} />
                           </td>
                           <td className="px-3 py-3 text-right font-medium text-gray-900">
                             {formatCurrency(r.total_calculado)}

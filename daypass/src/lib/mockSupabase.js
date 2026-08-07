@@ -507,6 +507,7 @@ const STORE = {
   agencias:   [...AGENCIAS],
   clientes:   [],
   registros:  buildRegistros(),
+  pasajeros:  [],
 }
 
 // ─── Query Builder ─────────────────────────────────────────────────────────────
@@ -557,6 +558,12 @@ class QB {
 
   neq(col, val) {
     this._filters.push(r => String(r[col]) !== String(val))
+    return this
+  }
+
+  in(col, valores) {
+    const set = new Set((valores || []).map(String))
+    this._filters.push(r => set.has(String(r[col])))
     return this
   }
 
@@ -618,8 +625,21 @@ class QB {
   }
 
   _joinIfRegistros(rows) {
-    if (this._table !== 'registros') return rows
-    return rows.map(joinRegistro)
+    if (this._table === 'registros') return rows.map(joinRegistro)
+    if (this._table === 'pasajeros') {
+      return rows.map(p => ({
+        ...p,
+        paises: STORE.paises.find(x => x.id === p.pais_id) || null,
+      }))
+    }
+    return rows
+  }
+
+  /** ON DELETE CASCADE de pasajeros: lo hace Postgres, aquí se imita. */
+  _cascadeDelete(borrados) {
+    if (this._table !== 'registros') return
+    const ids = new Set(borrados.map(r => r.id))
+    STORE.pasajeros = STORE.pasajeros.filter(p => !ids.has(p.registro_id))
   }
 
   _run() {
@@ -657,8 +677,10 @@ class QB {
 
     if (this._op === 'delete') {
       const rows = this._getRows()
-      const toDelete = new Set(this._applyFilters(rows).map(r => r.id))
+      const borrados = this._applyFilters(rows)
+      const toDelete = new Set(borrados.map(r => r.id))
       STORE[this._table] = rows.filter(r => !toDelete.has(r.id))
+      this._cascadeDelete(borrados)
       return { data: null, error: null }
     }
 

@@ -43,7 +43,7 @@ export default function Navbar() {
   return (
     <>
       {/* Top bar */}
-      <header className="bg-blue-700 text-white sticky top-0 z-40 shadow-md">
+      <header className="bg-gradient-to-r from-brand-900 via-[#2b3170] to-[#34418f] text-white sticky top-0 z-40 shadow-[0_4px_20px_rgba(30,32,69,.18)]">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
           <div className="flex items-center gap-2.5">
             <img src={logoBlanco} alt="Hotel San Pedro de Majagua" className="h-10 w-auto" />
@@ -63,10 +63,10 @@ export default function Navbar() {
                 key={to}
                 to={to}
                 className={classNames(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-sm font-semibold transition-colors',
                   location.pathname === to
                     ? 'bg-white/20 text-white'
-                    : 'text-blue-100 hover:bg-white/10'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 )}
               >
                 <Icon size={16} />

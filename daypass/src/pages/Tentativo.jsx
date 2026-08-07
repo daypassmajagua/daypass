@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { toast } from 'sonner'
 import { Copy, RefreshCw, Printer } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
@@ -16,10 +16,6 @@ export default function Tentativo() {
 
   const activos = useMemo(() =>
     registros.filter(r => !['cancelada', 'noshow'].includes(r.estado)),
-    [registros]
-  )
-  const confirmados = useMemo(() =>
-    registros.filter(r => ['confirmada', 'en_isla', 'completada'].includes(r.estado)),
     [registros]
   )
   const tentativas = useMemo(() =>

@@ -77,6 +77,7 @@ export default function Informes() {
 
   // Catálogos para los dropdowns de filtro (extraídos de los datos cargados)
   const [cats, setCats] = useState({ canales: [], lanchas: [], planes: [], asesoras: [] })
+  const [pasajeros, setPasajeros] = useState([])
 
   useEffect(() => { fetchData() }, [fechaDesde, fechaHasta])
 
@@ -84,12 +85,24 @@ export default function Informes() {
     setLoading(true)
     const { data } = await supabase
       .from('registros')
-      .select('*, lanchas(id,nombre), planes(id,nombre,categoria), canales(id,codigo,nombre)')
+      .select('*, lanchas(id,nombre), planes(id,nombre,categoria), canales(id,codigo,nombre), paises(id,codigo,nombre)')
       .gte('fecha', fechaDesde)
       .lte('fecha', fechaHasta)
       .order('fecha', { ascending: true })
     const rows = data || []
     setRegistros(rows)
+
+    // Origen: el país de cada pasajero con nombre propio manda sobre el de la
+    // reserva. Solo se cae al de la reserva cuando esa reserva no tiene nombres.
+    if (rows.length) {
+      const { data: pax } = await supabase
+        .from('pasajeros')
+        .select('registro_id, pais_id, paises (id, codigo, nombre)')
+        .in('registro_id', rows.map(r => r.id))
+      setPasajeros(pax || [])
+    } else {
+      setPasajeros([])
+    }
 
     // Construir catálogos únicos desde los datos
     const canalesMap = {}, lanchasMap = {}, planesMap = {}, asesoras = new Set()
@@ -228,6 +241,42 @@ export default function Informes() {
     return Object.entries(map).map(([name, value]) => ({ name, value }))
       .sort((a,b) => b.value - a.value)
   }, [activos])
+
+  /**
+   * De dónde viene la gente. Prioridad: el país del pasajero nominal; si la
+   * reserva no tiene nombres cargados, se usa el país de la reserva y sus pax.
+   */
+  const porOrigen = useMemo(() => {
+    const activosIds = new Set(activos.map(r => r.id))
+    const conNombres = new Set()
+    const map = {}
+
+    pasajeros.forEach(p => {
+      if (!activosIds.has(p.registro_id)) return
+      conNombres.add(p.registro_id)
+      const nombre = p.paises?.nombre || 'Sin especificar'
+      map[nombre] = (map[nombre] || 0) + 1
+    })
+
+    activos.forEach(r => {
+      if (conNombres.has(r.id)) return
+      const nombre = r.paises?.nombre || 'Sin especificar'
+      map[nombre] = (map[nombre] || 0) + r.adultos + r.ninos
+    })
+
+    return Object.entries(map)
+      .map(([pais, Pasajeros]) => ({ pais, Pasajeros }))
+      .sort((a, b) => b.Pasajeros - a.Pasajeros)
+      .slice(0, 8)
+  }, [activos, pasajeros])
+
+  const cobertura = useMemo(() => {
+    const activosIds = new Set(activos.map(r => r.id))
+    const conNombres = new Set(
+      pasajeros.filter(p => activosIds.has(p.registro_id)).map(p => p.registro_id)
+    )
+    return { conNombres: conNombres.size, total: activos.length }
+  }, [activos, pasajeros])
 
   const tablaDia = useMemo(() =>
     porDia.map(d => ({
@@ -570,6 +619,31 @@ export default function Informes() {
               </ResponsiveContainer>
             </Card>
           </div>
+
+          {/* ── De dónde viene la gente ── */}
+          {porOrigen.length > 0 && (
+            <Card className="p-5 mb-6">
+              <div className="flex items-baseline justify-between gap-3 flex-wrap mb-4">
+                <h2 className="text-sm font-semibold text-gray-700">De dónde viene la gente</h2>
+                <span className="text-xs text-tinta-2">
+                  {cobertura.conNombres > 0
+                    ? `${cobertura.conNombres} de ${cobertura.total} reservas con nombres cargados — esas cuentan persona por persona`
+                    : 'Contado por reserva: todavía no hay nombres cargados en este rango'}
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={Math.max(180, porOrigen.length * 34)}>
+                <BarChart data={porOrigen} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <YAxis type="category" dataKey="pais" width={130} tick={{ fontSize: 11, fill: '#6b7280' }} />
+                  <Tooltip content={<CurrencyTooltip />} />
+                  <Bar dataKey="Pasajeros" radius={[0, 4, 4, 0]}>
+                    {porOrigen.map((_, i) => <Cell key={i} fill={C[i % C.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Card>
+          )}
 
           {/* ── Lanchas + Tipo + Forma de pago ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
