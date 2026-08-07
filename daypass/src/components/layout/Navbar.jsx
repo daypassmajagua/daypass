@@ -19,11 +19,11 @@ import { classNames } from '../../lib/utils'
 import logoBlanco from '../../assets/logo-blanco.png'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/', label: 'Hoy', icon: LayoutDashboard },
   { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
-  { to: '/dia', label: 'Listado del día', icon: List },
+  { to: '/dia', label: 'El día', icon: List },
   { to: '/tentativo', label: 'Tentativo', icon: FileText },
-  { to: '/folios', label: 'Folios Zeus', icon: ClipboardList },
+  { to: '/folios', label: 'Folios', icon: ClipboardList },
   { to: '/historial', label: 'Historial', icon: History },
   { to: '/informes', label: 'Informes', icon: BarChart2 },
   { to: '/config', label: 'Configuración', icon: Settings },
@@ -57,7 +57,7 @@ export default function Navbar() {
             </button>
             <img src={logoBlanco} alt="Hotel San Pedro de Majagua" className="h-10 w-auto shrink-0" />
             <span className="font-bold text-lg tracking-tight">DayPASS</span>
-            <span className="hidden xl:block text-white/60 text-sm ml-1 truncate">
+            <span className="hidden 2xl:block text-white/60 text-sm ml-1 truncate">
               · Hotel San Pedro de Majagua
             </span>
             {isMock && (
@@ -73,7 +73,7 @@ export default function Navbar() {
                 key={to}
                 to={to}
                 className={classNames(
-                  'flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-sm font-semibold transition-colors',
+                  'flex items-center gap-1.5 px-2.5 py-2 rounded-[10px] text-sm font-semibold whitespace-nowrap transition-colors',
                   location.pathname === to
                     ? 'bg-white/20 text-white'
                     : 'text-white/70 hover:bg-white/10 hover:text-white'

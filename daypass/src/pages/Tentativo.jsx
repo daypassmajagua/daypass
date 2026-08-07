@@ -5,6 +5,8 @@ import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import { formatDate } from '../lib/utils'
 import DateNav from '../components/ui/DateNav'
+import FranjaDia from '../components/layout/FranjaDia'
+import { useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { openPrintWindow, buildTentativoHTML } from '../lib/printDoc'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -13,6 +15,7 @@ import PageHeader from '../components/layout/PageHeader'
 export default function Tentativo() {
   const { fechaActiva, setFechaActiva } = useAppStore()
   const { registros, loading, refetch } = useRegistros(fechaActiva)
+  useRegistrosEnVivo(fechaActiva, refetch)
 
   const activos = useMemo(() =>
     registros.filter(r => !['cancelada', 'noshow'].includes(r.estado)),
@@ -104,6 +107,7 @@ export default function Tentativo() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
+      <FranjaDia />
       <PageHeader
         title="Generador de Tentativo"
         subtitle={formatDate(fechaActiva)}

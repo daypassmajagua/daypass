@@ -1,4 +1,4 @@
-import { hoyLocal, aFechaLocal } from './utils'
+import { hoyLocal, aFechaLocal } from './utils.js'
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
@@ -508,6 +508,170 @@ const STORE = {
   clientes:   [],
   registros:  buildRegistros(),
   pasajeros:  [],
+  dias_operativos: [],
+  cambios_estado:  [],
+}
+
+// Cada fecha con reservas abre su día, igual que el trigger en Postgres.
+STORE.registros.forEach(r => {
+  if (!STORE.dias_operativos.some(d => d.fecha === r.fecha)) {
+    STORE.dias_operativos.push({
+      fecha: r.fecha,
+      estado: 'planeando',
+      cerrado_tentativo_at: null, cerrado_tentativo_por: null,
+      cerrado_at: null, cerrado_por: null,
+      notas: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+  }
+})
+
+// ─── Tiempo real simulado ──────────────────────────────────────────────────────
+// Un bus en memoria que imita a Postgres Changes y a Presence, para que el modo
+// demo se comporte igual que la app conectada.
+
+const BUS = { oyentes: new Set() }
+
+function emitirCambio(tabla, tipo, fila, anterior = null) {
+  BUS.oyentes.forEach(fn => {
+    try { fn({ table: tabla, eventType: tipo, new: fila, old: anterior || fila }) }
+    catch { /* un oyente roto no puede tumbar a los demás */ }
+  })
+}
+
+const PRESENCIA = new Map()   // canal → { clave: [estado] }
+
+class CanalMock {
+  constructor(nombre, opciones = {}) {
+    this._nombre = nombre
+    this._clave = opciones?.config?.presence?.key || 'mock'
+    this._cambios = []
+    this._presencia = []
+    this._suelta = null
+    if (!PRESENCIA.has(nombre)) PRESENCIA.set(nombre, {})
+  }
+
+  on(tipo, filtro, cb) {
+    if (tipo === 'postgres_changes') {
+      this._cambios.push({ filtro, cb })
+    } else if (tipo === 'presence') {
+      this._presencia.push({ evento: filtro?.event, cb })
+    }
+    return this
+  }
+
+  subscribe(cb) {
+    const oyente = (ev) => {
+      this._cambios.forEach(({ filtro, cb: manejador }) => {
+        if (filtro?.table && filtro.table !== ev.table) return
+        if (filtro?.event && filtro.event !== '*' && filtro.event !== ev.eventType) return
+        manejador(ev)
+      })
+    }
+    BUS.oyentes.add(oyente)
+    this._suelta = () => BUS.oyentes.delete(oyente)
+    setTimeout(() => cb?.('SUBSCRIBED'), 0)
+    return this
+  }
+
+  presenceState() {
+    return PRESENCIA.get(this._nombre) || {}
+  }
+
+  async track(estado) {
+    const mapa = PRESENCIA.get(this._nombre) || {}
+    mapa[this._clave] = [{ ...estado, presence_ref: this._clave }]
+    PRESENCIA.set(this._nombre, mapa)
+    this._presencia.filter(p => p.evento === 'sync').forEach(p => setTimeout(p.cb, 0))
+    return 'ok'
+  }
+
+  async untrack() {
+    const mapa = PRESENCIA.get(this._nombre) || {}
+    delete mapa[this._clave]
+    this._presencia.filter(p => p.evento === 'sync').forEach(p => setTimeout(p.cb, 0))
+    return 'ok'
+  }
+
+  unsubscribe() {
+    this._suelta?.()
+    return Promise.resolve('ok')
+  }
+}
+
+// ─── Funciones del servidor (RPC) ──────────────────────────────────────────────
+// Mismas reglas que las de 003_dia_operativo.sql.
+
+function diaDe(fecha) {
+  let dia = STORE.dias_operativos.find(d => d.fecha === fecha)
+  if (!dia) {
+    dia = {
+      fecha, estado: 'planeando',
+      cerrado_tentativo_at: null, cerrado_tentativo_por: null,
+      cerrado_at: null, cerrado_por: null, notas: null,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }
+    STORE.dias_operativos.push(dia)
+  }
+  return dia
+}
+
+/** Espeja al trigger registrar_cambio_estado de 003_dia_operativo.sql. */
+function anotarCambioEstado(registro, anterior, nuevo, origen, motivo = null) {
+  STORE.cambios_estado.push({
+    id: genId(),
+    registro_id: registro.id,
+    estado_anterior: anterior,
+    estado_nuevo: nuevo,
+    origen,
+    motivo,
+    registrado_por: MOCK_SESSION.user.id,
+    ocurrido_at: new Date().toISOString(),
+  })
+}
+
+const RPC = {
+  cerrar_tentativo({ p_fecha }) {
+    const dia = diaDe(p_fecha)
+    if (dia.estado !== 'planeando') {
+      return { data: null, error: { message: `El día ya no está en planeación (está en ${dia.estado})` } }
+    }
+    STORE.registros
+      .filter(r => r.fecha === p_fecha && r.estado === 'tentativa')
+      .forEach(r => {
+        const antes = { ...r }
+        r.estado = 'confirmada'
+        // El trigger de Postgres registra TODO cambio de estado, incluidos
+        // los que dispara el sistema. El mock tiene que hacer lo mismo.
+        anotarCambioEstado(r, antes.estado, 'confirmada', 'sistema')
+        emitirCambio('registros', 'UPDATE', r, antes)
+      })
+    dia.estado = 'tentativo_cerrado'
+    dia.cerrado_tentativo_at = new Date().toISOString()
+    dia.cerrado_tentativo_por = MOCK_SESSION.user.id
+    emitirCambio('dias_operativos', 'UPDATE', dia)
+    return { data: dia, error: null }
+  },
+
+  cerrar_dia({ p_fecha }) {
+    const dia = diaDe(p_fecha)
+    dia.estado = 'cerrado'
+    dia.cerrado_at = new Date().toISOString()
+    dia.cerrado_por = MOCK_SESSION.user.id
+    emitirCambio('dias_operativos', 'UPDATE', dia)
+    return { data: dia, error: null }
+  },
+
+  cambiar_estado_manual({ p_registro_id, p_estado, p_motivo }) {
+    const reg = STORE.registros.find(r => r.id === p_registro_id)
+    if (!reg) return { data: null, error: { message: 'No existe la reserva' } }
+    const antes = { ...reg }
+    reg.estado = p_estado
+    anotarCambioEstado(reg, antes.estado, p_estado, 'manual', p_motivo || null)
+    emitirCambio('registros', 'UPDATE', reg, antes)
+    return { data: reg, error: null }
+  },
 }
 
 // ─── Query Builder ─────────────────────────────────────────────────────────────
@@ -601,6 +765,11 @@ class QB {
     return this
   }
 
+  maybeSingle() {
+    this._isSingle = true
+    return this
+  }
+
   then(resolve, reject) {
     return Promise.resolve(this._run()).then(resolve, reject)
   }
@@ -642,6 +811,24 @@ class QB {
     STORE.pasajeros = STORE.pasajeros.filter(p => !ids.has(p.registro_id))
   }
 
+  /** Espeja al trigger marcar_cambio_tardio de 003_dia_operativo.sql. */
+  _marcarSiEsTardio(fila, cambios) {
+    if (this._table !== 'registros') return
+    const dia = STORE.dias_operativos.find(d => d.fecha === fila.fecha)
+    if (!dia || dia.estado === 'planeando') return
+
+    const relevantes = ['adultos', 'ninos', 'infantes', 'cortesias', 'plan_id', 'lancha_id', 'fecha', 'nombre_grupo']
+    const cambioRelevante =
+      relevantes.some(c => c in cambios && cambios[c] !== fila[c]) ||
+      (cambios.estado === 'cancelada' && fila.estado !== 'cancelada')
+
+    if (cambioRelevante) {
+      fila.cambio_tardio = true
+      fila.cambio_tardio_at = new Date().toISOString()
+      fila.cambio_tardio_por = MOCK_SESSION.user.id
+    }
+  }
+
   _run() {
     if (this._op === 'insert') {
       const inserted = this._insertPayload.map(item => {
@@ -652,6 +839,11 @@ class QB {
           updated_at: new Date().toISOString(),
         }
         STORE[this._table].push(row)
+        if (this._table === 'registros') {
+          row.cambio_tardio = false
+          diaDe(row.fecha)   // el día se abre solo, como en Postgres
+        }
+        emitirCambio(this._table, 'INSERT', row)
         return row
       })
       if (this._isSingle) {
@@ -665,7 +857,13 @@ class QB {
       const rows = this._getRows()
       const matched = this._applyFilters(rows)
       matched.forEach(row => {
+        const antes = { ...row }
+        this._marcarSiEsTardio(row, this._updatePayload)
         Object.assign(row, this._updatePayload, { updated_at: new Date().toISOString() })
+        if (this._table === 'registros' && row.estado !== antes.estado) {
+          anotarCambioEstado(row, antes.estado, row.estado, 'manual')
+        }
+        emitirCambio(this._table, 'UPDATE', row, antes)
       })
       if (this._isSingle) {
         const row = matched[0]
@@ -681,6 +879,7 @@ class QB {
       const toDelete = new Set(borrados.map(r => r.id))
       STORE[this._table] = rows.filter(r => !toDelete.has(r.id))
       this._cascadeDelete(borrados)
+      borrados.forEach(r => emitirCambio(this._table, 'DELETE', r))
       return { data: null, error: null }
     }
 
@@ -736,5 +935,12 @@ export function createMockClient() {
   return {
     from: (table) => new QB(table),
     auth: mockAuth,
+    rpc: (nombre, params = {}) => {
+      const fn = RPC[nombre]
+      if (!fn) return Promise.resolve({ data: null, error: { message: `Función ${nombre} no disponible en modo demo` } })
+      return Promise.resolve(fn(params))
+    },
+    channel: (nombre, opciones) => new CanalMock(nombre, opciones),
+    removeChannel: (canal) => canal?.unsubscribe?.() ?? Promise.resolve('ok'),
   }
 }

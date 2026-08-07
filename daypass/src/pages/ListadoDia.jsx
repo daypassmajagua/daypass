@@ -12,6 +12,8 @@ import {
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
 } from '../lib/utils'
 import { contarPorRegistro } from '../hooks/usePasajeros'
+import { useRegistrosEnVivo, useDiaOperativo, cambiarEstadoManual } from '../hooks/useDiaOperativo'
+import FranjaDia from '../components/layout/FranjaDia'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -21,6 +23,28 @@ import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
 
 const ESTADOS = ['tentativa', 'confirmada', 'en_isla', 'completada', 'noshow', 'cancelada']
+
+/**
+ * Esta reserva cambió después de cerrar el tentativo. La cocina y la isla ya
+ * trabajaron con la versión anterior, así que tiene que verse.
+ */
+function MarcaCambioTardio({ registro }) {
+  if (!registro.cambio_tardio) return null
+  const hora = registro.cambio_tardio_at
+    ? new Date(registro.cambio_tardio_at).toLocaleTimeString('es-CO', {
+        hour: 'numeric', minute: '2-digit', hour12: true,
+      })
+    : null
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-lg bg-coral-50 text-coral-600 px-2 py-0.5 text-[12px] font-bold shrink-0"
+      title={hora ? `Cambió a las ${hora}, después del cierre` : 'Cambió después del cierre'}
+    >
+      <AlertTriangle size={12} />
+      Cambió tras el cierre
+    </span>
+  )
+}
 
 /**
  * Cuántos nombres tiene la reserva contra lo planeado. Coral cuando faltan:
@@ -54,12 +78,18 @@ export default function ListadoDia() {
     filtroCanal, setFiltroCanal,
   } = useAppStore()
 
-  const { registros, loading, updateRegistro, deleteRegistro } = useRegistros(fechaActiva)
+  const { registros, loading, updateRegistro, deleteRegistro, refetch } = useRegistros(fechaActiva)
+
+  // Lo que cambie en el muelle o en la isla aparece aquí sin recargar.
+  useRegistrosEnVivo(fechaActiva, refetch)
 
   const [editingFolio, setEditingFolio] = useState({})
   const [deletingId, setDeletingId] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
   const [nombres, setNombres] = useState({})
+  const [pidiendoMotivo, setPidiendoMotivo] = useState(null)
+  const [motivo, setMotivo] = useState('')
+  const { enPlaneacion } = useDiaOperativo(fechaActiva)
 
   useEffect(() => {
     let vigente = true
@@ -105,9 +135,25 @@ export default function ListadoDia() {
       toast.error('Escribe el folio Zeus antes de dar esta reserva por completada.')
       return
     }
-    const { error } = await updateRegistro(id, { estado: newEstado })
-    if (error) toast.error('Error al cambiar estado')
-    else toast.success(`Estado → ${ESTADO_LABELS[newEstado]}`)
+    // Con el día ya cerrado, todo cambio a mano pide motivo: queda en la
+    // bitácora y la cocina y la isla tienen que enterarse.
+    if (!enPlaneacion) {
+      setPidiendoMotivo({ id, estado: newEstado, nombre: registro.nombre_pasajero })
+      return
+    }
+    await aplicarEstado(id, newEstado)
+  }
+
+  async function aplicarEstado(id, nuevoEstado, motivo) {
+    const { error } = motivo
+      ? await cambiarEstadoManual(id, nuevoEstado, motivo).then(r => ({ error: r.error }))
+      : await updateRegistro(id, { estado: nuevoEstado })
+    if (error) {
+      toast.error('No se pudo cambiar el estado. Inténtalo otra vez.')
+    } else {
+      toast.success(`Ahora está ${ESTADO_LABELS[nuevoEstado].toLowerCase()}`)
+      if (motivo) await refetch()
+    }
   }
 
   async function handleFolioSave(id, folio) {
@@ -132,6 +178,7 @@ export default function ListadoDia() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <FranjaDia />
       <PageHeader
         title="Listado del día"
         subtitle={formatDate(fechaActiva)}
@@ -244,11 +291,12 @@ export default function ListadoDia() {
                       {regs.map(r => (
                         <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900 flex items-center gap-1.5">
+                            <div className="font-medium text-gray-900 flex items-center gap-1.5 flex-wrap">
                               {r.tipo === 'grupo' && (
-                                <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium">GRP</span>
+                                <span className="text-xs bg-arena-100 text-arena-700 px-1.5 py-0.5 rounded font-bold">GRUPO</span>
                               )}
                               {r.nombre_pasajero}
+                              <MarcaCambioTardio registro={r} />
                             </div>
                             {r.nombre_grupo && <div className="text-xs text-gray-400 mt-0.5">{r.nombre_grupo}</div>}
                             {r.agencia_nombre && <div className="text-xs text-gray-400">{r.agencia_nombre}</div>}
@@ -362,7 +410,10 @@ export default function ListadoDia() {
                             {r.nombre_grupo && <p className="text-[13px] text-tinta-2 truncate">{r.nombre_grupo}</p>}
                             {r.agencia_nombre && <p className="text-[13px] text-tinta-2 truncate">{r.agencia_nombre}</p>}
                           </div>
-                          <Badge estado={r.estado} className="shrink-0" />
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <Badge estado={r.estado} />
+                            <MarcaCambioTardio registro={r} />
+                          </div>
                         </div>
 
                         <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -435,12 +486,47 @@ export default function ListadoDia() {
       )}
 
       <Modal open={Boolean(deletingId)} onClose={() => setDeletingId(null)} title="Eliminar la reserva">
-        <p className="text-sm text-gray-600 mb-4">
-          ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
+        <p className="text-[15px] text-tinta mb-4">
+          Se va a eliminar esta reserva y los nombres que tenga cargados. No se puede deshacer.
         </p>
         <div className="flex gap-3 justify-end">
-          <Button variant="secondary" onClick={() => setDeletingId(null)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => setDeletingId(null)}>Cancelar</Button>
           <Button variant="danger" onClick={() => handleDelete(deletingId)}>Eliminar</Button>
+        </div>
+      </Modal>
+
+      {/* Con el día cerrado, un cambio a mano necesita explicación. */}
+      <Modal
+        open={Boolean(pidiendoMotivo)}
+        onClose={() => { setPidiendoMotivo(null); setMotivo('') }}
+        title="¿Por qué cambia esta reserva?"
+      >
+        <p className="text-[15px] text-tinta">
+          El día ya está cerrado y <b>{pidiendoMotivo?.nombre}</b> pasa a{' '}
+          <b>{ESTADO_LABELS[pidiendoMotivo?.estado]?.toLowerCase()}</b>. Deja una línea:
+          queda en la bitácora y la isla la ve.
+        </p>
+        <input
+          value={motivo}
+          onChange={e => setMotivo(e.target.value)}
+          autoFocus
+          placeholder="Ej: la agencia canceló a las 6 a.m."
+          className="w-full mt-3 rounded-xl border border-linea px-3 py-2.5 min-h-[44px] text-sm bg-white focus:outline-none focus:border-blue-600"
+        />
+        <div className="flex gap-3 justify-end mt-5">
+          <Button variant="ghost" onClick={() => { setPidiendoMotivo(null); setMotivo('') }}>
+            Cancelar
+          </Button>
+          <Button
+            disabled={!motivo.trim()}
+            onClick={async () => {
+              await aplicarEstado(pidiendoMotivo.id, pidiendoMotivo.estado, motivo.trim())
+              setPidiendoMotivo(null)
+              setMotivo('')
+            }}
+          >
+            Guardar el cambio
+          </Button>
         </div>
       </Modal>
     </div>

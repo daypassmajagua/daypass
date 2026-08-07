@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'sonner'
+import useAppStore from './store/useAppStore'
+import { useSincronizarDia, usePresencia } from './hooks/useDiaOperativo'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
@@ -13,6 +15,11 @@ import Informes from './pages/Informes'
 import Config from './pages/Config'
 
 function AppLayout({ children }) {
+  // Una sola suscripción al día y a la presencia para toda la app.
+  const fechaActiva = useAppStore(s => s.fechaActiva)
+  useSincronizarDia(fechaActiva)
+  usePresencia('oficina')
+
   return (
     <div className="min-h-screen bg-fondo">
       <Navbar />

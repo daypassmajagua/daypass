@@ -5,6 +5,8 @@ import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
 import DateNav from '../components/ui/DateNav'
+import FranjaDia from '../components/layout/FranjaDia'
+import { useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { openPrintWindow, buildFoliosHTML } from '../lib/printDoc'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -14,6 +16,7 @@ import { supabase } from '../lib/supabase'
 export default function Folios() {
   const { fechaActiva, setFechaActiva } = useAppStore()
   const { registros, loading, updateRegistro, refetch } = useRegistros(fechaActiva)
+  useRegistrosEnVivo(fechaActiva, refetch)
   const [folios, setFolios] = useState({})
   const [saving, setSaving] = useState({})
   const [listadoImpreso, setListadoImpreso] = useState(false)
@@ -91,6 +94,7 @@ export default function Folios() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
+      <FranjaDia />
       <PageHeader
         title="Listado para Folios Zeus"
         subtitle={formatDate(fechaActiva)}

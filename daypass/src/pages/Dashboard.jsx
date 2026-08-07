@@ -1,20 +1,48 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
-  Users, TrendingUp, AlertCircle, Ship, BarChart2, PlusCircle
+  Users, TrendingUp, AlertCircle, Ship, BarChart2, PlusCircle, Lock, TriangleAlert
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { formatCurrency, formatDate, hoyLocal } from '../lib/utils'
+import { formatCurrency, formatDate, hoyLocal, plural } from '../lib/utils'
 import Card from '../components/ui/Card'
 import DateNav from '../components/ui/DateNav'
+import Modal from '../components/ui/Modal'
 import PageHeader from '../components/layout/PageHeader'
+import FranjaDia from '../components/layout/FranjaDia'
 import Button from '../components/ui/Button'
+import {
+  useDiaOperativo, useRegistrosEnVivo, cerrarTentativo,
+} from '../hooks/useDiaOperativo'
 
 export default function Dashboard() {
   const { fechaActiva, setFechaActiva } = useAppStore()
-  const { registros, loading } = useRegistros(fechaActiva)
+  const { registros, loading, refetch } = useRegistros(fechaActiva)
   const navigate = useNavigate()
+
+  const { enPlaneacion } = useDiaOperativo(fechaActiva)
+  useRegistrosEnVivo(fechaActiva, refetch)
+
+  const [confirmandoCierre, setConfirmandoCierre] = useState(false)
+  const [cerrando, setCerrando] = useState(false)
+
+  // Cambiaron después de que la cocina y la isla ya tenían la lista.
+  const tardios = useMemo(() => registros.filter(r => r.cambio_tardio), [registros])
+
+  async function confirmarCierre() {
+    setCerrando(true)
+    const { error } = await cerrarTentativo(fechaActiva)
+    setCerrando(false)
+    setConfirmandoCierre(false)
+    if (error) {
+      toast.error('No se pudo cerrar el tentativo. ' + error.message)
+    } else {
+      toast.success('Tentativo cerrado. Las reservas tentativas quedaron confirmadas.')
+      await refetch()   // el día llega solo por la suscripción
+    }
+  }
 
   const activos = useMemo(() =>
     registros.filter(r => !['cancelada', 'noshow', 'tentativa'].includes(r.estado)),
@@ -84,24 +112,54 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
+      <FranjaDia />
       <PageHeader
-        title="Dashboard"
+        title="Hoy"
         subtitle={formatDate(fechaActiva)}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <DateNav value={fechaActiva} onChange={setFechaActiva} />
             {fechaActiva !== hoyLocal() && (
               <Button variant="ghost" size="sm" onClick={() => setFechaActiva(hoyLocal())}>
-                Hoy
+                Ir a hoy
+              </Button>
+            )}
+            {enPlaneacion && registros.length > 0 && (
+              <Button variant="secondary" size="sm" onClick={() => setConfirmandoCierre(true)}>
+                <Lock size={16} />
+                Cerrar el tentativo
               </Button>
             )}
             <Button size="sm" onClick={() => navigate('/nuevo')}>
               <PlusCircle size={16} />
-              Nuevo
+              Nueva reserva
             </Button>
           </div>
         }
       />
+
+      {/* La cocina y la isla ya trabajaron con la versión anterior. */}
+      {tardios.length > 0 && (
+        <div className="flex items-start gap-3 rounded-2xl bg-coral-50 px-4 py-3 mb-5">
+          <TriangleAlert size={18} className="text-coral-600 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-bold text-coral-700 text-[15px]">
+              {plural(tardios.length, 'reserva cambió', 'reservas cambiaron')} después del cierre
+            </p>
+            <p className="text-sm text-coral-700/85">
+              La cocina y la isla tienen la versión anterior. Avísales de:{' '}
+              {tardios.map((r, i) => (
+                <span key={r.id}>
+                  {i > 0 && ', '}
+                  <Link to={`/editar/${r.id}`} className="font-bold underline">
+                    {r.nombre_grupo || r.nombre_pasajero}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -207,7 +265,7 @@ export default function Dashboard() {
             <Card className="p-5">
               <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <BarChart2 size={16} className="text-purple-500" />
-                Mix de Canales
+                Por canal de venta
               </h2>
               {canalMap.length === 0 ? (
                 <p className="text-sm text-tinta-2 text-center py-4">Sin reservas</p>
@@ -236,7 +294,7 @@ export default function Dashboard() {
             <Card className="p-5">
               <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <AlertCircle size={16} className="text-orange-500" />
-                Pendientes Operativos
+                Lo que falta
               </h2>
               <div className="flex flex-col gap-3">
                 {sinFolio.length > 0 && (
@@ -300,16 +358,50 @@ export default function Dashboard() {
           {registros.length === 0 && (
             <Card className="p-12 text-center">
               <Ship size={40} className="mx-auto text-gray-300 mb-3" />
-              <p className="text-tinta-2 font-bold">Todavía no hay reservas para este día</p>
-              <p className="text-sm text-gray-400 mt-1">Crea el primer pasadía del día</p>
+              <p className="text-tinta-2 font-bold">
+                Todavía no hay reservas para el {formatDate(fechaActiva)}
+              </p>
               <Button className="mt-4" onClick={() => navigate('/nuevo')}>
                 <PlusCircle size={16} />
-                Nuevo Registro
+                Crear la primera
               </Button>
             </Card>
           )}
         </>
       )}
+
+      {/* Cerrar el tentativo sí confirma: dispara cocina y folios. */}
+      <Modal
+        open={confirmandoCierre}
+        onClose={() => setConfirmandoCierre(false)}
+        title="Cerrar el tentativo"
+      >
+        <p className="text-[15px] text-tinta">
+          Vas a cerrar el tentativo del <b className="first-letter:uppercase">{formatDate(fechaActiva)}</b>.
+        </p>
+        <ul className="mt-3 flex flex-col gap-1.5 text-sm text-tinta-2">
+          <li>· Las {plural(tentativas.length, 'reserva tentativa pasa', 'reservas tentativas pasan')} a confirmada.</li>
+          <li>· A partir de ahí, cualquier cambio queda marcado como tardío.</li>
+          <li>· La cocina y la isla trabajan sobre esta versión.</li>
+        </ul>
+        {(sinFolio.length > 0 || sinPago.length > 0) && (
+          <p className="mt-3 text-sm text-coral-700 bg-coral-50 rounded-xl px-3 py-2">
+            Quedan pendientes: {sinFolio.length > 0 && `${plural(sinFolio.length, 'reserva sin folio', 'reservas sin folio')}`}
+            {sinFolio.length > 0 && sinPago.length > 0 && ' y '}
+            {sinPago.length > 0 && `${plural(sinPago.length, 'reserva sin pago', 'reservas sin pago')}`}.
+            Puedes cerrar igual y resolverlos después.
+          </p>
+        )}
+        <div className="flex justify-end gap-2 mt-5">
+          <Button variant="ghost" onClick={() => setConfirmandoCierre(false)}>
+            Todavía no
+          </Button>
+          <Button onClick={confirmarCierre} loading={cerrando}>
+            <Lock size={16} />
+            Cerrar el tentativo
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }
