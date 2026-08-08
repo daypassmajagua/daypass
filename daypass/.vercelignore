@@ -1,0 +1,14 @@
+# Vercel construye en su servidor: no tiene sentido subir esto.
+node_modules
+dist
+.env
+.env.*
+!.env.demo
+
+# Migraciones y semillas: se corren a mano en Supabase.
+supabase
+
+# Archivos de trabajo
+*.log
+.vscode
+.idea
