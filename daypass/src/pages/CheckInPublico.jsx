@@ -177,6 +177,12 @@ export default function CheckInPublico() {
   // sí: peor sería esconderle el almuerzo a todo el mundo por eso.
   const puedeElegirPlato = reserva?.puede_elegir_plato ?? true
 
+  // La edad viene del servidor (ajuste `edad_max_infante`, migración 014). Se
+  // muestra en la etiqueta de la categoría, que es lo único que el cliente
+  // necesita para saber en cuál va su hijo. El 3 de respaldo es lo que se
+  // muestra mientras carga, no una segunda fuente de verdad.
+  const edadMaxInfante = reserva?.edad_max_infante ?? 3
+
   function editar(i, campo, valor) {
     setPasajeros(prev => prev.map((p, j) => j === i ? { ...p, [campo]: valor } : p))
   }
@@ -379,7 +385,9 @@ export default function CheckInPublico() {
                       className={claseCampo}>
                       <option value="adulto">{t.adulto}</option>
                       <option value="nino">{t.nino}</option>
-                      <option value="infante">{t.infante}</option>
+                      <option value="infante">
+                        {t.infante.replace('{edad}', edadMaxInfante)}
+                      </option>
                       <option value="cortesia">{t.cortesia}</option>
                     </select>
                   </Campo>

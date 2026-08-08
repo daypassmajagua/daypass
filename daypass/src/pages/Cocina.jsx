@@ -12,6 +12,7 @@ import Card from '../components/ui/Card'
 import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
 import RevisionCocina from '../components/cocina/RevisionCocina'
+import { useEdadMaxInfante } from '../hooks/useAjuste'
 
 /**
  * El pronóstico de almuerzos.
@@ -69,6 +70,7 @@ export default function Cocina() {
   const [pasajeros, setPasajeros] = useState([])
   const [opcionesPlato, setOpcionesPlato] = useState([])
   const [actualizado, setActualizado] = useState(() => new Date())
+  const edadMaxInfante = useEdadMaxInfante()
 
   // Lo que el cliente elija desde su celular tiene que aparecer aquí sin que
   // nadie recargue: en la cocina nadie va a apretar F5.
@@ -131,7 +133,7 @@ export default function Cocina() {
               size="sm"
               onClick={() => openPrintWindow(
                 `Conteo de cocina — ${fechaActiva}`,
-                buildCocinaHTML(registros, pasajerosDelDia, opcionesPlato, fechaActiva)
+                buildCocinaHTML(registros, pasajerosDelDia, opcionesPlato, fechaActiva, edadMaxInfante)
               )}
             >
               <Printer size={14} />
@@ -180,13 +182,22 @@ export default function Cocina() {
                   cantidad={cocina.sinElegir}
                 />
               )}
+              {/* Su propia línea: comen, pero no eligen del menú. Cocina
+                  necesita el número aunque no sea un plato. */}
+              {cocina.infantes > 0 && (
+                <Linea
+                  nombre={cocina.infantes === 1 ? 'Infante' : 'Infantes'}
+                  detalle={`Menores de ${edadMaxInfante} años — comen, no eligen plato`}
+                  cantidad={cocina.infantes}
+                />
+              )}
             </ul>
 
             <p className="flex items-center gap-2 text-[14px] text-tinta-2 mt-4">
               <Users size={15} className="shrink-0" />
               {cocina.totalAdultos} adultos · {cocina.totalNinos} niños · {cocina.totalCortesias} cortesías
               {cocina.totalInfantes > 0 &&
-                ` · ${plural(cocina.totalInfantes, 'infante', 'infantes')} sin almuerzo (menores de 3)`}
+                ` · ${plural(cocina.totalInfantes, 'infante', 'infantes')}`}
             </p>
           </Card>
 

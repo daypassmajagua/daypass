@@ -17,6 +17,7 @@ import {
 import { calcularConteoCocina } from '../lib/conteoCocina'
 import { precargarDia } from '../lib/offline/precarga'
 import { usePrecarga, haceCuanto } from '../lib/offline/useOffline'
+import { useEdadMaxInfante } from '../hooks/useAjuste'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
@@ -48,6 +49,7 @@ export default function CerrarDia() {
   const { lista } = usePendientes(registros, { enPlaneacion, tiposIngreso })
   const { precarga, refrescar: refrescarPrecarga } = usePrecarga(fechaActiva)
   const [enviandoTarjetas, setEnviandoTarjetas] = useState(false)
+  const edadMaxInfante = useEdadMaxInfante()
 
   useEffect(() => {
     supabase.from('lanchas').select('*').eq('activa', true)
@@ -101,7 +103,7 @@ export default function CerrarDia() {
   function imprimirCocina() {
     openPrintWindow(
       `Conteo de cocina — ${fechaActiva}`,
-      buildCocinaHTML(registros, pasajeros, opcionesPlato, fechaActiva)
+      buildCocinaHTML(registros, pasajeros, opcionesPlato, fechaActiva, edadMaxInfante)
     )
   }
   /** Para pegarlo en el grupo de WhatsApp. */
@@ -263,11 +265,26 @@ export default function CerrarDia() {
                 <span className="font-bold text-coral-700 tabular shrink-0">{cocina.sinElegir}</span>
               </li>
             )}
+
+            {/* El infante come pero no elige: línea propia. Cocina necesita
+                saber que son porciones de más, no un plato del menú. */}
+            {cocina.infantes > 0 && (
+              <li className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0">
+                  <span className="font-bold text-tinta">
+                    {plural(cocina.infantes, 'infante', 'infantes')}
+                  </span>
+                  <span className="text-tinta-2"> · comen, no eligen plato</span>
+                </span>
+                <span className="font-bold text-tinta tabular shrink-0">{cocina.infantes}</span>
+              </li>
+            )}
           </ul>
 
           <p className="text-[13px] text-tinta-2 mt-3">
-            {cocina.totalAdultos} adultos · {cocina.totalNinos} niños · {cocina.totalCortesias} cortesías.
-            {cocina.totalInfantes > 0 && ` ${plural(cocina.totalInfantes, 'infante', 'infantes')} sin almuerzo (menores de 3 años).`}
+            {cocina.totalAdultos} adultos · {cocina.totalNinos} niños · {cocina.totalCortesias} cortesías
+            {cocina.totalInfantes > 0 && ` · ${plural(cocina.totalInfantes, 'infante', 'infantes')}`}.
+            {' '}Los menores de {edadMaxInfante} años cuentan como porción.
           </p>
 
           {cocina.restricciones.length > 0 ? (

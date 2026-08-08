@@ -6,26 +6,54 @@ maestro para ejecutar con Claude Code en VS Code.
 **Punto de partida:** commit `67f232b`, migraciones 001–013 aplicadas, producción en Vercel,
 fases A–D completas, E parcial.
 
+**Numeración de migraciones.** El bloque 0 se lleva el `014` —agregar `pasajeros.almuerza` es
+cambio de esquema— así que los números de este plan corren uno respecto a la primera versión:
+roles `015`, personas `016`, tickets `017`, dinero `018`–`020`, operación `021`–`022`,
+comunicación `023`.
+
 ---
 
 ## 1. Los ocho bloques, en orden de dependencias
 
 El orden no es negociable: cada bloque desbloquea el siguiente. Saltárselo significa rehacer.
 
-### Bloque 0 · Arreglos y datos (bloquea el piloto)
+### Bloque 0 · Arreglos y datos (bloquea el piloto) — `014`
 
-Sin migración. Es lo que hace que el piloto con Daniela sirva.
+Lleva migración, al contrario de lo que decía la primera versión de este plan: agregar
+`pasajeros.almuerza` es cambio de esquema y por la regla 5 va numerado. Toma el **`014`**, así que
+**todo lo demás corre uno** — roles pasa al `015` y de ahí en adelante.
 
-- **Corregir infantes.** Hoy el conteo de almuerzos asume que no almuerzan. Confirmado: **de 0 a 3
-  sí almuerzan**. Campo `pasajeros.almuerza` booleano, con valor por defecto según categoría pero
-  editable. *Quién paga y quién come son ejes distintos.*
+- **Corregir infantes.** ✅ Hecho. El conteo de almuerzos asumía que no almuerzan; el supuesto se
+  había deducido de la regla de precios —el infante no paga— y de ahí se concluyó que no come.
+  Confirmado: **de 0 a 3 sí almuerzan**. *Quién paga y quién come son ejes distintos.*
+
+  Estaba en **siete lugares**, no en uno, y en **dos rutas de cálculo** distintas: los planes con
+  opciones cuentan por los pasajeros con nombre, y los planes de menú fijo cuentan por los
+  contadores de la reserva. Un grupo de 24 sin listado no tiene ni una fila en `pasajeros`, así que
+  arreglar solo la primera ruta habría dejado el error vivo donde más pesa.
+
+  `pasajeros.almuerza` guarda la excepción por persona (el caso de 3 a 6 años depende de lo que los
+  padres compraron, y eso se marca, no se calcula). El infante **no elige plato** pero **cuenta en
+  su propia línea**: *"41 Gold · 25 Silver · 3 infantes"*. Qué se les sirve exactamente lo confirma
+  la isla.
+
+- **Sacar la edad de corte a `ajustes`.** ✅ Hecho. `edad_max_infante` estaba escrita a mano en tres
+  pantallas y en los textos ES/EN de la página del cliente, contra la regla 22.
 - **Conectar Resend** + Edge Functions para los tres correos: manifiesto, recordatorio de
   check-in, agradecimiento.
 - **Cargar catálogos reales**: lanchas con capacidad y prioridad (MAJ 1 y MAJ 2 primero), pilotos,
   agencias, planes con precios reales, empleados.
-- **Revisar las reservas con `tipo_ingreso='pasadía'` y `forma_pago='cortesía'`** — contar cuántas
-  son y decidir si es error de captura.
-- **Mover al repo las pruebas de humo** de Puppeteer que ya atraparon tres fallos.
+- **Revisar las reservas con `tipo_ingreso='pasadia'` y `forma_pago='cortesia'`** — contar cuántas
+  son y decidir si es error de captura. Consulta lista en
+  `daypass/supabase/consultas/pasadia_con_forma_pago_cortesia.sql`; solo lee. Trae también el caso
+  inverso —cortesías **con** folio, que viola la regla 18— porque nadie lo había mirado.
+  `/isla` ya las muestra como *"revisar antes de cobrar"* en vez de elegir bando.
+
+  Ojo: en la base los códigos van **sin tilde** (`pasadia`, `cortesia`). Manda el código.
+- **Mover al repo las pruebas de humo** de Puppeteer. ✅ Hecho: `npm run humo`, en
+  `daypass/pruebas/humo.mjs`. Levanta el demo solo si no está arriba y lo apaga al terminar. Ya
+  atraparon tres fallos que el build dejó pasar, y ahora cada ruta declara qué texto tiene que
+  aparecer — sin eso, una pantalla que pinta el cascarón vacío pasaría la prueba.
 
 ### Bloque 1 · Diseño base (antes de cualquier pantalla nueva)
 
@@ -41,7 +69,7 @@ cada una inventa su layout.
   spinner), vacío (invita a actuar) y error (qué pasó y cómo se arregla).
 - **Rehacer `Config.jsx` con los patrones**, como prueba de que alcanzan.
 
-### Bloque 2 · Roles, guardias y multi-tenant (`014`)
+### Bloque 2 · Roles, guardias y multi-tenant (`015`)
 
 Desbloquea todo lo demás: sin esto no se sabe a quién mostrarle qué ni a quién notificar.
 
@@ -61,7 +89,7 @@ Desbloquea todo lo demás: sin esto no se sabe a quién mostrarle qué ni a qui�
 - **Aislamiento por hotel** (`hotel_id` + RLS). Se hace aquí porque después significa reescribir
   todas las políticas. Es lo que hace que el hotel #2 cueste cero de infraestructura.
 
-### Bloque 3 · Personas y organizaciones (`015`)
+### Bloque 3 · Personas y organizaciones (`016`)
 
 Ver `spec-contingencia-personas.md`, parte 2. Va junto a roles porque comparte RLS.
 
@@ -72,8 +100,25 @@ Ver `spec-contingencia-personas.md`, parte 2. Va junto a roles porque comparte R
 - **Los correos de destino viven en la ficha de cada institución**, no en Ajustes.
 - Unir duplicados (solo directora o admin, con bitácora).
 - Precarga en la reserva y en el check-in público.
+- **Deshacer el solapamiento entre `categoria_pasajero` y `tipos_ingreso`.** Detectado en el
+  bloque 0; se anota aquí porque es problema de modelo y arreglarlo antes habría sido tocar algo
+  que este bloque va a rehacer de todos modos.
 
-### Bloque 4 · Tickets de soporte (`016`)
+  Hoy `cortesia` existe en los dos sitios: como valor del enum `categoria_pasajero`
+  (`adulto · nino · infante · cortesia`) y como código de `tipos_ingreso`. Son **dos ejes
+  distintos** y confundirlos ya causó problemas:
+
+  > La **categoría** dice *qué es la persona en esa reserva* — adulto, niño, infante —, y de ahí
+  > sale si elige plato y qué porción le toca.
+  > El **tipo de ingreso** dice *por qué entró* — pasadía, cortesía, alojamiento, empleado — y de
+  > ahí salen las tres banderas de la regla 11 y a qué cuenta se le carga.
+
+  Un adulto que entra de cortesía es `categoria='adulto'` y `tipo_ingreso='cortesia'`. Con el enum
+  actual alguien puede marcarlo `categoria='cortesia'`, y entonces no se sabe ni qué come ni cuántos
+  años tiene. Es la misma lección que la regla 9 (plato ≠ plan) y la 10 (quién paga ≠ quién come):
+  **un eje no puede derivar del otro, y menos compartir vocabulario.**
+
+### Bloque 4 · Tickets de soporte (`017`)
 
 Adelantado a propósito: si van a probar durante meses, el canal de reportes tiene que existir
 **mientras** se construye, no al final.
@@ -86,34 +131,34 @@ Adelantado a propósito: si van a probar durante meses, el canal de reportes tie
 - Botón en el shell, **también en modo muelle**. Funciona sin señal: entra a la cola.
 - Estados visibles para quien reportó. Adjuntos se borran a los 90 días.
 
-### Bloque 5 · Dinero y control (`017`–`019`)
+### Bloque 5 · Dinero y control (`018`–`020`)
 
-- **Pagos y cartera** (`017`): tipo, valor, estado, soporte. Cartera por agencia con antigüedad
+- **Pagos y cartera** (`018`): tipo, valor, estado, soporte. Cartera por agencia con antigüedad
   (0-30/31-60/61-90/+90). Tasa de no-show por agencia.
-- **Tiquetes** (`018`): kardex combinado (zarpe + parque). **Saldo inicial digitado una vez**, sin
+- **Tiquetes** (`019`): kardex combinado (zarpe + parque). **Saldo inicial digitado una vez**, sin
   migrar la planilla. Compras manuales por lote con proveedor. **Consumo derivado del embarque**
   según `consume_tiquete`. Responsable de pago (hotel, agencia, cliente, empresa). **Alerta
   predictiva** al cerrar el día: *"quedan 30 y mañana van 87"*. Kardex mensual que **sí suma
   alojamiento** (la fórmula actual no lo hace).
-- **Cortesías, metas y liquidación** (`019`): reporte mensual de cortesías con quién autorizó y
+- **Cortesías, metas y liquidación** (`020`): reporte mensual de cortesías con quién autorizó y
   costo de servicio. Metas por año, periodo y responsable — visibles para gerencia **y para
   Daniela**; las ventas de otras asesoras suman a su meta. Liquidación de comisiones por agencia.
 
-### Bloque 6 · Operación ampliada (`020`–`021`)
+### Bloque 6 · Operación ampliada (`021`–`022`)
 
-- **Eventos masivos** (`020`): el evento como unidad comercial por encima de la reserva, con
+- **Eventos masivos** (`021`): el evento como unidad comercial por encima de la reserva, con
   lancha asignada **por pasajero**. Caso real: Gematours, 250 personas = 7 manifiestos. Carga
   masiva de nombres, distribución en lanchas con zarpes escalonados, embarque por lotes, menú
   fijado a nivel de evento.
 - **Restaurante externo**: reservas con lancha de terceros. No consumen cupo ni tiquete, sí
   generan ingreso. Se crean con anticipación y **se confirman o desconfirman en el cierre del día
   anterior**. Sus almuerzos **suman al conteo de cocina**.
-- **Contingencia** (`021`): ver `spec-contingencia-personas.md`, parte 1, más la
+- **Contingencia** (`022`): ver `spec-contingencia-personas.md`, parte 1, más la
   sección 2 de este documento (contingencia desde la isla).
 - **Clima**: viento y oleaje de Open-Meteo (gratis, sin clave) en el cierre y en Hoy. **Informa,
   nunca decide** — la autoridad portuaria y el capitán definen el zarpe.
 
-### Bloque 7 · Comunicación (`022`)
+### Bloque 7 · Comunicación (`023`)
 
 - **Notificaciones** con matriz configurable por usuario y evento. Cuatro canales: en la app,
   push, correo, WhatsApp (fase 2). Regla: *se notifica solo si quien recibe haría algo distinto,
@@ -205,7 +250,8 @@ dice: *"pendiente de avisar"*.
 >
 > ### Ya existe y funciona (revisa `supabase/migrations/` antes de tocar nada)
 >
-> Migraciones 001–013 aplicadas · 23 tablas · 61 pruebas en Vitest · offline con Dexie y cola por
+> Migraciones 001–014 aplicadas · 23 tablas · 75 pruebas en Vitest (`npm test`) más humo con
+> Puppeteer (`npm run humo`) · offline con Dexie y cola por
 > `client_id` · check-in público en `/r/:token` con firma y QR · muelle con manifiesto y regreso ·
 > `/isla` · sistema visual v2 · modo demo (`npm run demo`).
 >

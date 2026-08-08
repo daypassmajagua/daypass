@@ -473,9 +473,9 @@ export function buildFoliosHTML(registros, fecha) {
  * @param pasajeros      Pasajeros nominales del día, con plato y restricción.
  * @param opcionesPlato  Catálogo de opciones, para saber qué planes preguntan.
  */
-export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha) {
+export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha, edadMaxInfante = 3) {
   const {
-    filasPlato, filasMenuFijo, sinElegir, restricciones,
+    filasPlato, filasMenuFijo, sinElegir, infantes, restricciones,
     totalAdultos, totalNinos, totalCortesias, totalInfantes, totalAlmuerzos,
   } = calcularConteoCocina(registros, pasajeros, opcionesPlato)
 
@@ -533,6 +533,13 @@ export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha) {
           <td style="text-align:center; font-weight:800; font-size:15px">${sinElegir}</td>
         </tr>` : ''}
 
+        ${infantes > 0 ? `
+        <tr>
+          <td style="font-weight:700; font-size:13px">Infantes</td>
+          <td style="font-size:10.5px; color:#6b7280">menores de ${edadMaxInfante} años — comen, pero no eligen plato</td>
+          <td style="text-align:center; font-weight:800; font-size:15px">${infantes}</td>
+        </tr>` : ''}
+
         <tr>
           <td colspan="2" style="font-weight:800; border-top:2px solid #1e2045">TOTAL DE ALMUERZOS</td>
           <td style="text-align:center; font-weight:800; font-size:15px; border-top:2px solid #1e2045">${totalAlmuerzos}</td>
@@ -541,9 +548,9 @@ export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha) {
     </table>
   </div>
   <p style="font-size:10.5px; color:#6b7280; margin-top:6px">
-    ${totalAdultos} adultos · ${totalNinos} niños · ${totalCortesias} cortesías.
-    Los infantes menores de 3 años no cuentan como almuerzo${totalInfantes > 0 ? ` (vienen ${totalInfantes})` : ''}.
-    Las cortesías sí comen.
+    ${totalAdultos} adultos · ${totalNinos} niños · ${totalCortesias} cortesías${totalInfantes > 0 ? ` · ${totalInfantes} ${totalInfantes === 1 ? 'infante' : 'infantes'}` : ''}.
+    Las cortesías comen. Los infantes menores de ${edadMaxInfante} años también:
+    cuentan como porción aunque no elijan plato del menú.
   </p>
 
   ${restricciones.length ? `

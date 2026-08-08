@@ -557,6 +557,15 @@ const STORE = {
   zarpe_empleados:   [],
   zarpe_alojamiento: [],
   tokens_reserva:    [],
+  // Las constantes de la operación (regla 22). Sin esta tabla la demo mostraba
+  // siempre los valores de respaldo y cambiar un ajuste no hacía nada.
+  ajustes: [
+    { clave: 'checkin_cierra_hora', valor: '08:30', descripcion: 'Hora de zarpe.' },
+    { clave: 'checkin_abre_dias',   valor: '2',     descripcion: 'Días antes que se abre plato y firma.' },
+    { clave: 'cocina_cierra_hora',  valor: '08:30', descripcion: 'Hora en que cocina revisa.' },
+    { clave: 'hora_regreso',        valor: '15:30', descripcion: 'Hora del zarpe de regreso.' },
+    { clave: 'edad_max_infante',    valor: '3',     descripcion: 'Hasta qué edad cuenta como infante.' },
+  ],
   documentos_legales: [
     { id: 'doc-es-1', tipo: 'exoneracion', version: 1, idioma: 'es',
       titulo: 'Condiciones del Day Tour',
@@ -1005,6 +1014,7 @@ const RPC = {
         lancha: STORE.lanchas.find(l => l.id === r.lancha_id)?.nombre || null,
         estado_dia: dia?.estado || 'planeando',
         puede_check_in: (dia?.estado || 'planeando') === 'planeando' && dias >= 0 && dias <= 2,
+        edad_max_infante: STORE.ajustes.find(a => a.clave === 'edad_max_infante')?.valor || '3',
         check_in_at: r.check_in_at || null,
         tiene_firma: STORE.firmas.some(f => f.registro_id === r.id),
         opciones_plato: STORE.opciones_plato
@@ -1044,6 +1054,7 @@ const RPC = {
         tipo_documento: p.tipo_documento || null, documento: p.documento || null,
         pais_id: p.pais_id || null, categoria: p.categoria || 'adulto',
         opcion_plato_id: p.opcion_plato_id || null,
+        almuerza: p.almuerza !== false,
         restriccion_alimentaria: p.restriccion_alimentaria || null,
         created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
       })

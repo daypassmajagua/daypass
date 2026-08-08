@@ -2,7 +2,7 @@
 
 **Corte:** 8 de agosto de 2026 · commit `67f232b` · 36 commits
 **Producción:** https://daypass-seven.vercel.app · **Repo:** github.com/daypassmajagua/daypass
-**Base de datos:** Supabase `ubtmixgqwfwvartciqyr` · migraciones **001–013 todas aplicadas**
+**Base de datos:** Supabase `ubtmixgqwfwvartciqyr` · migraciones **001–014**
 
 Este documento es el estado real verificado contra el código y contra la base en
 producción, no un resumen de intenciones. Donde dice "verificado" es porque se
@@ -44,7 +44,7 @@ comprobó, y donde hay un supuesto sin confirmar, lo dice.
 ### Números
 
 - **13.931 líneas** de JS/JSX · **23 tablas** · **13 migraciones** (2.836 líneas de SQL)
-- **61 pruebas automáticas** en Vitest, 4 archivos
+- **75 pruebas automáticas** en Vitest, 5 archivos, más humo con Puppeteer (`npm run humo`)
 - Modo demo completo (`npm run demo`): mock de ~1.300 líneas que replica triggers, RPC, realtime y presencia
 
 ---
@@ -295,13 +295,12 @@ es el bloque más grande que queda. Es lo que yo pondría primero.
 ```bash
 cd daypass
 npm run demo      # datos de muestra, sin tocar producción — puerto 5175
-npm test          # 61 pruebas
+npm test          # 75 pruebas
 npm run build
-npx eslint src    # línea base: 36 problemas
+npx eslint src    # línea base: 34 problemas
 ```
 
-Hay pruebas de humo con Puppeteer en el scratchpad de la sesión que cargan las 7
-pantallas y escuchan la consola. **Han atrapado tres fallos que el build dejó
-pasar**, incluido un `ReferenceError` que dejaba una pantalla en blanco y un icono
-sin importar que habría reventado la barra de navegación. Vale la pena moverlas al
-repo.
+Las pruebas de humo ya están en el repo: `npm run humo` carga las ocho pantallas
+y escucha la consola. **Han atrapado tres fallos que el build dejó pasar**: un
+`ReferenceError` que dejaba una pantalla en blanco, un icono sin importar que
+habría reventado la barra de navegación, y un documento impreso que salía vacío.
