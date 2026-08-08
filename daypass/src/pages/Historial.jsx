@@ -45,7 +45,7 @@ export default function Historial() {
   async function fetchRegistros() {
     setLoading(true)
     let query = supabase
-      .from('registros')
+      .from('reservas')
       .select(reservaCon({ nivel: 'dinero', relaciones: ['lanchas (nombre)', 'planes (nombre)', 'canales (codigo, nombre)'] }), { count: 'exact' })
       .order('fecha', { ascending: false })
       .order('created_at', { ascending: false })

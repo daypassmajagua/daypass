@@ -199,7 +199,7 @@ export default function Reserva() {
   // Al editar, la fuente de verdad es la base.
   useEffect(() => {
     if (!isEdit || !id) return
-    supabase.from('registros').select(RESERVA_CON_DINERO).eq('id', id).single().then(({ data }) => {
+    supabase.from('reservas').select(RESERVA_CON_DINERO).eq('id', id).single().then(({ data }) => {
       if (data) reset(data)
     })
   }, [id, isEdit, reset])

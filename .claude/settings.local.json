@@ -198,7 +198,18 @@
       "Bash(grep -E \"select\\\\\\('\\\\*|select\\\\\\(\\\\`\\\\*\")",
       "Bash(awk '{s+=$1} END {print s\" politicas en total\"}')",
       "Bash(awk '{print $NF}')",
-      "Bash(sed -n '/^## 5 · Qué decidir/,$p' docs/fases.md)"
+      "Bash(sed -n '/^## 5 · Qué decidir/,$p' docs/fases.md)",
+      "Bash(sed -n '/function nombre_de_quien_actua/,/language sql/p' supabase/migrations/005_sello_del_cierre.sql)",
+      "Bash(sed -n '/create table cambios_estado/,/^\\);/p' supabase/migrations/003_dia_operativo.sql)",
+      "Bash(grep -n \"^            \\)\\)}$\\\\|^            \\)}\\)}$\" src/components/layout/Navbar.jsx)",
+      "Bash(perl -i -pe 's/^            \\\\\\)\\\\\\)\\\\}$/            \\)}\\)}/ if $. == 94 || $. == 139' src/components/layout/Navbar.jsx)",
+      "Bash(node roles.mjs)",
+      "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/dia\")",
+      "Bash(grep -oE '\\\\$ ?[0-9.]+')",
+      "Bash(perl -0pi -e \"s|import IndicadorSync from '../components/layout/IndicadorSync'|import IndicadorSync from '../components/layout/IndicadorSync'\\\\nimport NavegacionMinima from '../components/layout/NavegacionMinima'|\" src/pages/Isla.jsx)",
+      "Bash(perl -0pi -e \"s|  mesero:     \\\\{ inicio: '/isla', menu: \\\\['Isla'\\\\],                        dinero: false \\\\},|  // El mesero tiene una sola pantalla, así que NO ve barra: un botón que\\\\n  // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.\\\\n  mesero:     { inicio: '/isla', menu: [],                              dinero: false },|\" pruebas/roles.mjs)",
+      "Bash(node depurarvista.mjs)",
+      "Bash(perl -0pi -e \"s/\\\\.select\\\\\\('\\\\*'\\\\\\)\\\\.limit\\\\\\(1\\\\\\)/.select\\('*'\\).eq\\('fecha','2026-08-08'\\)/\" depurarvista.mjs)"
     ]
   }
 }

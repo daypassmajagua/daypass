@@ -85,7 +85,7 @@ export default function Informes() {
   async function fetchData() {
     setLoading(true)
     const { data } = await supabase
-      .from('registros')
+      .from('reservas')
       .select(reservaCon({ nivel: 'dinero', relaciones: ['lanchas (id, nombre)', 'planes (id, nombre, categoria)', CON_CANAL, CON_PAIS] }))
       .gte('fecha', fechaDesde)
       .lte('fecha', fechaHasta)

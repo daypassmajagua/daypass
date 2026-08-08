@@ -12,7 +12,7 @@ export function useRegistros(fecha) {
     setLoading(true)
     setError(null)
     const { data, error: err } = await supabase
-      .from('registros')
+      .from('reservas')
       .select(reservaCon({ nivel: 'dinero', relaciones: [CON_LANCHA_COMPLETA, CON_PLAN_COMPLETO, CON_CANAL, CON_PAIS, CON_AGENCIA] }))
       .eq('fecha', fecha)
       .order('created_at', { ascending: true })

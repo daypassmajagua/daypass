@@ -14,7 +14,7 @@ export async function precargarDia(fecha) {
 
   const [reg, zar, cat] = await Promise.all([
     supabase
-      .from('registros')
+      .from('reservas')
       .select(reservaCon({ nivel: 'pago', relaciones: [CON_LANCHA_COMPLETA, CON_PLAN, CON_CANAL, CON_PAIS] }))
       .eq('fecha', fecha),
     supabase

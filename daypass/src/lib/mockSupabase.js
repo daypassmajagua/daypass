@@ -132,7 +132,7 @@ function calcTotal(r) {
 function joinRegistro(r) {
   return {
     ...r,
-    total_calculado: calcTotal(r),
+    total_calculado: r._sinDinero ? null : calcTotal(r),
     lanchas:  STORE.lanchas.find(l => l.id === r.lancha_id) || null,
     planes:   STORE.planes.find(p => p.id === r.plan_id)   || null,
     canales:  STORE.canales.find(c => c.id === r.canal_id) || null,
@@ -557,6 +557,33 @@ const STORE = {
   zarpe_empleados:   [],
   zarpe_alojamiento: [],
   tokens_reserva:    [],
+
+  /**
+   * Los perfiles (migración 015). En la demo se puede cambiar de rol desde la
+   * consola para ver la app como la ve cada persona:
+   *
+   *     window.__daypass_rol('mesero')
+   *
+   * Sin eso no habría forma de comprobar que el mesero no ve precios ni que la
+   * isla entra directo a su pantalla — y esas son justamente las dos cosas que
+   * esta fase promete.
+   */
+  perfiles: [
+    {
+      user_id: 'mock-user-demo',
+      nombre: 'Usuario Demo',
+      // El rol sobrevive a la recarga: el mock vive en memoria y sin esto
+      // cambiar de rol no serviría de nada, porque la página se recarga para
+      // que el menú y el inicio se recalculen.
+      rol: (() => {
+        try { return localStorage.getItem('daypass:demo-rol') || 'directora' }
+        catch { return 'directora' }
+      })(),
+      activo: true,
+    },
+  ],
+  guardias: [],
+  bitacora: [],
   // Las constantes de la operación (regla 22). Sin esta tabla la demo mostraba
   // siempre los valores de respaldo y cambiar un ajuste no hacía nada.
   ajustes: [
@@ -761,6 +788,36 @@ function diaDe(fecha) {
  * Espeja a la vista estado_embarques de 006: el último evento de cada
  * persona manda. La clave es el pasajero si lo hay, o el client_id.
  */
+/** Los roles que pueden ver plata. Igual que `puedo_ver_dinero()` en la 015. */
+const VEN_DINERO = ['super_admin', 'gerencia', 'directora', 'asesora', 'asesora_comercial']
+
+function rolActual() {
+  return STORE.perfiles.find(p => p.user_id === MOCK_SESSION.user.id)?.rol || null
+}
+
+/**
+ * La vista `reservas`: lo mismo que registros, con los precios en null para
+ * quien no debe verlos.
+ *
+ * En Postgres esto lo hace un `case when puedo_ver_dinero() then …` dentro de
+ * la vista, así que el null lo decide el servidor. Aquí se replica para que la
+ * demo diga la verdad: si el mesero viera precios en la demo, nadie
+ * descubriría que la vista no se está usando hasta producción.
+ */
+function derivarReservas() {
+  if (VEN_DINERO.includes(rolActual())) return STORE.registros
+  return STORE.registros.map(r => ({
+    ...r,
+    precio_adulto: null,
+    precio_nino: null,
+    precio_lancha: null,
+    valor_cupo: null,
+    // Marca para que joinRegistro no vuelva a calcular el total: en Postgres
+    // la vista lo devuelve en null y aquí tiene que pasar lo mismo.
+    _sinDinero: true,
+  }))
+}
+
 function derivarEstadoEmbarques() {
   const ultimo = new Map()
   ;[...STORE.embarques]
@@ -1209,6 +1266,10 @@ class QB {
     // La vista estado_embarques no es una tabla: se deriva del último
     // evento de cada persona, igual que en Postgres.
     if (this._table === 'estado_embarques') return derivarEstadoEmbarques()
+    // Y `reservas` tampoco: es registros con los precios en null para quien no
+    // puede verlos. Sin esto en la demo no habría forma de comprobar que el
+    // mesero no ve plata, que es la promesa central de la fase de roles.
+    if (this._table === 'reservas') return derivarReservas()
     return STORE[this._table] || []
   }
 
@@ -1228,7 +1289,10 @@ class QB {
   }
 
   _joinIfRegistros(rows) {
-    if (this._table === 'registros') return rows.map(joinRegistro)
+    // `reservas` es una vista sobre `registros`: lleva los mismos joins y el
+    // mismo total calculado. Sin esto la vista devolvería filas a medias y
+    // parecería que el enmascarado rompió la pantalla.
+    if (this._table === 'registros' || this._table === 'reservas') return rows.map(joinRegistro)
     if (this._table === 'pasajeros') {
       return rows.map(p => ({
         ...p,
@@ -1393,6 +1457,20 @@ const MOCK_SESSION = {
     email: 'demo@daypass.co',
     user_metadata: { full_name: 'Usuario Demo' },
   },
+}
+
+/**
+ * Cambiar de rol en la demo, para ver la app como la ve cada persona.
+ * En la consola:  __daypass_rol('mesero')
+ */
+if (typeof window !== 'undefined') {
+  window.__daypass_rol = rol => {
+    const p = STORE.perfiles.find(x => x.user_id === MOCK_SESSION.user.id)
+    if (!p) return
+        p.rol = rol
+        try { localStorage.setItem('daypass:demo-rol', rol) } catch { /* sin persistencia */ }
+        location.reload()
+  }
 }
 
 const mockAuth = {

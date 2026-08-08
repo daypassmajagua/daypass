@@ -8,6 +8,7 @@ import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
 import { comoSeCobra, coincideEnIsla, COBROS } from '../lib/cobroEnIsla'
 import { classNames, fraseFecha, plural } from '../lib/utils'
 import IndicadorSync from '../components/layout/IndicadorSync'
+import NavegacionMinima from '../components/layout/NavegacionMinima'
 import { reservaCon, CON_LANCHA } from '../lib/columnas'
 
 /**
@@ -112,7 +113,7 @@ export default function Isla() {
 
     if (navigator.onLine) {
       const [reg, ti] = await Promise.all([
-        supabase.from('registros')
+        supabase.from('reservas')
           .select(reservaCon({ nivel: 'pago', relaciones: [CON_LANCHA] }))
           .eq('fecha', fechaActiva),
         supabase.from('tipos_ingreso').select('*'),
@@ -162,10 +163,12 @@ export default function Isla() {
             </p>
           </div>
           <IndicadorSync muelle />
-          <Link to="/" className="text-[16px] font-bold text-blue-700 underline min-h-[44px] flex items-center shrink-0">
-            Volver
-          </Link>
         </div>
+
+        {/* La isla lleva navegación mínima, no ninguna: quien trabaja aquí
+            puede tener dos o tres pantallas, y sin esto queda encerrado. Al
+            mesero, que tiene una sola, no le aparece. */}
+        <NavegacionMinima />
 
         <div className="relative">
           <Search size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6d80] pointer-events-none" />

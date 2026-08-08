@@ -21,25 +21,31 @@ import { useState } from 'react'
 import { classNames } from '../../lib/utils'
 import logoBlanco from '../../assets/logo-blanco.png'
 import IndicadorSync from './IndicadorSync'
+import { usePerfil } from '../../hooks/usePerfil'
+import { menuDe, ETIQUETA_ROL } from '../../lib/navegacion'
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Hoy', icon: LayoutDashboard },
-  { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
-  { to: '/dia', label: 'El día', icon: List },
-  { to: '/embarque', label: 'Embarque', icon: Anchor },
-  { to: '/isla', label: 'Isla', icon: Palmtree },
-  { to: '/cocina', label: 'Almuerzos', icon: ChefHat },
-  { to: '/equipo', label: 'Lanchas y equipo', icon: Ship },
-  { to: '/folios', label: 'Folios', icon: ClipboardList },
-  { to: '/historial', label: 'Historial', icon: History },
-  { to: '/informes', label: 'Informes', icon: BarChart2 },
-  { to: '/config', label: 'Configuración', icon: Settings },
-]
+/**
+ * El menú sale de navegacion.js, no de una lista aquí. Antes había tres
+ * listas —esta, la de ProtectedRoute y la redirección al entrar— y con ocho
+ * roles se habrían desincronizado en la primera semana.
+ *
+ * Los iconos se resuelven por nombre porque navegacion.js es lógica y no
+ * debería importar componentes de dibujo.
+ */
+const ICONOS = {
+  LayoutDashboard, PlusCircle, List, Lock, Anchor, Palmtree, ChefHat,
+  ClipboardList, Ship, History, BarChart2, Settings,
+}
 
 export default function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { rol, perfil } = usePerfil()
+
+  // Lo que este rol no puede usar no aparece: nada en gris, nada con candado.
+  // Un menú lleno de cosas que no puedes tocar se lee mal todos los días.
+  const secciones = menuDe(rol)
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -76,7 +82,7 @@ export default function Navbar() {
           </div>
 
           <nav className="hidden 2xl:flex items-center gap-1 min-w-0">
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            {secciones.map(({ a: to, etiqueta: label, icono }) => { const Icon = ICONOS[icono]; return (
               <Link
                 key={to}
                 to={to}
@@ -90,7 +96,7 @@ export default function Navbar() {
                 <Icon size={16} />
                 {label}
               </Link>
-            ))}
+            )})}
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -120,7 +126,7 @@ export default function Navbar() {
                 <X size={22} />
               </button>
             </div>
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            {secciones.map(({ a: to, etiqueta: label, icono }) => { const Icon = ICONOS[icono]; return (
               <Link
                 key={to}
                 to={to}
@@ -135,7 +141,7 @@ export default function Navbar() {
                 <Icon size={20} />
                 {label}
               </Link>
-            ))}
+            )})}
             <div className="mt-auto border-t border-white/15 pt-2 pb-[env(safe-area-inset-bottom)]">
               <button
                 onClick={handleLogout}

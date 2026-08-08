@@ -205,7 +205,7 @@ export function useEmbarque(zarpe) {
 
     if (navigator.onLine) {
       const { data: regs, error } = await supabase
-        .from('registros')
+        .from('reservas')
         .select(reservaCon({ relaciones: [CON_LANCHA, CON_PLAN] }))
         .eq('fecha', zarpe.fecha)
         .eq('lancha_id', zarpe.lancha_id)
