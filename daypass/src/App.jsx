@@ -11,7 +11,6 @@ import CerrarDia from './pages/CerrarDia'
 import Embarque from './pages/Embarque'
 import Equipo from './pages/Equipo'
 import ListadoDia from './pages/ListadoDia'
-import Tentativo from './pages/Tentativo'
 import Folios from './pages/Folios'
 import Historial from './pages/Historial'
 import Informes from './pages/Informes'
@@ -106,16 +105,6 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <ListadoDia />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tentativo"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <Tentativo />
               </AppLayout>
             </ProtectedRoute>
           }

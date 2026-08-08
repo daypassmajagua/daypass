@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, ChefHat, Download, Lock, Printer, Ship, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ChefHat, Copy, Download, Lock, Printer, Ship, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import { usePendientes } from '../hooks/usePendientes'
 import { useDiaOperativo, cerrarTentativo } from '../hooks/useDiaOperativo'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
-import { openPrintWindow, buildTentativoHTML, buildCocinaHTML } from '../lib/printDoc'
+import {
+  openPrintWindow, buildTentativoHTML, buildCocinaHTML, buildTentativoTexto,
+} from '../lib/printDoc'
 import { calcularConteoCocina } from '../lib/conteoCocina'
 import { precargarDia } from '../lib/offline/precarga'
 import { usePrecarga, haceCuanto } from '../lib/offline/useOffline'
@@ -94,6 +96,11 @@ export default function CerrarDia() {
       `Conteo de cocina — ${fechaActiva}`,
       buildCocinaHTML(registros, pasajeros, opcionesPlato, fechaActiva)
     )
+  }
+  /** Para pegarlo en el grupo de WhatsApp. */
+  function copiarTexto() {
+    navigator.clipboard.writeText(buildTentativoTexto(registros, fechaActiva))
+    toast.success('Tentativo copiado — pégalo en WhatsApp')
   }
 
   async function cerrarYEnviar() {
@@ -317,6 +324,10 @@ export default function CerrarDia() {
             <Button variant="secondary" onClick={imprimirCocina}>
               <Printer size={16} />
               Imprimir el conteo de cocina
+            </Button>
+            <Button variant="secondary" onClick={copiarTexto}>
+              <Copy size={16} />
+              Copiar para WhatsApp
             </Button>
             <Button
               variant="ghost"

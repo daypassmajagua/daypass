@@ -564,3 +564,56 @@ export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha) {
   </div>
 </div>`
 }
+
+// ─── Tentativo en texto plano ──────────────────────────────────────────────────
+/**
+ * El mismo tentativo, pero para pegar en WhatsApp.
+ *
+ * Es lo único que la pantalla /tentativo hacía y que no existía en otro lado;
+ * vive aquí porque el sitio natural para compartir el día es el cierre.
+ */
+export function buildTentativoTexto(registros, fecha) {
+  const activos = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
+  const tentativas = registros.filter(r => r.estado === 'tentativa')
+
+  const totalAdultos = activos.reduce((s, r) => s + r.adultos, 0)
+  const totalNinos = activos.reduce((s, r) => s + r.ninos, 0)
+  const totalCortesias = activos.reduce((s, r) => s + r.cortesias, 0)
+  const totalPax = activos.reduce((s, r) => s + r.adultos + r.ninos, 0)
+
+  const porLancha = {}
+  activos.forEach(r => {
+    const nombre = r.lanchas?.nombre || 'Sin lancha'
+    if (!porLancha[nombre]) porLancha[nombre] = []
+    porLancha[nombre].push(r)
+  })
+
+  let texto = `TENTATIVO — ${formatDate(fecha)}\n`
+  texto += `${'─'.repeat(42)}\n\n`
+  texto += `Total: ${totalPax} personas\n`
+  texto += `${totalAdultos} adultos · ${totalNinos} niños`
+  if (totalCortesias > 0) texto += ` · ${totalCortesias} cortesías`
+  texto += '\n\n'
+
+  Object.entries(porLancha).forEach(([lancha, regs]) => {
+    const pax = regs.reduce((s, r) => s + r.adultos + r.ninos, 0)
+    texto += `${lancha.toUpperCase()} — ${pax} pax\n`
+    regs.forEach(r => {
+      const quien = r.nombre_grupo || r.agencia_nombre || r.nombre_pasajero
+      texto += `  · ${quien} — ${r.adultos + r.ninos} pax`
+      if (r.planes?.nombre) texto += ` — ${r.planes.nombre}`
+      texto += '\n'
+    })
+    texto += '\n'
+  })
+
+  if (tentativas.length > 0) {
+    const tPax = tentativas.reduce((s, r) => s + r.adultos + r.ninos, 0)
+    texto += `SIN CONFIRMAR: ${tPax} personas\n`
+    tentativas.forEach(r => {
+      texto += `  · ${r.nombre_grupo || r.nombre_pasajero} — ${r.adultos + r.ninos} pax\n`
+    })
+  }
+
+  return texto.trim()
+}
