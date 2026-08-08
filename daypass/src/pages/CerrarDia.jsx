@@ -36,13 +36,16 @@ export default function CerrarDia() {
   const { fechaActiva } = useAppStore()
   const { registros, loading, refetch } = useRegistros(fechaActiva)
   const { dia, enPlaneacion } = useDiaOperativo(fechaActiva)
-  const { lista } = usePendientes(registros, { enPlaneacion, tiposIngreso })
 
   const [lanchas, setLanchas] = useState([])
   const [pasajeros, setPasajeros] = useState([])
   const [opcionesPlato, setOpcionesPlato] = useState([])
   const [tiposIngreso, setTiposIngreso] = useState([])
   const [cerrando, setCerrando] = useState(false)
+
+  // Va después de los estados: leerlo antes lo dejaba en zona muerta y
+  // tumbaba la pantalla entera.
+  const { lista } = usePendientes(registros, { enPlaneacion, tiposIngreso })
   const { precarga, refrescar: refrescarPrecarga } = usePrecarga(fechaActiva)
   const [enviandoTarjetas, setEnviandoTarjetas] = useState(false)
 

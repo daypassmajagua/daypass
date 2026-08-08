@@ -97,7 +97,16 @@
       "Bash(npx --yes vercel project inspect daypass)",
       "Bash(curl -s \"https://www.vercel-status.com/api/v2/status.json\")",
       "Bash(curl -s \"https://www.vercel-status.com/api/v2/incidents/unresolved.json\")",
-      "PowerShell(git config --global user.email \"daypassmajagua@gmail.com\"; \"email global: $\\(git config --global user.email\\)\"; \"name global:  $\\(git config --global user.name\\)\"; \"--- en este repo ---\"; Set-Location \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\"; \"email efectivo: $\\(git config user.email\\)\"; \"name efectivo:  $\\(git config user.name\\)\")"
+      "PowerShell(git config --global user.email \"daypassmajagua@gmail.com\"; \"email global: $\\(git config --global user.email\\)\"; \"name global:  $\\(git config --global user.name\\)\"; \"--- en este repo ---\"; Set-Location \"c:\\\\Users\\\\ragui\\\\Documents\\\\Claude\\\\Projects\\\\Reservas DayPASS\"; \"email efectivo: $\\(git config user.email\\)\"; \"name efectivo:  $\\(git config user.name\\)\")",
+      "Bash(npx --yes vercel project protection --help)",
+      "Bash(npx --yes vercel project protection disable --sso --yes)",
+      "Bash(npx --yes vercel project protection disable --sso)",
+      "Bash(npx --yes vercel alias ls)",
+      "Bash(npx --yes vercel domains ls)",
+      "Bash(npx eslint *)",
+      "Bash(awk '/^\\\\// || /^C:/ {f=$0} /Cannot access/ {print f\" -> \"$0}')",
+      "Bash(npm run *)",
+      "PowerShell($edge = \"C:\\\\Program Files \\(x86\\)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\"; $out = \"C:\\\\Users\\\\ragui\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-ragui-Documents-Claude-Projects-Reservas-DayPASS\\\\c5cc36e3-af4f-4387-b6e7-aa61444873eb\\\\scratchpad\"; & $edge --headless=new --disable-gpu --no-sandbox --virtual-time-budget=9000 --screenshot=\"$out\\\\fix-cerrar.png\" --window-size=1000,1300 \"http://localhost:5174/cerrar\" 2>&1 | Out-Null; \"listo\")"
     ]
   }
 }

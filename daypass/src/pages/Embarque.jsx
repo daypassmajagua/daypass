@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -205,7 +205,9 @@ export default function Embarque() {
   const [walkInAbierto, setWalkInAbierto] = useState(false)
   const [cerrando, setCerrando] = useState(false)
   // Toques recientes: volver a tocar dentro de la ventana deshace.
-  const recientes = useRef(new Map())
+  // Va en estado, no en un ref: la fila tiene que repintarse cuando la
+  // ventana se abre y cuando se cierra sola a los 8 segundos.
+  const [recientes, setRecientes] = useState({})
 
   useEffect(() => {
     document.body.style.background = '#f4f4f0'
@@ -237,19 +239,23 @@ export default function Embarque() {
   async function alTocar(fila) {
     if (cerrado) return
     const clave = claveDe(fila)
-    const hace = recientes.current.get(clave)
+    const hace = recientes[clave]
     const embarcado = ['check_in', 'walk_in'].includes(fila.estado)
 
     // Volver a tocar dentro de la ventana deshace lo que se acaba de marcar.
     if (embarcado && hace && Date.now() - hace < VENTANA_DESHACER) {
-      recientes.current.delete(clave)
+      setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
       await registrarEvento(fila, 'no_show')
       toast('Deshecho', { duration: 1500 })
       return
     }
     if (embarcado) return   // ya estaba: un toque no lo tumba después de la ventana
 
-    recientes.current.set(clave, Date.now())
+    setRecientes(prev => ({ ...prev, [clave]: Date.now() }))
+    // Pasada la ventana, la fila deja de ofrecer deshacer por sí sola.
+    setTimeout(() => {
+      setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
+    }, VENTANA_DESHACER)
     await registrarEvento(fila, 'check_in')
   }
 
@@ -356,7 +362,7 @@ export default function Embarque() {
                   const embarcado = ['check_in', 'walk_in'].includes(f.estado)
                   const noLlego = f.estado === 'no_show'
                   const clave = claveDe(f)
-                  const reciente = embarcado && Date.now() - (recientes.current.get(clave) || 0) < VENTANA_DESHACER
+                  const reciente = embarcado && Boolean(recientes[clave])
 
                   return (
                     <li key={clave}>
