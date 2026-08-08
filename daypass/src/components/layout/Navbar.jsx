@@ -15,6 +15,7 @@ import {
   Anchor,
   Ship,
   ChefHat,
+  Palmtree,
 } from 'lucide-react'
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
   { to: '/dia', label: 'El día', icon: List },
   { to: '/embarque', label: 'Embarque', icon: Anchor },
+  { to: '/isla', label: 'Isla', icon: Palmtree },
   { to: '/cocina', label: 'Almuerzos', icon: ChefHat },
   { to: '/equipo', label: 'Lanchas y equipo', icon: Ship },
   { to: '/folios', label: 'Folios', icon: ClipboardList },

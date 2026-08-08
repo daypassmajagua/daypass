@@ -17,6 +17,7 @@ import Historial from './pages/Historial'
 import Informes from './pages/Informes'
 import Config from './pages/Config'
 import Cocina from './pages/Cocina'
+import Isla from './pages/Isla'
 
 function AppLayout({ children }) {
   // Una sola suscripción al día y a la presencia para toda la app.
@@ -81,6 +82,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Embarque />
+            </ProtectedRoute>
+          }
+        />
+        {/* Como el muelle: sin AppLayout. La isla se usa de pie y con una
+            mano, y la barra de la oficina solo estorba. */}
+        <Route
+          path="/isla"
+          element={
+            <ProtectedRoute>
+              <Isla />
             </ProtectedRoute>
           }
         />
