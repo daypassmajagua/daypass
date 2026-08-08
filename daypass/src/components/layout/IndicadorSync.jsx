@@ -58,7 +58,11 @@ export default function IndicadorSync({ muelle = false }) {
           : pendientes > 0
             ? <CloudUpload size={muelle ? 20 : 15} className={sincronizando ? 'motion-safe:animate-pulse' : ''} />
             : <Check size={muelle ? 20 : 15} strokeWidth={3} />}
-        <span className="truncate">{texto}</span>
+        {/* En pantallas apretadas el ícono basta; el detalle está a un toque.
+            Salvo cuando hay algo pendiente: eso siempre se lee. */}
+        <span className={classNames('truncate', !muelle && pendientes === 0 && 'hidden lg:inline')}>
+          {texto}
+        </span>
       </button>
 
       {abierto && (
