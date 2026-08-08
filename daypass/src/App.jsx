@@ -9,6 +9,7 @@ import Hoy from './pages/Hoy'
 import Reserva from './pages/Reserva'
 import CerrarDia from './pages/CerrarDia'
 import Embarque from './pages/Embarque'
+import Equipo from './pages/Equipo'
 import ListadoDia from './pages/ListadoDia'
 import Tentativo from './pages/Tentativo'
 import Folios from './pages/Folios'
@@ -76,6 +77,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Embarque />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/equipo"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Equipo />
+              </AppLayout>
             </ProtectedRoute>
           }
         />

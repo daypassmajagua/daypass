@@ -3,15 +3,53 @@ import { hoyLocal, aFechaLocal } from './utils.js'
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
 const LANCHAS = [
-  { id: 'l-maj1', codigo: 'MAJ1', nombre: 'Majagua 1', capacidad: 40, activa: true },
-  { id: 'l-maj2', codigo: 'MAJ2', nombre: 'Majagua 2', capacidad: 40, activa: true },
-  { id: 'l-cat1', codigo: 'CAT1', nombre: 'Catalina 1', capacidad: 30, activa: true },
-  { id: 'l-cat2', codigo: 'CAT2', nombre: 'Catalina 2', capacidad: 30, activa: true },
-  { id: 'l-cat3', codigo: 'CAT3', nombre: 'Catalina 3', capacidad: 30, activa: true },
-  { id: 'l-cat4', codigo: 'CAT4', nombre: 'Catalina 4', capacidad: 30, activa: true },
-  { id: 'l-pop',  codigo: 'POP',  nombre: 'Popeye',     capacidad: 20, activa: true },
-  { id: 'l-arc',  codigo: 'ARC',  nombre: 'Arco',       capacidad: 20, activa: true },
-  { id: 'l-otr',  codigo: 'OTR',  nombre: 'Otra',       capacidad: null, activa: true },
+  { id: 'l-maj1', codigo: 'MAJ1', nombre: 'Majagua 1', capacidad: 41, activa: true, prioridad: 1 },
+  { id: 'l-maj2', codigo: 'MAJ2', nombre: 'Majagua 2', capacidad: 41, activa: true, prioridad: 2 },
+  { id: 'l-cat1', codigo: 'CAT1', nombre: 'Catalina 1', capacidad: 30, activa: true, prioridad: 10 },
+  { id: 'l-cat2', codigo: 'CAT2', nombre: 'Catalina 2', capacidad: 30, activa: true, prioridad: 10 },
+  { id: 'l-cat3', codigo: 'CAT3', nombre: 'Catalina 3', capacidad: 30, activa: true, prioridad: 10 },
+  { id: 'l-cat4', codigo: 'CAT4', nombre: 'Catalina 4', capacidad: 30, activa: true, prioridad: 10 },
+  { id: 'l-pop',  codigo: 'POP',  nombre: 'Popeye',     capacidad: 20, activa: true, prioridad: 10 },
+  { id: 'l-arc',  codigo: 'ARC',  nombre: 'Arco',       capacidad: 20, activa: true, prioridad: 10 },
+  { id: 'l-otr',  codigo: 'OTR',  nombre: 'Otra',       capacidad: null, activa: true, prioridad: 99 },
+]
+
+// ─── Modelo de operación (007) ────────────────────────────────────────────────
+
+const OPCIONES_PLATO = []
+;['p-rack-s', 'p-may-s', 'p-fid-s', 'p-corp-s', 'p-alm-s'].forEach(planId => {
+  ;[['Pescado frito', 'Fried fish'], ['Filete de pescado', 'Fish fillet'],
+    ['Pescado a la plancha', 'Grilled fish'], ['Pollo', 'Chicken']]
+    .forEach(([es, en], i) => OPCIONES_PLATO.push({
+      id: `op-${planId}-${i}`, plan_id: planId, nombre_es: es, nombre_en: en, activo: true,
+    }))
+})
+;['p-rack-g', 'p-may-g', 'p-fid-g'].forEach(planId => {
+  ;[['Langosta', 'Lobster'], ['Cazuela de mariscos', 'Seafood casserole']]
+    .forEach(([es, en], i) => OPCIONES_PLATO.push({
+      id: `op-${planId}-${i}`, plan_id: planId, nombre_es: es, nombre_en: en, activo: true,
+    }))
+})
+// Diamond sin filas: no se pregunta.
+
+const TIPOS_INGRESO = [
+  { id: 'ti-pasadia',  codigo: 'pasadia',     nombre: 'Pasadía',                consume_cupo: true, consume_tiquete: true,  genera_ingreso: true,  activo: true },
+  { id: 'ti-cortesia', codigo: 'cortesia',    nombre: 'Cortesía',               consume_cupo: true, consume_tiquete: true,  genera_ingreso: false, activo: true },
+  { id: 'ti-aloj',     codigo: 'alojamiento', nombre: 'Huésped de alojamiento', consume_cupo: true, consume_tiquete: true,  genera_ingreso: false, activo: true },
+  { id: 'ti-empleado', codigo: 'empleado',    nombre: 'Empleado',               consume_cupo: true, consume_tiquete: false, genera_ingreso: false, activo: true },
+  { id: 'ti-prov',     codigo: 'proveedor',   nombre: 'Proveedor',              consume_cupo: true, consume_tiquete: false, genera_ingreso: null,  activo: true },
+  { id: 'ti-guia',     codigo: 'guia',        nombre: 'Guía de turismo',        consume_cupo: null, consume_tiquete: null,  genera_ingreso: null,  activo: true },
+]
+
+const PILOTOS = [
+  { id: 'pi-1', nombre: 'José Julio Berrío', documento: '73123456', activo: true },
+  { id: 'pi-2', nombre: 'Wilmer Castro', documento: '9876543', activo: true },
+]
+
+const EMPLEADOS = [
+  { id: 'em-1', nombre: 'Rosiri Cabarcas', tipo_documento: 'cc', documento: '45111222', pais_id: 'pa-col', activo: true },
+  { id: 'em-2', nombre: 'Deivis Julio', tipo_documento: 'cc', documento: '73222333', pais_id: 'pa-col', activo: true },
+  { id: 'em-3', nombre: 'Yulieth Torres', tipo_documento: 'cc', documento: '45333444', pais_id: 'pa-col', activo: true },
 ]
 
 const CANALES = [
@@ -512,7 +550,17 @@ const STORE = {
   cambios_estado:  [],
   zarpes:     [],
   embarques:  [],
+  opciones_plato:    [...OPCIONES_PLATO],
+  tipos_ingreso:     [...TIPOS_INGRESO],
+  pilotos:           [...PILOTOS],
+  empleados:         [...EMPLEADOS],
+  zarpe_empleados:   [],
+  zarpe_alojamiento: [],
+  tokens_reserva:    [],
 }
+
+// Todo lo existente es pasadía, igual que en la migración.
+STORE.registros.forEach(r => { if (!r.tipo_ingreso_id) r.tipo_ingreso_id = 'ti-pasadia' })
 
 // Cada fecha con reservas abre su día, igual que el trigger en Postgres.
 STORE.registros.forEach(r => {
@@ -943,12 +991,26 @@ class QB {
       return rows.map(p => ({
         ...p,
         paises: STORE.paises.find(x => x.id === p.pais_id) || null,
+        opciones_plato: STORE.opciones_plato.find(o => o.id === p.opcion_plato_id) || null,
+      }))
+    }
+    if (this._table === 'empleados' || this._table === 'zarpe_alojamiento') {
+      return rows.map(e => ({
+        ...e,
+        paises: STORE.paises.find(x => x.id === e.pais_id) || null,
+      }))
+    }
+    if (this._table === 'zarpe_empleados') {
+      return rows.map(ze => ({
+        ...ze,
+        empleados: STORE.empleados.find(e => e.id === ze.empleado_id) || null,
       }))
     }
     if (this._table === 'zarpes') {
       return rows.map(z => ({
         ...z,
         lanchas: STORE.lanchas.find(l => l.id === z.lancha_id) || null,
+        pilotos: STORE.pilotos.find(p => p.id === z.piloto_id) || null,
       }))
     }
     return rows

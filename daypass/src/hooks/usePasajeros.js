@@ -37,6 +37,7 @@ function aFilaDeBase(p, registroId) {
     documento: (p.documento || '').trim() || null,
     pais_id: p.pais_id || null,
     categoria: p.categoria || 'adulto',
+    opcion_plato_id: p.opcion_plato_id || null,
     restriccion_alimentaria: (p.restriccion_alimentaria || '').trim() || null,
   }
 }

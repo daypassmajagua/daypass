@@ -14,6 +14,7 @@ import {
   X,
   BarChart2,
   Anchor,
+  Ship,
 } from 'lucide-react'
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
   { to: '/dia', label: 'El día', icon: List },
   { to: '/embarque', label: 'Embarque', icon: Anchor },
+  { to: '/equipo', label: 'Lanchas y equipo', icon: Ship },
   { to: '/tentativo', label: 'Tentativo', icon: FileText },
   { to: '/folios', label: 'Folios', icon: ClipboardList },
   { to: '/historial', label: 'Historial', icon: History },

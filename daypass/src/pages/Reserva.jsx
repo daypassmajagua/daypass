@@ -38,6 +38,12 @@ const schema = z.object({
   plan_id: z.string().min(1, 'Elige un plan'),
   canal_id: z.string().min(1, 'Falta el canal'),
   agencia_nombre: z.string().optional(),
+  // El check-in remoto y el recordatorio viajan por aquí: sin contacto no hay link.
+  telefono: z.string().min(7, 'Falta el teléfono'),
+  email: z.string().email('Ese correo no se ve bien'),
+  tipo_ingreso_id: z.string().min(1),
+  cobra_cupo: z.boolean().optional(),
+  valor_cupo: z.coerce.number().min(0).optional(),
   adultos: z.coerce.number().min(1, 'Mínimo 1 adulto'),
   ninos: z.coerce.number().min(0).default(0),
   infantes: z.coerce.number().min(0).default(0),
@@ -86,6 +92,8 @@ export default function Reserva() {
   const [canales, setCanales] = useState([])
   const [paises, setPaises] = useState([])
   const [agencias, setAgencias] = useState([])
+  const [tiposIngreso, setTiposIngreso] = useState([])
+  const [opcionesPlato, setOpcionesPlato] = useState([])
   const [cargandoCatalogos, setCargandoCatalogos] = useState(true)
   const [guardando, setGuardando] = useState(false)
   const [borradorRecuperado, setBorradorRecuperado] = useState(false)
@@ -137,15 +145,18 @@ export default function Reserva() {
 
   useEffect(() => {
     async function cargar() {
-      const [l, p, c, pa, a] = await Promise.all([
+      const [l, p, c, pa, a, ti, op] = await Promise.all([
         supabase.from('lanchas').select('*').eq('activa', true).order('nombre'),
         supabase.from('planes').select('*').eq('activo', true).order('nombre'),
         supabase.from('canales').select('*').order('nombre'),
         supabase.from('paises').select('*').order('nombre'),
         supabase.from('agencias').select('*').eq('activa', true).order('nombre'),
+        supabase.from('tipos_ingreso').select('*').eq('activo', true),
+        supabase.from('opciones_plato').select('*').eq('activo', true),
       ])
       setLanchas(l.data || []); setPlanes(p.data || []); setCanales(c.data || [])
       setPaises(pa.data || []); setAgencias(a.data || [])
+      setTiposIngreso(ti.data || []); setOpcionesPlato(op.data || [])
       setCargandoCatalogos(false)
     }
     cargar()
@@ -183,14 +194,36 @@ export default function Reserva() {
     setValue('precio_nino', (temporada === 'alta' ? plan.precio_nino_alta : plan.precio_nino_baja) || 0)
   }, [valores.plan_id, temporada, planes, setValue, cargandoCatalogos])
 
-  // Lancha sugerida: la que tenga más cupo libre ese día.
+  // Lancha sugerida POR PRIORIDAD (regla v5): Majagua 1 y Majagua 2 siempre
+  // primero; las demás solo entran cuando esas se llenan. La prioridad es un
+  // campo editable de la lancha, no código duro.
   useEffect(() => {
     if (isEdit || cargandoCatalogos || valores.lancha_id || !lanchas.length) return
-    const conCupo = [...lanchas]
+    const porPrioridad = [...lanchas]
       .filter(l => l.capacidad)
-      .sort((a, b) => (b.capacidad - (ocupacion[b.id] || 0)) - (a.capacidad - (ocupacion[a.id] || 0)))
-    if (conCupo[0]) setValue('lancha_id', conCupo[0].id)
-  }, [isEdit, cargandoCatalogos, lanchas, ocupacion, valores.lancha_id, setValue])
+      .sort((a, b) => (a.prioridad ?? 999) - (b.prioridad ?? 999))
+    const conCupo = porPrioridad.find(
+      l => (ocupacion[l.id] || 0) + Math.max(1, paxNuevos) <= l.capacidad
+    )
+    // Si ninguna tiene cupo, se sugiere la de mayor prioridad igual:
+    // el sobrecupo se ve en la ficha y lo decide ella.
+    setValue('lancha_id', (conCupo || porPrioridad[0]).id)
+  }, [isEdit, cargandoCatalogos, lanchas, ocupacion, valores.lancha_id, paxNuevos, setValue])
+
+  // El tipo de ingreso arranca en pasadía apenas cargue el catálogo.
+  useEffect(() => {
+    if (cargandoCatalogos || valores.tipo_ingreso_id || !tiposIngreso.length) return
+    const pasadia = tiposIngreso.find(t => t.codigo === 'pasadia')
+    if (pasadia) setValue('tipo_ingreso_id', pasadia.id)
+  }, [cargandoCatalogos, tiposIngreso, valores.tipo_ingreso_id, setValue])
+
+  const tipoIngresoElegido = tiposIngreso.find(t => t.id === valores.tipo_ingreso_id)
+
+  // Las opciones de plato del plan elegido (Diamond no tiene → no se pregunta).
+  const opcionesDelPlan = useMemo(
+    () => opcionesPlato.filter(o => o.plan_id === valores.plan_id),
+    [opcionesPlato, valores.plan_id]
+  )
 
   const totalAdultos = (Number(valores.adultos) || 0) * (Number(valores.precio_adulto) || 0)
   const totalNinos = (Number(valores.ninos) || 0) * (Number(valores.precio_nino) || 0)
@@ -299,8 +332,8 @@ export default function Reserva() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        {/* Cuándo, arriba de todo: cambia precios y ocupación */}
-        <Card className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Cuándo y qué tipo de ingreso: cambian precios, cupo y tiquetes */}
+        <Card className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Controller name="fecha" control={control} render={({ field }) => (
             <DatePicker label="¿Qué día vienen?" value={field.value} onChange={field.onChange}
               error={errors.fecha?.message} />
@@ -312,6 +345,31 @@ export default function Reserva() {
                 { value: 'tentativa', label: 'Tentativa' },
               ]} />
           )} />
+          <Controller name="tipo_ingreso_id" control={control} render={({ field }) => (
+            <Select label="Tipo de ingreso" value={field.value || ''} onChange={field.onChange}
+              options={tiposIngreso.map(t => ({ value: t.id, label: t.nombre }))} />
+          )} />
+
+          {/* Proveedor: la única bandera que se decide por reserva */}
+          {tipoIngresoElegido?.codigo === 'proveedor' && (
+            <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-xl bg-blue-50 p-4">
+              <Controller name="cobra_cupo" control={control} render={({ field }) => (
+                <Select
+                  label="¿Se le cobra el cupo?"
+                  value={field.value === true ? 'si' : field.value === false ? 'no' : ''}
+                  onChange={v => field.onChange(v === 'si')}
+                  placeholder="— Decidir —"
+                  options={[
+                    { value: 'si', label: 'Sí, se cobra' },
+                    { value: 'no', label: 'No, va por cuenta del hotel' },
+                  ]}
+                />
+              )} />
+              {valores.cobra_cupo === true && (
+                <Input label="Valor del cupo" type="number" min="0" {...register('valor_cupo')} />
+              )}
+            </div>
+          )}
         </Card>
 
         {/* 1 · Quién viene */}
@@ -356,6 +414,17 @@ export default function Reserva() {
                 placeholder="— País —"
                 options={[{ value: '', label: '— País —' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))]} />
             )} />
+          </div>
+
+          {/* El check-in remoto y las tarjetas viajan por aquí */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Input label="Teléfono / WhatsApp" placeholder="300 123 4567" inputMode="tel"
+                {...register('telefono')} error={errors.telefono?.message} />
+              <p className="text-[13px] text-tinta-2 mt-1">Por aquí le llega el link de su reserva.</p>
+            </div>
+            <Input label="Correo" type="email" placeholder="nombre@correo.com"
+              {...register('email')} error={errors.email?.message} />
           </div>
         </Seccion>
 
@@ -495,6 +564,7 @@ export default function Reserva() {
               infantes: Number(valores.infantes) || 0, cortesias: Number(valores.cortesias) || 0,
             }}
             pasajeros={pasajeros} onChange={setPasajeros} paises={paises}
+            opcionesPlato={opcionesDelPlan}
           />
         </Seccion>
 

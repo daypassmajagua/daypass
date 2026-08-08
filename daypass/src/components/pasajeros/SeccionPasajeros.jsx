@@ -23,7 +23,8 @@ const TIPOS_DOC = [
 
 const filaVacia = () => ({
   nombre: '', tipo_documento: null, documento: '', pais_id: null,
-  categoria: 'adulto', restriccion_alimentaria: '', _dudosa: false,
+  categoria: 'adulto', opcion_plato_id: null,
+  restriccion_alimentaria: '', _dudosa: false,
 })
 
 /**
@@ -31,7 +32,13 @@ const filaVacia = () => ({
  * listados llegan tarde, así que la reserva vive sin nombres y el faltante
  * queda visible en el contador.
  */
-export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [] }) {
+export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [], opcionesPlato = [] }) {
+  // El plato solo se pregunta si el plan tiene opciones (Diamond no tiene).
+  const conPlato = opcionesPlato.length > 0
+  const opcionesDePlato = useMemo(
+    () => [{ value: '', label: '— Plato —' }, ...opcionesPlato.map(o => ({ value: o.id, label: o.nombre_es }))],
+    [opcionesPlato]
+  )
   const [pegando, setPegando] = useState(false)
   const [texto, setTexto] = useState('')
 
@@ -182,9 +189,16 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
           )}
 
           {/* Encabezado solo cuando la fila cabe en una línea (desde 1280px). */}
-          <div className="hidden xl:grid grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto] gap-2 px-3 text-[12px] font-bold uppercase tracking-wider text-tinta-2">
+          <div className={classNames(
+            'hidden xl:grid gap-2 px-3 text-[12px] font-bold uppercase tracking-wider text-tinta-2',
+            conPlato
+              ? 'grid-cols-[1.5fr_6rem_1fr_1fr_1fr_1.1fr_1.1fr_auto]'
+              : 'grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto]'
+          )}>
             <span>Nombre</span><span>Tipo</span><span>Documento</span>
-            <span>País</span><span>Categoría</span><span>Restricción</span><span className="w-11" />
+            <span>País</span><span>Categoría</span>
+            {conPlato && <span>Plato</span>}
+            <span>Restricción</span><span className="w-11" />
           </div>
 
           {pasajeros.map((p, i) => (
@@ -192,7 +206,10 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
               key={i}
               className={classNames(
                 // iPad: dos columnas apiladas con etiqueta. Escritorio: una fila.
-                'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto] gap-2 items-center rounded-2xl px-3 py-3 xl:py-2',
+                'grid grid-cols-1 sm:grid-cols-2 gap-2 items-center rounded-2xl px-3 py-3 xl:py-2',
+                conPlato
+                  ? 'xl:grid-cols-[1.5fr_6rem_1fr_1fr_1fr_1.1fr_1.1fr_auto]'
+                  : 'xl:grid-cols-[1.6fr_7rem_1fr_1.1fr_1fr_1.2fr_auto]',
                 p._dudosa ? 'bg-coral-50' : 'bg-white'
               )}
             >
@@ -243,6 +260,15 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
                 onChange={v => editar(i, 'categoria', v)}
                 options={CATEGORIAS}
               />
+
+              {conPlato && (
+                <Select
+                  label="Plato" labelOculta
+                  value={p.opcion_plato_id || ''}
+                  onChange={v => editar(i, 'opcion_plato_id', v || null)}
+                  options={opcionesDePlato}
+                />
+              )}
 
               <div>
                 <label className="xl:hidden block text-[12px] font-bold uppercase tracking-wider text-tinta-2 mb-1">

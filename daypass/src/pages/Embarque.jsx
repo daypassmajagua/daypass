@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  Check, ChevronLeft, Search, Ship, UserPlus, X, Anchor, Undo2,
+  Check, ChevronLeft, Search, Settings2, Ship, UserPlus, X, Anchor, Undo2,
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useZarpesDelDia, useEmbarque, claveDe } from '../hooks/useEmbarque'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
-import { supabase } from '../lib/supabase'
+import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 
 /**
  * El muelle.
@@ -21,8 +21,9 @@ const VENTANA_DESHACER = 8000
 
 // ─── Selección de zarpe ────────────────────────────────────────────────────────
 
-function SelectorZarpe({ zarpes, onElegir, onProgramar, fecha, cargando }) {
+function SelectorZarpe({ zarpes, onElegir, onProgramar, onRecargar, fecha, cargando }) {
   const [programando, setProgramando] = useState(false)
+  const [preparando, setPreparando] = useState(null)
 
   if (cargando) return <p className="text-[18px] text-[#3a3d52] p-6">Buscando los zarpes del día…</p>
 
@@ -63,32 +64,58 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, fecha, cargando }) {
       </div>
       {zarpes.map(z => {
         const cerrado = ['zarpado', 'regresado'].includes(z.estado)
+        const preparado = Boolean(z.piloto_id)
         return (
-          <button
-            key={z.id}
-            onClick={() => onElegir(z)}
-            className={classNames(
-              'w-full flex items-center gap-4 rounded-2xl px-5 min-h-[80px] text-left ring-2 transition-colors',
-              cerrado ? 'bg-white ring-[#d8d8d2]' : 'bg-white ring-[#101223]'
+          <div key={z.id} className="flex items-stretch gap-2">
+            <button
+              onClick={() => onElegir(z)}
+              className={classNames(
+                'flex-1 flex items-center gap-4 rounded-2xl px-5 min-h-[80px] text-left ring-2 transition-colors',
+                cerrado ? 'bg-white ring-[#d8d8d2]' : 'bg-white ring-[#101223]'
+              )}
+            >
+              <Ship size={28} className={cerrado ? 'text-[#6a6d80]' : 'text-blue-700'} />
+              <span className="flex-1 min-w-0">
+                <span className="block text-[20px] font-bold text-[#101223]">
+                  {z.lanchas?.nombre || 'Lancha'}
+                </span>
+                <span className="block text-[16px] text-[#3a3d52]">
+                  {z.sentido === 'ida' ? 'Ida' : 'Regreso'}
+                  {z.hora_programada ? ` · ${z.hora_programada.slice(0, 5)}` : ''}
+                  {preparado && z.pilotos?.nombre ? ` · ${z.pilotos.nombre}` : ''}
+                  {cerrado && ` · zarpó ${hora12(z.hora_real_salida) || ''}`}
+                </span>
+              </span>
+              {cerrado
+                ? <span className="text-[16px] font-bold text-verde-600 shrink-0">Cerrado</span>
+                : <ChevronLeft size={26} className="rotate-180 text-[#6a6d80] shrink-0" />}
+            </button>
+
+            {!cerrado && (
+              <button
+                onClick={() => setPreparando(z)}
+                className={classNames(
+                  'shrink-0 w-[92px] rounded-2xl ring-2 text-[14px] font-bold flex flex-col items-center justify-center gap-1 transition-colors',
+                  preparado
+                    ? 'bg-verde-50 ring-verde-500 text-verde-600'
+                    : 'bg-white ring-[#c8c9d4] text-[#3a3d52]'
+                )}
+              >
+                <Settings2 size={20} />
+                {preparado ? 'Lista' : 'Preparar'}
+              </button>
             )}
-          >
-            <Ship size={28} className={cerrado ? 'text-[#6a6d80]' : 'text-blue-700'} />
-            <span className="flex-1 min-w-0">
-              <span className="block text-[20px] font-bold text-[#101223]">
-                {z.lanchas?.nombre || 'Lancha'}
-              </span>
-              <span className="block text-[16px] text-[#3a3d52]">
-                {z.sentido === 'ida' ? 'Ida' : 'Regreso'}
-                {z.hora_programada ? ` · ${z.hora_programada.slice(0, 5)}` : ''}
-                {cerrado && ` · zarpó ${hora12(z.hora_real_salida) || ''}`}
-              </span>
-            </span>
-            {cerrado
-              ? <span className="text-[16px] font-bold text-verde-600 shrink-0">Cerrado</span>
-              : <ChevronLeft size={26} className="rotate-180 text-[#6a6d80] shrink-0" />}
-          </button>
+          </div>
         )
       })}
+
+      {preparando && (
+        <PrepararZarpe
+          zarpe={preparando}
+          onCerrar={() => setPreparando(null)}
+          onGuardado={onRecargar}
+        />
+      )}
     </div>
   )
 }
@@ -167,7 +194,7 @@ function FormularioWalkIn({ onGuardar, onCerrar }) {
 
 export default function Embarque() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
-  const { zarpes, cargando, programar } = useZarpesDelDia(fechaActiva)
+  const { zarpes, cargando, programar, recargar: recargarZarpes } = useZarpesDelDia(fechaActiva)
   const [zarpeId, setZarpeId] = useState(null)
 
   const zarpe = useMemo(() => zarpes.find(z => z.id === zarpeId) || null, [zarpes, zarpeId])
@@ -188,7 +215,8 @@ export default function Embarque() {
     return (
       <div className="min-h-screen bg-[#f4f4f0]">
         <SelectorZarpe zarpes={zarpes} onElegir={z => setZarpeId(z.id)}
-          onProgramar={programar} fecha={fechaActiva} cargando={cargando} />
+          onProgramar={programar} onRecargar={recargarZarpes}
+          fecha={fechaActiva} cargando={cargando} />
       </div>
     )
   }
