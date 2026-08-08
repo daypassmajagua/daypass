@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  Check, ChevronLeft, Search, Settings2, Ship, UserPlus, X, Anchor, Undo2,
+  Check, ChevronLeft, FileText, Search, Settings2, Ship, UserPlus, X, Anchor, Undo2,
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
-import { useZarpesDelDia, useEmbarque, claveDe } from '../hooks/useEmbarque'
+import { useZarpesDelDia, useEmbarque, useDatosManifiesto, claveDe } from '../hooks/useEmbarque'
+import { armarManifiesto } from '../lib/manifiesto'
+import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 import IndicadorSync from '../components/layout/IndicadorSync'
@@ -123,11 +125,26 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onRecargar, fecha, carga
 
 // ─── Walk-in ───────────────────────────────────────────────────────────────────
 
-function FormularioWalkIn({ onGuardar, onCerrar }) {
+/**
+ * Alguien llegó al muelle sin reserva y sube igual.
+ *
+ * Pide tipo de documento y país además del nombre porque va en el manifiesto
+ * como todos los demás, y la Capitanía los exige. Cédula y Colombia vienen
+ * puestos: es lo que trae la mayoría, y en el muelle cada toque cuesta.
+ */
+function FormularioWalkIn({ onGuardar, onCerrar, paises = [] }) {
   const [nombre, setNombre] = useState('')
   const [documento, setDocumento] = useState('')
+  const [tipoDocumento, setTipoDocumento] = useState('cc')
+  // null = no lo ha tocado. Se deriva en vez de sembrarlo desde un efecto: el
+  // catálogo de países puede llegar después de que se abra el formulario, y
+  // sembrarlo entonces repintaría encima de lo que ella ya hubiera elegido.
+  const [paisId, setPaisId] = useState(null)
   const [categoria, setCategoria] = useState('adulto')
   const [guardando, setGuardando] = useState(false)
+
+  const colombia = paises.find(p => p.codigo === 'CO' || /colombia/i.test(p.nombre || ''))
+  const paisElegido = paisId ?? (colombia?.id || '')
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
@@ -147,12 +164,39 @@ function FormularioWalkIn({ onGuardar, onCerrar }) {
           />
         </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-[16px] font-bold text-[#101223]">Documento</span>
-          <input
-            value={documento} onChange={e => setDocumento(e.target.value)} inputMode="numeric"
-            className="rounded-xl border-2 border-[#c8c9d4] px-4 min-h-[60px] text-[18px] tabular focus:outline-none focus:border-blue-600"
-          />
+        <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3">
+          <label className="flex flex-col gap-1.5 min-w-0">
+            <span className="text-[16px] font-bold text-[#101223]">Tipo</span>
+            <select
+              value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)}
+              className="rounded-xl border-2 border-[#c8c9d4] bg-white px-3 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            >
+              <option value="cc">C.C.</option>
+              <option value="ce">C.E.</option>
+              <option value="pasaporte">Pasaporte</option>
+              <option value="ti">T.I.</option>
+              <option value="rc">R.C.</option>
+              <option value="otro">Otro</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 min-w-0">
+            <span className="text-[16px] font-bold text-[#101223]">Documento</span>
+            <input
+              value={documento} onChange={e => setDocumento(e.target.value)} inputMode="numeric"
+              className="rounded-xl border-2 border-[#c8c9d4] px-4 min-h-[60px] text-[18px] tabular focus:outline-none focus:border-blue-600"
+            />
+          </label>
+        </div>
+
+        <label className="flex flex-col gap-1.5 min-w-0">
+          <span className="text-[16px] font-bold text-[#101223]">País</span>
+          <select
+            value={paisElegido} onChange={e => setPaisId(e.target.value)}
+            className="rounded-xl border-2 border-[#c8c9d4] bg-white px-3 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+          >
+            <option value="">Sin especificar</option>
+            {paises.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+          </select>
         </label>
 
         <div className="flex flex-col gap-1.5">
@@ -179,7 +223,13 @@ function FormularioWalkIn({ onGuardar, onCerrar }) {
           disabled={!nombre.trim() || guardando}
           onClick={async () => {
             setGuardando(true)
-            await onGuardar({ nombre: nombre.trim(), documento: documento.trim(), categoria })
+            await onGuardar({
+              nombre: nombre.trim(),
+              documento: documento.trim(),
+              tipo_documento: tipoDocumento,
+              pais_id: paisElegido || null,
+              categoria,
+            })
             setGuardando(false)
           }}
           className="rounded-2xl bg-blue-600 text-white text-[19px] font-bold min-h-[64px] disabled:opacity-40"
@@ -199,7 +249,43 @@ export default function Embarque() {
   const [zarpeId, setZarpeId] = useState(null)
 
   const zarpe = useMemo(() => zarpes.find(z => z.id === zarpeId) || null, [zarpes, zarpeId])
-  const { grupos, walkIns, contador, registrarEvento, cerrar, recargar } = useEmbarque(zarpe)
+  const {
+    grupos, walkIns, contador, registrarEvento, cerrar, recargar,
+    registros, pasajeros, estados,
+  } = useEmbarque(zarpe)
+  const extras = useDatosManifiesto(zarpe)
+
+  // Lo que se le entrega a la Capitanía. Se recalcula con cada toque porque el
+  // documento tiene que decir quién va a bordo AHORA, no cuando se abrió la
+  // pantalla.
+  const manifiesto = useMemo(
+    () => armarManifiesto(zarpe, {
+      registros, pasajeros, estados,
+      empleados: extras.empleados,
+      zarpeEmpleados: extras.zarpeEmpleados,
+      alojamiento: extras.alojamiento,
+      pilotos: extras.pilotos,
+      paises: extras.paises,
+    }),
+    [zarpe, registros, pasajeros, estados,
+     extras.empleados, extras.zarpeEmpleados, extras.alojamiento,
+     extras.pilotos, extras.paises]
+  )
+
+  // Lo que le falta al documento, en el orden en que importa: sin piloto no lo
+  // reciben; sin un documento sí, y eso se completa en la ventanilla.
+  const faltasDelManifiesto = [
+    !manifiesto.piloto && 'sin piloto',
+    manifiesto.sinNombre > 0 && `con ${manifiesto.sinNombre} sin nombre`,
+    manifiesto.sinDocumento > 0 && `con ${manifiesto.sinDocumento} sin documento`,
+  ].filter(Boolean)
+
+  function imprimirManifiesto() {
+    openPrintWindow(
+      `Manifiesto — ${zarpe.lanchas?.nombre || ''} ${fechaActiva}`,
+      buildManifiestoHTML(zarpe, manifiesto, fechaActiva, zarpe.lanchas)
+    )
+  }
 
   const [busqueda, setBusqueda] = useState('')
   const [walkInAbierto, setWalkInAbierto] = useState(false)
@@ -442,9 +528,11 @@ export default function Embarque() {
         )}
       </main>
 
-      {/* Acciones fijas abajo */}
-      {!cerrado && (
-        <div className="fixed bottom-0 inset-x-0 z-30 bg-[#f4f4f0] border-t-2 border-[#d8d8d2] px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-3">
+      {/* Acciones fijas abajo.
+          El manifiesto también después de cerrado: la Capitanía puede pedirlo
+          otra vez y no hay razón para esconderlo. */}
+      <div className="fixed bottom-0 inset-x-0 z-30 bg-[#f4f4f0] border-t-2 border-[#d8d8d2] px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-3">
+        {!cerrado && (
           <button
             onClick={() => setWalkInAbierto(true)}
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold min-h-[64px]"
@@ -452,6 +540,17 @@ export default function Embarque() {
             <UserPlus size={22} />
             Sin reserva
           </button>
+        )}
+        <button
+          onClick={imprimirManifiesto}
+          disabled={manifiesto.total === 0}
+          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold min-h-[64px] disabled:opacity-40"
+        >
+          <FileText size={22} />
+          <span>Manifiesto</span>
+          <span className="tabular text-[15px] font-black">{manifiesto.total}</span>
+        </button>
+        {!cerrado && (
           <button
             onClick={cerrarZarpe}
             disabled={cerrando}
@@ -460,11 +559,27 @@ export default function Embarque() {
             <Anchor size={22} />
             {cerrando ? 'Cerrando…' : 'Cerrar el zarpe'}
           </button>
+        )}
+      </div>
+
+      {/* Lo que le va a faltar al documento, antes de imprimirlo y no después
+          de que la autoridad lo devuelva. */}
+      {!cerrado && faltasDelManifiesto.length > 0 && (
+        <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] inset-x-0 z-20 px-4">
+          <p className={classNames(
+            'mx-auto max-w-2xl rounded-xl px-4 py-2 text-[15px] font-bold text-center ring-2',
+            manifiesto.piloto
+              ? 'bg-[#fff4d6] ring-[#e8c76a] text-[#6b4d05]'
+              : 'bg-[#ffe0e0] ring-[#e08a8a] text-[#7a1f1f]'
+          )}>
+            El manifiesto va {faltasDelManifiesto.join(' y ')}
+          </p>
         </div>
       )}
 
       {walkInAbierto && (
         <FormularioWalkIn
+          paises={extras.paises}
           onCerrar={() => setWalkInAbierto(false)}
           onGuardar={async datos => {
             const { error } = await registrarEvento(null, 'walk_in', datos)

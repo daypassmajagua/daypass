@@ -1,5 +1,6 @@
 import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils.js'
 import { calcularConteoCocina } from './conteoCocina.js'
+import { ETIQUETA_DOCUMENTO as ETIQUETA_DOC } from './manifiesto.js'
 
 // ─── Estilos base compartidos ──────────────────────────────────────────────────
 const BASE_CSS = `
@@ -616,4 +617,165 @@ export function buildTentativoTexto(registros, fecha) {
   }
 
   return texto.trim()
+}
+
+// ─── Manifiesto de Capitanía ───────────────────────────────────────────────────
+/**
+ * La lista nominal de quién va a bordo, para la Capitanía de Puerto.
+ *
+ * Es el único documento de aquí que sale del hotel hacia una autoridad, así que
+ * se escribe distinto que los demás: sin emoji, sin colores que dependan de la
+ * impresora, con casilla de firma, y con el número de personas repetido en el
+ * pie para que no haya duda de cuántas se declararon.
+ *
+ * El armado de las filas vive en manifiesto.js, compartido con la pantalla del
+ * muelle. Aquí solo se dibuja.
+ */
+export function buildManifiestoHTML(zarpe, manifiesto, fecha, lancha) {
+  const { filas, total, pasajeros, alojados, tripulacion, sinNombre, sinDocumento } = manifiesto
+
+  const hora = zarpe?.hora_real_salida
+    ? new Date(zarpe.hora_real_salida).toLocaleTimeString('es-CO', {
+        hour: '2-digit', minute: '2-digit',
+      })
+    : (zarpe?.hora_programada || '').slice(0, 5)
+
+  const GRUPO = {
+    pasajero: 'Pasajero',
+    alojamiento: 'Alojamiento',
+    tripulacion: 'Tripulación',
+  }
+
+  const fila = (f, i) => {
+    // Una plaza que subió sin nombre se declara como lo que es. Esconderla
+    // sería declarar menos gente de la que va a bordo.
+    const nombre = f.sinNombre
+      ? `<span style="color:#92400e; font-style:italic;">Sin nombre — ${esc(f.reserva || 'reserva')} (${f.posicion})</span>`
+      : esc(f.nombre)
+
+    const doc = f.documento
+      ? `${esc(ETIQUETA_DOC[f.tipo_documento] || '')} ${esc(f.documento)}`.trim()
+      : `<span class="folio-blank"></span>`
+
+    return `
+      <tr>
+        <td style="text-align:center; color:#6b7280; width:34px;">${i + 1}</td>
+        <td style="font-weight:${f.sinNombre ? '400' : '700'};">${nombre}</td>
+        <td style="width:150px; font-family:monospace; font-size:11px;">${doc}</td>
+        <td style="width:110px;">${esc(f.pais || '')}</td>
+        <td style="width:96px; font-size:10.5px; color:#374151;">
+          ${f.cargo ? esc(f.cargo) : GRUPO[f.grupo]}
+        </td>
+      </tr>`
+  }
+
+  const seccion = (grupo, titulo) => {
+    const suyas = filas.filter(f => f.grupo === grupo)
+    if (!suyas.length) return ''
+    return `
+      <div class="section-title">${titulo} — ${suyas.length}</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:34px;">#</th>
+              <th>Nombre completo</th>
+              <th style="width:150px;">Identificación</th>
+              <th style="width:110px;">País</th>
+              <th style="width:96px;">Calidad</th>
+            </tr>
+          </thead>
+          <tbody>${suyas.map(fila).join('')}</tbody>
+        </table>
+      </div>`
+  }
+
+  const pendientes = []
+  // El piloto de primero: sin él el documento no lo recibe nadie, mientras que
+  // un pasajero sin documento se completa en la ventanilla.
+  if (!manifiesto.piloto) pendientes.push('SIN PILOTO ASIGNADO')
+  if (sinNombre > 0) pendientes.push(`${sinNombre} sin nombre`)
+  if (sinDocumento > 0) pendientes.push(`${sinDocumento} sin identificación`)
+
+  return `
+<div class="page">
+  <div class="doc-header">
+    <div>
+      <div class="hotel-name">Hotel San Pedro de Majagua</div>
+      <div class="hotel-sub">Islas del Rosario &middot; Cartagena de Indias, Colombia</div>
+    </div>
+    <div>
+      <div class="doc-title">MANIFIESTO DE PASAJEROS</div>
+      <div class="doc-date">${formatDate(fecha)}${hora ? ` &middot; ${esc(hora)}` : ''}</div>
+      <div class="doc-stamp">Impreso: ${now()}</div>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="stat">
+      <span class="stat-value">${total}</span>
+      <span class="stat-label">Total a bordo</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">${pasajeros}</span>
+      <span class="stat-label">Pasajeros</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">${alojados}</span>
+      <span class="stat-label">Alojamiento</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">${tripulacion}</span>
+      <span class="stat-label">Tripulación</span>
+    </div>
+  </div>
+
+  <div class="canal-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:18px;">
+    <div class="canal-item">
+      <span class="canal-name">Embarcación</span>
+      <span style="font-weight:700; color:#1e2045;">${esc(lancha?.nombre || '')}</span>
+    </div>
+    <div class="canal-item">
+      <span class="canal-name">Sentido</span>
+      <span style="font-weight:700; color:#1e2045;">
+        ${zarpe?.sentido === 'regreso' ? 'Regreso a La Bodeguita' : 'Ida a Islas del Rosario'}
+      </span>
+    </div>
+  </div>
+
+  ${pendientes.length ? `
+    <div class="warning-box" style="margin-top:0; margin-bottom:16px;">
+      <div class="warning-title">REVISAR ANTES DE ENTREGAR</div>
+      <div class="warning-row">
+        ${pendientes.join(' &middot; ')}. Las personas van a bordo y se declaran igual;
+        completar los datos en el muelle si la autoridad lo exige.
+      </div>
+    </div>` : ''}
+
+  ${seccion('pasajero', 'Pasajeros')}
+  ${seccion('alojamiento', 'Huéspedes de alojamiento')}
+  ${seccion('tripulacion', 'Tripulación')}
+
+  <div style="margin-top:34px; display:flex; gap:40px;">
+    <div style="flex:1;">
+      <div style="border-top:1px solid #374151; padding-top:5px; font-size:10.5px; color:#374151;">
+        Piloto${manifiesto.piloto ? ` — ${esc(manifiesto.piloto.nombre)}` : ''}
+      </div>
+    </div>
+    <div style="flex:1;">
+      <div style="border-top:1px solid #374151; padding-top:5px; font-size:10.5px; color:#374151;">
+        Capitanía de Puerto
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <div class="footer-left">
+      Se declaran ${total} personas a bordo &middot; ${esc(lancha?.nombre || '')} &middot; ${formatDate(fecha)}
+    </div>
+    <div class="footer-right">
+      <span class="footer-brand">DayPASS</span> &middot; Hotel San Pedro de Majagua
+    </div>
+  </div>
+</div>`
 }

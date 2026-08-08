@@ -27,6 +27,7 @@ export async function precargarDia(fecha) {
       supabase.from('opciones_plato').select('*'),
       supabase.from('tipos_ingreso').select('*'),
       supabase.from('empleados').select('*'),
+      supabase.from('pilotos').select('*'),
     ]),
   ])
 
@@ -48,31 +49,45 @@ export async function precargarDia(fecha) {
   // Los embarques ya registrados, para que el muelle no repita a nadie
   // que otro dispositivo ya marcó.
   let embarques = []
+  // Y quiénes van a bordo sin ser pasadía: sin esto el manifiesto de
+  // Capitanía no se puede imprimir sin señal, que es justo cuando se imprime.
+  let zarpeEmpleados = []
+  let zarpeAlojamiento = []
   if (zarpes.length) {
-    const { data } = await supabase
-      .from('embarques')
-      .select('*')
-      .in('zarpe_id', zarpes.map(z => z.id))
-    embarques = data || []
+    const ids = zarpes.map(z => z.id)
+    const [emb, ze, za] = await Promise.all([
+      supabase.from('embarques').select('*').in('zarpe_id', ids),
+      supabase.from('zarpe_empleados').select('*').in('zarpe_id', ids),
+      supabase.from('zarpe_alojamiento').select('*').in('zarpe_id', ids),
+    ])
+    embarques = emb.data || []
+    zarpeEmpleados = ze.data || []
+    zarpeAlojamiento = za.data || []
   }
 
   await limpiarDia(fecha)
-  await db.transaction('rw', db.registros, db.pasajeros, db.zarpes, db.embarques, db.catalogos, async () => {
-    if (registros.length) await db.registros.bulkPut(registros)
-    if (pasajeros.length) await db.pasajeros.bulkPut(pasajeros)
-    if (zarpes.length) await db.zarpes.bulkPut(zarpes)
-    if (embarques.length) await db.embarques.bulkPut(embarques)
+  await db.transaction('rw',
+    db.registros, db.pasajeros, db.zarpes, db.embarques,
+    db.zarpe_empleados, db.zarpe_alojamiento, db.catalogos,
+    async () => {
+      if (registros.length) await db.registros.bulkPut(registros)
+      if (pasajeros.length) await db.pasajeros.bulkPut(pasajeros)
+      if (zarpes.length) await db.zarpes.bulkPut(zarpes)
+      if (embarques.length) await db.embarques.bulkPut(embarques)
+      if (zarpeEmpleados.length) await db.zarpe_empleados.bulkPut(zarpeEmpleados)
+      if (zarpeAlojamiento.length) await db.zarpe_alojamiento.bulkPut(zarpeAlojamiento)
 
-    const [lanchas, planes, paises, opciones, tipos, empleados] = cat
-    await db.catalogos.bulkPut([
-      { nombre: 'lanchas', filas: lanchas.data || [] },
-      { nombre: 'planes', filas: planes.data || [] },
-      { nombre: 'paises', filas: paises.data || [] },
-      { nombre: 'opciones_plato', filas: opciones.data || [] },
-      { nombre: 'tipos_ingreso', filas: tipos.data || [] },
-      { nombre: 'empleados', filas: empleados.data || [] },
-    ])
-  })
+      const [lanchas, planes, paises, opciones, tipos, empleados, pilotos] = cat
+      await db.catalogos.bulkPut([
+        { nombre: 'lanchas', filas: lanchas.data || [] },
+        { nombre: 'planes', filas: planes.data || [] },
+        { nombre: 'paises', filas: paises.data || [] },
+        { nombre: 'opciones_plato', filas: opciones.data || [] },
+        { nombre: 'tipos_ingreso', filas: tipos.data || [] },
+        { nombre: 'empleados', filas: empleados.data || [] },
+        { nombre: 'pilotos', filas: pilotos.data || [] },
+      ])
+    })
 
   const resumen = {
     registros: registros.length,
@@ -97,10 +112,17 @@ export async function leerDiaLocal(fecha) {
   const pasajeros = ids.length
     ? await db.pasajeros.where('registro_id').anyOf(ids).toArray()
     : []
-  const embarques = zarpes.length
-    ? await db.embarques.where('zarpe_id').anyOf(zarpes.map(z => z.id)).toArray()
-    : []
-  return { registros, pasajeros, zarpes, embarques }
+
+  const idsZarpe = zarpes.map(z => z.id)
+  const [embarques, zarpeEmpleados, zarpeAlojamiento] = idsZarpe.length
+    ? await Promise.all([
+        db.embarques.where('zarpe_id').anyOf(idsZarpe).toArray(),
+        db.zarpe_empleados.where('zarpe_id').anyOf(idsZarpe).toArray(),
+        db.zarpe_alojamiento.where('zarpe_id').anyOf(idsZarpe).toArray(),
+      ])
+    : [[], [], []]
+
+  return { registros, pasajeros, zarpes, embarques, zarpeEmpleados, zarpeAlojamiento }
 }
 
 export async function leerCatalogoLocal(nombre) {

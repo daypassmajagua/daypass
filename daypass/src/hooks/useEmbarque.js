@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { db } from '../lib/offline/db'
 import { encolar, alCambiarLaCola } from '../lib/offline/cola'
-import { leerDiaLocal } from '../lib/offline/precarga'
+import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
 
 /**
  * El embarque de un zarpe.
@@ -34,6 +34,9 @@ function derivarDeEmbarques(eventos) {
     estado: e.evento || e.estado,
     nombre: e.nombre || null,
     documento: e.documento || null,
+    // El manifiesto los pide, y sin red esta es la única fuente que hay.
+    tipo_documento: e.tipo_documento || null,
+    pais_id: e.pais_id || null,
     categoria: e.categoria || null,
     ocurrido_at: e.ocurrido_at,
   }))
@@ -86,6 +89,61 @@ export function useZarpesDelDia(fecha) {
   }, [fecha, recargar])
 
   return { zarpes, cargando, recargar, programar }
+}
+
+/**
+ * Lo que va a bordo sin ser pasadía: empleados, huéspedes de alojamiento, el
+ * piloto y el catálogo de países. Solo el manifiesto lo necesita, así que vive
+ * aparte de useEmbarque en vez de engordarlo.
+ *
+ * Con red se lee del servidor; sin red, de la copia local. Es lo mismo que
+ * hace el embarque, y por la misma razón: el manifiesto se imprime en el
+ * muelle, donde puede no haber señal.
+ */
+export function useDatosManifiesto(zarpe) {
+  const [datos, setDatos] = useState({
+    empleados: [], zarpeEmpleados: [], alojamiento: [], pilotos: [], paises: [],
+  })
+
+  const cargar = useCallback(async () => {
+    if (!zarpe?.id) return
+
+    if (navigator.onLine) {
+      const [ze, za, emp, pil, pai] = await Promise.all([
+        supabase.from('zarpe_empleados').select('*').eq('zarpe_id', zarpe.id),
+        supabase.from('zarpe_alojamiento').select('*').eq('zarpe_id', zarpe.id),
+        supabase.from('empleados').select('*'),
+        supabase.from('pilotos').select('*'),
+        supabase.from('paises').select('*'),
+      ])
+      if (!ze.error && !za.error) {
+        setDatos({
+          zarpeEmpleados: ze.data || [],
+          alojamiento: za.data || [],
+          empleados: emp.data || [],
+          pilotos: pil.data || [],
+          paises: pai.data || [],
+        })
+        return
+      }
+    }
+
+    const local = await leerDiaLocal(zarpe.fecha)
+    const [empleados, pilotos, paises] = await Promise.all([
+      leerCatalogoLocal('empleados'),
+      leerCatalogoLocal('pilotos'),
+      leerCatalogoLocal('paises'),
+    ])
+    setDatos({
+      zarpeEmpleados: (local.zarpeEmpleados || []).filter(z => z.zarpe_id === zarpe.id),
+      alojamiento: (local.zarpeAlojamiento || []).filter(z => z.zarpe_id === zarpe.id),
+      empleados, pilotos, paises,
+    })
+  }, [zarpe?.id, zarpe?.fecha])
+
+  useEffect(() => { cargar() }, [cargar])
+
+  return { ...datos, recargar: cargar }
 }
 
 /**
@@ -250,6 +308,7 @@ export function useEmbarque(zarpe) {
       evento,
       nombre: extra.nombre || null,
       documento: extra.documento || null,
+      tipo_documento: extra.tipo_documento || null,
       pais_id: extra.pais_id || null,
       categoria: extra.categoria || null,
       ocurrido_at: new Date().toISOString(),
@@ -276,5 +335,9 @@ export function useEmbarque(zarpe) {
     return { zarpe: Array.isArray(data) ? data[0] : data, error }
   }, [zarpe?.id])
 
-  return { grupos, walkIns, contador, cargando, registrarEvento, cerrar, recargar: cargar }
+  return {
+    grupos, walkIns, contador, cargando, registrarEvento, cerrar, recargar: cargar,
+    // Crudos, para el manifiesto: lo arma armarManifiesto() y no esta pantalla.
+    registros, pasajeros, estados,
+  }
 }

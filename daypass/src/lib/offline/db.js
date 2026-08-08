@@ -34,6 +34,22 @@ db.version(1).stores({
   meta: 'clave',
 })
 
+/**
+ * v2 · Quiénes van a bordo sin ser pasadía.
+ *
+ * El manifiesto de Capitanía incluye a los empleados y a los huéspedes de
+ * alojamiento que viajan en ese zarpe, y se imprime en el muelle minutos antes
+ * de zarpar —donde puede no haber señal—. Sin estas dos tablas en la copia
+ * local, el documento saldría incompleto justo cuando se necesita completo.
+ *
+ * Dexie migra solo: los stores viejos se conservan y lo ya guardado no se
+ * pierde. Solo se agregan.
+ */
+db.version(2).stores({
+  zarpe_empleados: '[zarpe_id+empleado_id], zarpe_id',
+  zarpe_alojamiento: 'id, zarpe_id',
+})
+
 /** Cuándo se llenó por última vez la copia de este día. */
 export async function marcarPrecarga(fecha, resumen) {
   await db.meta.put({
@@ -51,9 +67,18 @@ export async function leerPrecarga(fecha) {
 export async function limpiarDia(fecha) {
   const regs = await db.registros.where('fecha').equals(fecha).toArray()
   const ids = regs.map(r => r.id)
-  await db.transaction('rw', db.registros, db.pasajeros, db.zarpes, db.embarques, async () => {
-    await db.registros.where('fecha').equals(fecha).delete()
-    await db.zarpes.where('fecha').equals(fecha).delete()
-    if (ids.length) await db.pasajeros.where('registro_id').anyOf(ids).delete()
-  })
+  const zarpes = await db.zarpes.where('fecha').equals(fecha).toArray()
+  const idsZarpe = zarpes.map(z => z.id)
+  await db.transaction('rw',
+    db.registros, db.pasajeros, db.zarpes, db.embarques,
+    db.zarpe_empleados, db.zarpe_alojamiento,
+    async () => {
+      await db.registros.where('fecha').equals(fecha).delete()
+      await db.zarpes.where('fecha').equals(fecha).delete()
+      if (ids.length) await db.pasajeros.where('registro_id').anyOf(ids).delete()
+      if (idsZarpe.length) {
+        await db.zarpe_empleados.where('zarpe_id').anyOf(idsZarpe).delete()
+        await db.zarpe_alojamiento.where('zarpe_id').anyOf(idsZarpe).delete()
+      }
+    })
 }
