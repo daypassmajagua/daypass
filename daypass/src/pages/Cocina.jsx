@@ -124,6 +124,7 @@ export default function Cocina() {
               variant="secondary"
               size="sm"
               onClick={() => openPrintWindow(
+                `Conteo de cocina — ${fechaActiva}`,
                 buildCocinaHTML(registros, pasajerosDelDia, opcionesPlato, fechaActiva)
               )}
             >
