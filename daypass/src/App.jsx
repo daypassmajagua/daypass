@@ -5,6 +5,7 @@ import { useSincronizarDia, usePresencia } from './hooks/useDiaOperativo'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
+import CheckInPublico from './pages/CheckInPublico'
 import Hoy from './pages/Hoy'
 import Reserva from './pages/Reserva'
 import CerrarDia from './pages/CerrarDia'
@@ -38,6 +39,9 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-right" richColors closeButton />
       <Routes>
+        {/* La página del cliente: fuera del login, sin marco de la app. */}
+        <Route path="/r/:token" element={<CheckInPublico />} />
+
         <Route path="/login" element={<Login />} />
         <Route
           path="/"

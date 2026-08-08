@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, ChefHat, Copy, Download, Lock, Printer, Ship, TriangleAlert } from 'lucide-react'
+import {
+  ArrowLeft, ChefHat, Copy, Download, Lock, MessageCircle, Printer, Ship, TriangleAlert,
+} from 'lucide-react'
+import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
@@ -41,6 +44,7 @@ export default function CerrarDia() {
   const [tiposIngreso, setTiposIngreso] = useState([])
   const [cerrando, setCerrando] = useState(false)
   const { precarga, refrescar: refrescarPrecarga } = usePrecarga(fechaActiva)
+  const [enviandoTarjetas, setEnviandoTarjetas] = useState(false)
 
   useEffect(() => {
     supabase.from('lanchas').select('*').eq('activa', true)
@@ -329,6 +333,10 @@ export default function CerrarDia() {
               <Copy size={16} />
               Copiar para WhatsApp
             </Button>
+            <Button onClick={() => setEnviandoTarjetas(true)}>
+              <MessageCircle size={16} />
+              Enviar las tarjetas
+            </Button>
             <Button
               variant="ghost"
               onClick={async () => {
@@ -349,6 +357,14 @@ export default function CerrarDia() {
           </span>
         )}
       </div>
+
+      {enviandoTarjetas && (
+        <EnviarTarjetas
+          fecha={fechaActiva}
+          registros={registros}
+          onCerrar={() => { setEnviandoTarjetas(false); refetch() }}
+        />
+      )}
     </div>
   )
 }

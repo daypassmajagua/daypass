@@ -557,7 +557,51 @@ const STORE = {
   zarpe_empleados:   [],
   zarpe_alojamiento: [],
   tokens_reserva:    [],
+  documentos_legales: [
+    { id: 'doc-es-1', tipo: 'exoneracion', version: 1, idioma: 'es',
+      titulo: 'Condiciones del Day Tour',
+      contenido: 'Al confirmar mi asistencia declaro que participo de forma libre y voluntaria en el Day Tour del Hotel San Pedro de Majagua...\n\n(Texto completo en la migración 008.)',
+      vigente_desde: new Date().toISOString(), vigente_hasta: null },
+    { id: 'doc-en-1', tipo: 'exoneracion', version: 1, idioma: 'en',
+      titulo: 'Day Tour Terms',
+      contenido: 'By confirming my attendance I declare that I take part freely and voluntarily in the Day Tour of Hotel San Pedro de Majagua...\n\n(Full text in migration 008.)',
+      vigente_desde: new Date().toISOString(), vigente_hasta: null },
+  ],
+  firmas: [],
 }
+
+/**
+ * 48 caracteres hex, igual que el `encode(gen_random_bytes(24),'hex')` de la
+ * migración. Nunca deriva del id de la reserva: un token no debe revelar a
+ * qué reserva apunta ni permitir adivinar el siguiente.
+ */
+function nuevoToken() {
+  let t = ''
+  for (let i = 0; i < 48; i++) t += '0123456789abcdef'[Math.floor(Math.random() * 16)]
+  return t
+}
+
+// Toda reserva tiene su token, igual que el trigger de la 008.
+STORE.registros.forEach(r => {
+  STORE.tokens_reserva.push({
+    id: genId(), registro_id: r.id, token: nuevoToken(),
+    estado: 'activo', expira_at: null, enviado_at: null, enviado_por: null,
+    veces_abierto: 0, created_at: new Date().toISOString(),
+  })
+})
+
+// Solo en modo demo: la primera reserva de hoy responde también a /r/demo,
+// para poder mostrar el flujo del cliente sin buscar un token de 48 letras.
+;(function tokenDeDemostracion() {
+  const primera = STORE.registros.find(
+    r => r.fecha === hoyLocal() && !['cancelada', 'noshow'].includes(r.estado))
+  if (!primera) return
+  STORE.tokens_reserva.push({
+    id: genId(), registro_id: primera.id, token: 'demo',
+    estado: 'activo', expira_at: null, enviado_at: null, enviado_por: null,
+    veces_abierto: 0, created_at: new Date().toISOString(),
+  })
+})()
 
 // Todo lo existente es pasadía, igual que en la migración.
 STORE.registros.forEach(r => { if (!r.tipo_ingreso_id) r.tipo_ingreso_id = 'ti-pasadia' })
@@ -843,6 +887,98 @@ const RPC = {
     z.cerrado_at = new Date().toISOString()
     emitirCambio('zarpes', 'UPDATE', z)
     return { data: z, error: null }
+  },
+
+  // ── La puerta pública (008) ──────────────────────────────────────────────
+  // Mismas reglas que las funciones SECURITY DEFINER: solo lo de esa
+  // reserva, y nunca precios ni folios.
+  reserva_publica({ p_token }) {
+    const t = STORE.tokens_reserva.find(x => x.token === p_token && x.estado !== 'expirado')
+    if (!t) return { data: null, error: null }
+    const r = STORE.registros.find(x => x.id === t.registro_id)
+    if (!r) return { data: null, error: null }
+    const dia = STORE.dias_operativos.find(d => d.fecha === r.fecha)
+    const hoy = hoyLocal()
+    const dias = Math.round((new Date(r.fecha) - new Date(hoy)) / 86400000)
+
+    return {
+      data: {
+        titular: r.nombre_pasajero, grupo: r.nombre_grupo, agencia: r.agencia_nombre,
+        fecha: r.fecha, estado: r.estado,
+        adultos: r.adultos, ninos: r.ninos, infantes: r.infantes, cortesias: r.cortesias,
+        plan: STORE.planes.find(p => p.id === r.plan_id)?.nombre || null,
+        lancha: STORE.lanchas.find(l => l.id === r.lancha_id)?.nombre || null,
+        estado_dia: dia?.estado || 'planeando',
+        puede_check_in: (dia?.estado || 'planeando') === 'planeando' && dias >= 0 && dias <= 2,
+        check_in_at: r.check_in_at || null,
+        tiene_firma: STORE.firmas.some(f => f.registro_id === r.id),
+        opciones_plato: STORE.opciones_plato
+          .filter(o => o.plan_id === r.plan_id && o.activo)
+          .map(o => ({ id: o.id, es: o.nombre_es, en: o.nombre_en })),
+        pasajeros: STORE.pasajeros.filter(p => p.registro_id === r.id),
+        paises: STORE.paises.map(p => ({ id: p.id, nombre: p.nombre })),
+      },
+      error: null,
+    }
+  },
+
+  marcar_token_abierto({ p_token }) {
+    const t = STORE.tokens_reserva.find(x => x.token === p_token)
+    if (t) t.veces_abierto = (t.veces_abierto || 0) + 1
+    return { data: null, error: null }
+  },
+
+  documento_vigente({ p_idioma = 'es' }) {
+    const d = STORE.documentos_legales.find(x => x.idioma === p_idioma && !x.vigente_hasta)
+    return { data: d ? { id: d.id, titulo: d.titulo, contenido: d.contenido, version: d.version } : null, error: null }
+  },
+
+  guardar_pasajeros_por_token({ p_token, p_pasajeros }) {
+    const t = STORE.tokens_reserva.find(x => x.token === p_token && x.estado !== 'expirado')
+    if (!t) return { data: null, error: { message: 'Este enlace ya no está disponible' } }
+    const r = STORE.registros.find(x => x.id === t.registro_id)
+    const dia = STORE.dias_operativos.find(d => d.fecha === r.fecha)
+    if ((dia?.estado || 'planeando') !== 'planeando') {
+      return { data: null, error: { message: 'La lista de este día ya se cerró' } }
+    }
+    STORE.pasajeros = STORE.pasajeros.filter(p => p.registro_id !== r.id)
+    ;(p_pasajeros || []).forEach(p => {
+      if (!(p.nombre || '').trim()) return
+      STORE.pasajeros.push({
+        id: genId(), registro_id: r.id, nombre: p.nombre.trim(),
+        tipo_documento: p.tipo_documento || null, documento: p.documento || null,
+        pais_id: p.pais_id || null, categoria: p.categoria || 'adulto',
+        opcion_plato_id: p.opcion_plato_id || null,
+        restriccion_alimentaria: p.restriccion_alimentaria || null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      })
+    })
+    emitirCambio('pasajeros', 'UPDATE', { registro_id: r.id })
+    return RPC.reserva_publica({ p_token })
+  },
+
+  firmar_por_token({ p_token, p_documento_legal_id, p_firmante_nombre, p_firmante_documento, p_trazo, p_client_id, p_dispositivo }) {
+    const t = STORE.tokens_reserva.find(x => x.token === p_token && x.estado !== 'expirado')
+    if (!t) return { data: null, error: { message: 'Este enlace ya no está disponible' } }
+    const r = STORE.registros.find(x => x.id === t.registro_id)
+    const dia = STORE.dias_operativos.find(d => d.fecha === r.fecha)
+    if ((dia?.estado || 'planeando') !== 'planeando') {
+      return { data: null, error: { message: 'La lista de este día ya se cerró' } }
+    }
+    if (!STORE.firmas.some(f => f.client_id === p_client_id)) {
+      STORE.firmas.push({
+        id: genId(), registro_id: r.id, documento_legal_id: p_documento_legal_id,
+        firmante_nombre: p_firmante_nombre, firmante_documento: p_firmante_documento || null,
+        trazo_datos: p_trazo, dispositivo: p_dispositivo || null,
+        hash: `mock-${p_client_id}`, client_id: p_client_id,
+        firmado_at: new Date().toISOString(), created_at: new Date().toISOString(),
+      })
+    }
+    r.check_in_at = r.check_in_at || new Date().toISOString()
+    r.check_in_desde = 'publico'
+    t.estado = 'check_in_abierto'
+    emitirCambio('registros', 'UPDATE', r)
+    return RPC.reserva_publica({ p_token })
   },
 
   cambiar_estado_manual({ p_registro_id, p_estado, p_motivo }) {
