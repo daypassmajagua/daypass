@@ -58,18 +58,27 @@ export function mensajeTarjeta(registro, url) {
  * cliente le responde por ahí.
  */
 export async function abrirWhatsApp(registro, { cerrado = false } = {}) {
+  // La ventana se abre YA, antes de cualquier await. Safari en iPad —el
+  // aparato de la asesora— cuenta window.open como emergente y lo bloquea si
+  // no sale del toque del dedo, y buscar el token de por medio rompe esa
+  // cadena. Se abre vacía y después se le pone la dirección.
+  const ventana = window.open('', '_blank')
+
   const token = await tokenDe(registro.id)
-  if (!token) return { error: { message: 'Esta reserva todavía no tiene enlace' } }
+  if (!token) {
+    ventana?.close()
+    return { error: { message: 'Esta reserva todavía no tiene enlace' } }
+  }
 
   const url = enlaceDe(token)
   const texto = cerrado ? mensajeTarjeta(registro, url) : mensajeInvitacion(registro, url)
   const tel = telefonoWhatsApp(registro.telefono)
+  const destino = tel
+    ? `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`
+    : `https://wa.me/?text=${encodeURIComponent(texto)}`
 
-  window.open(
-    tel ? `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`
-        : `https://wa.me/?text=${encodeURIComponent(texto)}`,
-    '_blank'
-  )
+  if (ventana) ventana.location.href = destino
+  else window.open(destino, '_blank')   // si igual la bloquearon, se reintenta
 
   const { data: sesion } = await supabase.auth.getSession()
   await supabase.from('tokens_reserva').update({
