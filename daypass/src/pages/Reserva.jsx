@@ -11,6 +11,7 @@ import { useTemporada } from '../hooks/useTemporada'
 import { useRegistros } from '../hooks/useRegistros'
 import { usePasajeros, guardarPasajeros } from '../hooks/usePasajeros'
 import { useAutoguardado, leerBorrador, borrarBorrador } from '../hooks/useBorrador'
+import { abrirWhatsApp } from '../lib/enlaceReserva'
 import {
   aFechaLocal, formatCurrency, hoyLocal, limpiarVacios, plural, FORMA_PAGO_LABELS,
 } from '../lib/utils'
@@ -65,6 +66,38 @@ const schema = z.object({
 function manana() {
   const [y, m, d] = hoyLocal().split('-').map(Number)
   return aFechaLocal(new Date(y, m - 1, d + 1))
+}
+
+/**
+ * El titular ya escribió su nombre arriba. Pedírselo otra vez como "pasajero"
+ * es un paso de más, y en una reserva individual de una persona deja la lista
+ * en 0/1 sin razón. Se siembra solo, y solo si no está ya en la lista.
+ *
+ * En un grupo no: ahí el titular suele ser el contacto de la agencia y puede
+ * no viajar.
+ */
+function conTitular(data, pasajeros) {
+  if (data.tipo === 'grupo') return pasajeros
+  const nombre = (data.nombre_pasajero || '').trim()
+  if (!nombre) return pasajeros
+
+  const normal = s => (s || '').trim().toLowerCase()
+  if (pasajeros.some(p => normal(p.nombre) === normal(nombre))) return pasajeros
+
+  const total = (Number(data.adultos) || 0) + (Number(data.ninos) || 0) +
+                (Number(data.infantes) || 0) + (Number(data.cortesias) || 0)
+  if (pasajeros.filter(p => (p.nombre || '').trim()).length >= total) return pasajeros
+
+  return [
+    {
+      nombre,
+      documento: (data.identificacion || '').trim(),
+      tipo_documento: 'cc',
+      pais_id: data.pais_id || '',
+      categoria: 'adulto',
+    },
+    ...pasajeros,
+  ]
 }
 
 function Seccion({ numero, titulo, children }) {
@@ -257,7 +290,12 @@ export default function Reserva() {
     }
 
     if (registroId) {
-      const res = await guardarPasajeros(registroId, pasajeros)
+      // Solo al crear: en una edición, si ella quitó al titular de la lista
+      // fue a propósito y volver a meterlo sería pelear con ella.
+      const res = await guardarPasajeros(
+        registroId,
+        isEdit ? pasajeros : conTitular(data, pasajeros)
+      )
       if (res.error) {
         toast.error('La reserva quedó guardada, pero los nombres no. Vuelve a intentarlo desde la reserva.')
       }
@@ -272,9 +310,21 @@ export default function Reserva() {
     } else {
       borrarBorrador()
       setBorradorRecuperado(false)
+      // El enlace se manda ahora, no al cerrar el día: el check-in se cierra
+      // junto con el día, así que mandarlo en el cierre llega tarde siempre.
       toast.success(
         `Reserva de ${quien} guardada — ${plural(pax, 'pax', 'pax')}${lancha ? ' en ' + lancha : ''}`,
-        { action: { label: 'Abrirla', onClick: () => navigate(`/editar/${registroId}`) } }
+        {
+          description: 'Mándale el enlace para que registre los nombres y firme.',
+          duration: 10000,
+          action: {
+            label: 'Mandar el enlace',
+            onClick: async () => {
+              const { error: errEnlace } = await abrirWhatsApp({ ...data, id: registroId })
+              if (errEnlace) toast.error(errEnlace.message)
+            },
+          },
+        }
       )
       // Ella carga reservas en tanda: queda lista para la siguiente.
       setPasajeros([])

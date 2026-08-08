@@ -42,10 +42,24 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
       })
     })
 
-    // ── Nombres faltantes. Los grupos van uno por uno —pasar el listado de
-    //    la agencia es la tarea más tediosa del día y merece su propia
-    //    línea—, pero los individuales se agrupan: doce filas idénticas
-    //    ahogan todo lo demás y enseñan a ignorar la lista.
+    // ── Nombres faltantes. "Nombres" es la lista nominal: nombre y documento
+    //    de cada persona que zarpa, que la Capitanía de Puerto exige. Que la
+    //    reserva diga "4 adultos" no basta. Por eso cada línea dice el porqué:
+    //    sin él, "sin nombres" no significa nada para quien lo lee de afán.
+    //
+    //    Los grupos van uno por uno —pasar el listado de la agencia es la
+    //    tarea más tediosa del día y merece su propia línea—, pero los
+    //    individuales se agrupan: doce filas idénticas ahogan todo lo demás y
+    //    enseñan a ignorar la lista.
+    //    El porqué se dice una sola vez, en la primera línea de nombres:
+    //    repetido en cada una deja de leerse a la tercera.
+    let faltaExplicar = true
+    const porqueNombres = () => {
+      if (!faltaExplicar) return undefined
+      faltaExplicar = false
+      return 'La Capitanía de Puerto pide nombre y documento de cada persona antes de zarpar.'
+    }
+
     const faltos = vivas
       .map(r => {
         const plan = r.adultos + r.ninos + r.infantes + r.cortesias
@@ -64,9 +78,10 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
         id: `nombres-${r.id}`,
         tono: 'pendiente',
         texto: tiene === 0
-          ? `${quien} (${plan} pax) no tiene nombres todavía`
-          : `A ${quien} le faltan ${plural(plan - tiene, 'nombre', 'nombres')}`,
-        accion: { etiqueta: 'Agregar nombres', a: `/editar/${r.id}` },
+          ? `${quien}: faltan los ${plan} nombres`
+          : `${quien}: faltan ${plural(plan - tiene, 'nombre', 'nombres')} de ${plan}`,
+        porque: porqueNombres(),
+        accion: { etiqueta: 'Agregar los nombres', a: `/editar/${r.id}` },
       })
     })
 
@@ -76,8 +91,8 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
       lista.push({
         id: 'nombres-grupos-resto',
         tono: 'pendiente',
-        texto: `Otros ${resto.length} grupos sin nombres`,
-        detalle: `${plural(paxResto, 'persona', 'personas')} por cargar`,
+        texto: `Otros ${resto.length} grupos: faltan ${plural(paxResto, 'nombre', 'nombres')}`,
+        porque: porqueNombres(),
         accion: { etiqueta: 'Ver el listado', a: '/dia' },
       })
     }
@@ -88,8 +103,15 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
       lista.push({
         id: 'nombres-individuales',
         tono: 'pendiente',
-        texto: `${plural(individualesFaltos.length, 'reserva individual sin nombres', 'reservas individuales sin nombres')}`,
-        detalle: `${plural(paxInd, 'persona', 'personas')} por cargar`,
+        // Con nombre propio: "2 reservas individuales" no le dice a nadie
+        // cuáles son, y sin eso no hay nada que hacer con el aviso.
+        texto: `Faltan ${plural(paxInd, 'nombre', 'nombres')} en ${plural(individualesFaltos.length, 'reserva individual', 'reservas individuales')}`,
+        detalle: individualesFaltos
+          .slice(0, 3)
+          .map(x => `${x.r.nombre_pasajero} (${x.tiene} de ${x.plan})`)
+          .join(' · ') +
+          (individualesFaltos.length > 3 ? ` y ${individualesFaltos.length - 3} más` : ''),
+        porque: porqueNombres(),
         accion: { etiqueta: 'Ver el listado', a: '/dia' },
       })
     }

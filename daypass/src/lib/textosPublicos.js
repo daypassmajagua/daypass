@@ -65,8 +65,10 @@ export const T = {
     verDetalle: 'Ver el detalle de mi reserva',
 
     // Estados
-    cerrado: 'La lista de este día ya se cerró',
-    cerradoDetalle: 'Si necesitas cambiar algo, escríbenos directamente.',
+    cerrado: 'Tu reserva está confirmada',
+    cerradoDetalle: 'Ya cerramos la lista de este día, así que el registro en línea se cerró con ella. Preséntate en el muelle de La Bodeguita y allá terminamos tu ingreso.',
+    quienesVan: 'Quiénes vienen',
+    sinNombresAun: 'No alcanzamos a recibir los nombres. Lleva el documento de cada persona: la Capitanía de Puerto lo pide antes de zarpar.',
     aunNo: 'Todavía es pronto',
     aunNoDetalle: 'El check-in se abre dos días antes de tu Day Tour. Te avisamos.',
     yaPaso: 'Este Day Tour ya pasó',
@@ -133,8 +135,10 @@ export const T = {
     tuPase: 'Your pass',
     verDetalle: 'See my booking details',
 
-    cerrado: 'This day’s list is already closed',
-    cerradoDetalle: 'If you need to change anything, please write to us directly.',
+    cerrado: 'Your booking is confirmed',
+    cerradoDetalle: 'We have closed the list for this day, so online registration closed with it. Come to the La Bodeguita dock and we will finish your check-in there.',
+    quienesVan: 'Who is coming',
+    sinNombresAun: 'We did not receive the names in time. Bring everyone’s ID: the Port Authority asks for it before we sail.',
     aunNo: 'A little early',
     aunNoDetalle: 'Check-in opens two days before your Day Tour. We will let you know.',
     yaPaso: 'This Day Tour has passed',

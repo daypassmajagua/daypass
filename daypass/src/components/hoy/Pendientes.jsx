@@ -47,6 +47,10 @@ export default function Pendientes({ lista, fecha }) {
                 {p.detalle}
               </p>
             )}
+            {/* El porqué, cuando el pendiente no se explica solo. */}
+            {p.porque && (
+              <p className="text-[13px] text-tinta-2 mt-0.5">{p.porque}</p>
+            )}
           </div>
 
           {p.accion && (

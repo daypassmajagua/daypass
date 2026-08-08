@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   ArrowLeft, ChefHat, Copy, Download, Lock, MessageCircle, Printer, Ship, TriangleAlert,
@@ -301,9 +301,18 @@ export default function CerrarDia() {
             <p className="text-sm text-tinta-2 mb-3">
               No te bloquea. Es para que cierres sabiendo qué queda.
             </p>
-            <ul className="flex flex-col gap-1.5">
+            <ul className="flex flex-col gap-2.5">
               {lista.map(p => (
-                <li key={p.id} className="text-sm text-tinta">· {p.texto}</li>
+                <li key={p.id} className="text-sm text-tinta">
+                  <span className="block font-bold">{p.texto}</span>
+                  {p.detalle && <span className="block text-tinta-2">{p.detalle}</span>}
+                  {p.porque && <span className="block text-[13px] text-tinta-2">{p.porque}</span>}
+                  {p.accion && (
+                    <Link to={p.accion.a} className="inline-block mt-0.5 text-blue-700 font-bold underline">
+                      {p.accion.etiqueta}
+                    </Link>
+                  )}
+                </li>
               ))}
             </ul>
           </Card>
@@ -363,8 +372,8 @@ export default function CerrarDia() {
 
       {enviandoTarjetas && (
         <EnviarTarjetas
-          fecha={fechaActiva}
           registros={registros}
+          cerrado={!enPlaneacion}
           onCerrar={() => { setEnviandoTarjetas(false); refetch() }}
         />
       )}

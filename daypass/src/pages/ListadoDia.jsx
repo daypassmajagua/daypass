@@ -3,8 +3,9 @@ import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   PlusCircle, Edit2, Trash2,
-  AlertTriangle, CheckCircle2, Filter
+  AlertTriangle, CheckCircle2, Filter, MessageCircle
 } from 'lucide-react'
+import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import {
@@ -89,6 +90,7 @@ export default function ListadoDia() {
   const [nombres, setNombres] = useState({})
   const [pidiendoMotivo, setPidiendoMotivo] = useState(null)
   const [motivo, setMotivo] = useState('')
+  const [mandandoEnlaces, setMandandoEnlaces] = useState(false)
   const { enPlaneacion } = useDiaOperativo(fechaActiva)
 
   useEffect(() => {
@@ -188,6 +190,18 @@ export default function ListadoDia() {
             <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
               <Filter size={14} />
               Filtros
+            </Button>
+            {/* Aquí y no solo en el cierre: el check-in se cierra con el día,
+                así que el enlace tiene que poder salir desde el momento en
+                que la reserva existe. */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMandandoEnlaces(true)}
+              disabled={registros.length === 0}
+            >
+              <MessageCircle size={14} />
+              Enlaces
             </Button>
             <Button size="sm" onClick={() => navigate('/nuevo')}>
               <PlusCircle size={16} />
@@ -483,6 +497,14 @@ export default function ListadoDia() {
             </div>
           ))}
         </div>
+      )}
+
+      {mandandoEnlaces && (
+        <EnviarTarjetas
+          registros={registros}
+          cerrado={!enPlaneacion}
+          onCerrar={() => { setMandandoEnlaces(false); refetch() }}
+        />
       )}
 
       <Modal open={Boolean(deletingId)} onClose={() => setDeletingId(null)} title="Eliminar la reserva">

@@ -151,6 +151,12 @@ export default function CheckInPublico() {
   const opciones = reserva?.opciones_plato || []
   const hayPlatos = opciones.length > 0
 
+  // Los que ya están en la base, no las filas vacías del formulario.
+  const pasajerosGuardados = useMemo(
+    () => (reserva?.pasajeros || []).filter(p => p.nombre?.trim()),
+    [reserva]
+  )
+
   function editar(i, campo, valor) {
     setPasajeros(prev => prev.map((p, j) => j === i ? { ...p, [campo]: valor } : p))
   }
@@ -251,9 +257,34 @@ export default function CheckInPublico() {
         <Aviso tono="verde" titulo={t.gracias} detalle={t.graciasDetalle} />
       )}
 
-      {/* ── Día ya cerrado ── */}
+      {/* ── Día ya cerrado ──
+          Sin check-in y con la lista cerrada, el cliente igual viaja: la
+          reserva existe y el pase nunca fue obligatorio para embarcar. Un
+          "cerrado" a secas lo dejaba sin saber qué hacer, así que se le
+          devuelve lo que sí le sirve: adónde ir y a quiénes alcanzamos a
+          registrar. */}
       {!listo && !yaPaso && reserva.estado_dia !== 'planeando' && (
-        <Aviso tono="coral" titulo={t.cerrado} detalle={t.cerradoDetalle} />
+        <div className="flex flex-col gap-5">
+          <Aviso tono="verde" titulo={t.cerrado} detalle={t.cerradoDetalle} />
+
+          {pasajerosGuardados.length > 0 ? (
+            <div className="rounded-2xl bg-white p-5 flex flex-col gap-3 shadow-[0_1px_2px_rgba(22,24,44,.05)]">
+              <h2 className="text-[17px] font-bold text-tinta">{t.quienesVan}</h2>
+              <ul className="flex flex-col gap-2">
+                {pasajerosGuardados.map((p, i) => (
+                  <li key={i} className="flex items-baseline justify-between gap-3 text-[15px]">
+                    <span className="text-tinta truncate">{p.nombre}</span>
+                    {p.documento && (
+                      <span className="text-tinta-2 tabular shrink-0">{p.documento}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-[15px] text-tinta-2">{t.sinNombresAun}</p>
+          )}
+        </div>
       )}
 
       {/* ── El formulario ── */}
