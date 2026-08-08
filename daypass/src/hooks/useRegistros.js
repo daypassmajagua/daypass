@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { reservaCon, CON_LANCHA_COMPLETA, CON_PLAN_COMPLETO, CON_CANAL, CON_PAIS, CON_AGENCIA } from '../lib/columnas'
 
 export function useRegistros(fecha) {
   const [registros, setRegistros] = useState([])
@@ -12,14 +13,7 @@ export function useRegistros(fecha) {
     setError(null)
     const { data, error: err } = await supabase
       .from('registros')
-      .select(`
-        *,
-        lanchas (id, codigo, nombre, capacidad),
-        planes (id, nombre, categoria, nivel),
-        canales (id, codigo, nombre),
-        paises (id, codigo, nombre),
-        agencias (id, nombre)
-      `)
+      .select(reservaCon({ nivel: 'dinero', relaciones: [CON_LANCHA_COMPLETA, CON_PLAN_COMPLETO, CON_CANAL, CON_PAIS, CON_AGENCIA] }))
       .eq('fecha', fecha)
       .order('created_at', { ascending: true })
 

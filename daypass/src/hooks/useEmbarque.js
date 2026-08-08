@@ -4,6 +4,7 @@ import { db } from '../lib/offline/db'
 import { encolar, alCambiarLaCola } from '../lib/offline/cola'
 import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
 import { plazasSinNombre } from '../lib/plazas'
+import { reservaCon, CON_LANCHA, CON_PLAN } from '../lib/columnas'
 
 /**
  * El embarque de un zarpe.
@@ -205,7 +206,7 @@ export function useEmbarque(zarpe) {
     if (navigator.onLine) {
       const { data: regs, error } = await supabase
         .from('registros')
-        .select('*, lanchas (id, nombre), planes (id, nombre)')
+        .select(reservaCon({ relaciones: [CON_LANCHA, CON_PLAN] }))
         .eq('fecha', zarpe.fecha)
         .eq('lancha_id', zarpe.lancha_id)
 

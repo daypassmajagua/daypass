@@ -1,5 +1,6 @@
 import { db, limpiarDia, marcarPrecarga } from './db'
 import { supabase } from '../supabase'
+import { reservaCon, CON_LANCHA_COMPLETA, CON_PLAN, CON_CANAL, CON_PAIS } from '../columnas'
 
 /**
  * Descarga el día completo a la copia local.
@@ -14,7 +15,7 @@ export async function precargarDia(fecha) {
   const [reg, zar, cat] = await Promise.all([
     supabase
       .from('registros')
-      .select('*, lanchas (id, nombre, codigo, capacidad), planes (id, nombre), canales (id, codigo, nombre), paises (id, codigo, nombre)')
+      .select(reservaCon({ nivel: 'pago', relaciones: [CON_LANCHA_COMPLETA, CON_PLAN, CON_CANAL, CON_PAIS] }))
       .eq('fecha', fecha),
     supabase
       .from('zarpes')

@@ -26,6 +26,7 @@ import TarjetasPlan from '../components/reserva/TarjetasPlan'
 import FichasLancha from '../components/reserva/FichasLancha'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
 import PageHeader from '../components/layout/PageHeader'
+import { RESERVA_CON_DINERO } from '../lib/columnas'
 
 const schema = z.object({
   fecha: z.string().min(1),
@@ -198,7 +199,7 @@ export default function Reserva() {
   // Al editar, la fuente de verdad es la base.
   useEffect(() => {
     if (!isEdit || !id) return
-    supabase.from('registros').select('*').eq('id', id).single().then(({ data }) => {
+    supabase.from('registros').select(RESERVA_CON_DINERO).eq('id', id).single().then(({ data }) => {
       if (data) reset(data)
     })
   }, [id, isEdit, reset])

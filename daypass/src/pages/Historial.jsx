@@ -9,6 +9,7 @@ import PageHeader from '../components/layout/PageHeader'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { reservaCon } from '../lib/columnas'
 
 const PAGE_SIZE = 50
 
@@ -45,7 +46,7 @@ export default function Historial() {
     setLoading(true)
     let query = supabase
       .from('registros')
-      .select(`*, lanchas(nombre), planes(nombre), canales(codigo,nombre)`, { count: 'exact' })
+      .select(reservaCon({ nivel: 'dinero', relaciones: ['lanchas (nombre)', 'planes (nombre)', 'canales (codigo, nombre)'] }), { count: 'exact' })
       .order('fecha', { ascending: false })
       .order('created_at', { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)

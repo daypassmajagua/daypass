@@ -192,7 +192,10 @@
       "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/config\" config-nuevo.png)",
       "Bash(perl -0pi -e \"s/  const \\\\{ createElement: h \\\\} = React/  const h = React.createElement || React.default?.createElement/\" patrones.mjs)",
       "Bash(node patrones.mjs)",
-      "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/\")"
+      "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/\")",
+      "Bash(perl -0pi -e \"s|import \\\\{\\\\nimport \\\\{ reservaCon, CON_CANAL, CON_PAIS \\\\} from '../lib/columnas'\\\\n|import {\\\\n|\" src/pages/Informes.jsx)",
+      "Bash(perl -0pi -e \"s|\\(\\\\} from 'lucide-react'\\\\n\\)|\\\\$1import { reservaCon, CON_CANAL, CON_PAIS } from '../lib/columnas'\\\\n|\" src/pages/Informes.jsx)",
+      "Bash(grep -E \"select\\\\\\('\\\\*|select\\\\\\(\\\\`\\\\*\")"
     ]
   }
 }

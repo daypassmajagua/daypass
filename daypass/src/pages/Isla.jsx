@@ -8,6 +8,7 @@ import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
 import { comoSeCobra, coincideEnIsla, COBROS } from '../lib/cobroEnIsla'
 import { classNames, fraseFecha, plural } from '../lib/utils'
 import IndicadorSync from '../components/layout/IndicadorSync'
+import { reservaCon, CON_LANCHA } from '../lib/columnas'
 
 /**
  * La isla: a qué cuenta va este almuerzo.
@@ -112,7 +113,7 @@ export default function Isla() {
     if (navigator.onLine) {
       const [reg, ti] = await Promise.all([
         supabase.from('registros')
-          .select('*, lanchas (id, nombre)')
+          .select(reservaCon({ nivel: 'pago', relaciones: [CON_LANCHA] }))
           .eq('fecha', fechaActiva),
         supabase.from('tipos_ingreso').select('*'),
       ])

@@ -14,6 +14,7 @@ import {
   Download, FileText, TrendingUp, Users, CalendarDays,
   BarChart2, Percent, RefreshCw, SlidersHorizontal, X, ChevronDown,
 } from 'lucide-react'
+import { reservaCon, CON_CANAL, CON_PAIS } from '../lib/columnas'
 
 // ─── Paleta ───────────────────────────────────────────────────────────────────
 // Ancla: navy de marca #1E2045 (LogoAzul) + dorado #B5904D (LogoCafe),
@@ -85,7 +86,7 @@ export default function Informes() {
     setLoading(true)
     const { data } = await supabase
       .from('registros')
-      .select('*, lanchas(id,nombre), planes(id,nombre,categoria), canales(id,codigo,nombre), paises(id,codigo,nombre)')
+      .select(reservaCon({ nivel: 'dinero', relaciones: ['lanchas (id, nombre)', 'planes (id, nombre, categoria)', CON_CANAL, CON_PAIS] }))
       .gte('fecha', fechaDesde)
       .lte('fecha', fechaHasta)
       .order('fecha', { ascending: true })
