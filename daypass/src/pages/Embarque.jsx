@@ -8,6 +8,7 @@ import useAppStore from '../store/useAppStore'
 import { useZarpesDelDia, useEmbarque, claveDe } from '../hooks/useEmbarque'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
+import IndicadorSync from '../components/layout/IndicadorSync'
 
 /**
  * El muelle.
@@ -284,10 +285,14 @@ export default function Embarque() {
               {zarpe.lanchas?.nombre}
               {zarpe.hora_programada && <span className="text-[#3a3d52] font-normal"> · {zarpe.hora_programada.slice(0, 5)}</span>}
             </p>
-            <p className="text-[15px] text-[#3a3d52]">
-              {cerrado ? `Zarpó a las ${hora12(zarpe.hora_real_salida) || ''}` : 'Todo guardado'}
-            </p>
+            {cerrado && (
+              <p className="text-[15px] text-[#3a3d52]">
+                Zarpó a las {hora12(zarpe.hora_real_salida) || ''}
+              </p>
+            )}
           </div>
+
+          {!cerrado && <IndicadorSync muelle />}
 
           {/* El contador: lo que ella mira cada 30 segundos */}
           <div className="text-right shrink-0">

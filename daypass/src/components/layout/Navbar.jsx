@@ -19,6 +19,7 @@ import {
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
 import logoBlanco from '../../assets/logo-blanco.png'
+import IndicadorSync from './IndicadorSync'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Hoy', icon: LayoutDashboard },
@@ -89,13 +90,16 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <button
-            onClick={handleLogout}
-            className="hidden xl:flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white rounded-[10px] transition-colors"
-          >
-            <LogOut size={16} />
-            Salir
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <IndicadorSync />
+            <button
+              onClick={handleLogout}
+              className="hidden xl:flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white rounded-[10px] transition-colors"
+            >
+              <LogOut size={16} />
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 

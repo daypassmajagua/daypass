@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { ArrowLeft, ChefHat, Lock, Printer, Ship, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ChefHat, Download, Lock, Printer, Ship, TriangleAlert } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
@@ -10,6 +10,8 @@ import { useDiaOperativo, cerrarTentativo } from '../hooks/useDiaOperativo'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import { openPrintWindow, buildTentativoHTML, buildCocinaHTML } from '../lib/printDoc'
 import { calcularConteoCocina } from '../lib/conteoCocina'
+import { precargarDia } from '../lib/offline/precarga'
+import { usePrecarga, haceCuanto } from '../lib/offline/useOffline'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
@@ -36,6 +38,7 @@ export default function CerrarDia() {
   const [opcionesPlato, setOpcionesPlato] = useState([])
   const [tiposIngreso, setTiposIngreso] = useState([])
   const [cerrando, setCerrando] = useState(false)
+  const { precarga, refrescar: refrescarPrecarga } = usePrecarga(fechaActiva)
 
   useEffect(() => {
     supabase.from('lanchas').select('*').eq('activa', true)
@@ -103,6 +106,17 @@ export default function CerrarDia() {
     }
     await refetch()
     toast.success('Día cerrado. Las reservas tentativas quedaron confirmadas.')
+
+    // Los dispositivos se llevan la lista: esto pasa aquí, en la oficina y
+    // con wifi, porque en el muelle ya no habrá señal.
+    const { resumen, error: errPrecarga } = await precargarDia(fechaActiva)
+    if (errPrecarga) {
+      toast.error('El día cerró, pero la copia para el muelle no se pudo guardar. Vuelve a intentarlo desde el indicador.')
+    } else {
+      await refrescarPrecarga()
+      toast.success(`Lista guardada en este dispositivo: ${resumen.pax} pax en ${plural(resumen.zarpes, 'zarpe', 'zarpes')}.`)
+    }
+
     // Los dos documentos salen de una, que es para lo que se cierra.
     imprimirTentativo()
     setTimeout(imprimirCocina, 600)
@@ -304,7 +318,24 @@ export default function CerrarDia() {
               <Printer size={16} />
               Imprimir el conteo de cocina
             </Button>
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                const { resumen, error } = await precargarDia(fechaActiva)
+                if (error) toast.error('No se pudo guardar la lista. ' + error.message)
+                else { await refrescarPrecarga(); toast.success(`Lista guardada: ${resumen.pax} pax.`) }
+              }}
+            >
+              <Download size={16} />
+              Volver a guardar la lista
+            </Button>
           </>
+        )}
+
+        {precarga && (
+          <span className="text-[13px] text-tinta-2 w-full sm:w-auto">
+            Lista guardada en este dispositivo {haceCuanto(precarga.en)} · {precarga.resumen?.pax} pax
+          </span>
         )}
       </div>
     </div>

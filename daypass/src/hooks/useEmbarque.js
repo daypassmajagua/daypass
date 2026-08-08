@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { db } from '../lib/offline/db'
+import { encolar, alCambiarLaCola } from '../lib/offline/cola'
+import { leerDiaLocal } from '../lib/offline/precarga'
 
 /**
  * El embarque de un zarpe.
@@ -11,6 +14,29 @@ import { supabase } from '../lib/supabase'
 /** Identificador estable de una persona dentro del zarpe. */
 export function claveDe(fila) {
   return fila.pasajero_id || fila.client_id || `${fila.registro_id}#${fila.indice}`
+}
+
+/**
+ * Misma regla que la vista estado_embarques de Postgres: el último evento de
+ * cada persona manda. Se usa cuando se trabaja sin red o para sumar lo que
+ * todavía está en la cola.
+ */
+function derivarDeEmbarques(eventos) {
+  const ultimo = new Map()
+  ;[...eventos]
+    .sort((a, b) => new Date(a.ocurrido_at) - new Date(b.ocurrido_at))
+    .forEach(e => ultimo.set(`${e.pasajero_id || e.client_id}`, e))
+  return [...ultimo.values()].map(e => ({
+    zarpe_id: e.zarpe_id,
+    pasajero_id: e.pasajero_id || null,
+    registro_id: e.registro_id || null,
+    client_id: e.client_id,
+    estado: e.evento || e.estado,
+    nombre: e.nombre || null,
+    documento: e.documento || null,
+    categoria: e.categoria || null,
+    ocurrido_at: e.ocurrido_at,
+  }))
 }
 
 function nuevoClientId() {
@@ -72,36 +98,69 @@ export function useEmbarque(zarpe) {
   const [estados, setEstados] = useState([])
   const [cargando, setCargando] = useState(true)
 
+  /**
+   * Con red, del servidor; sin red, de la copia local que se precargó al
+   * cerrar el tentativo. En ambos casos se suman los hechos que todavía
+   * están en la cola: lo que la asesora acaba de marcar tiene que verse ya.
+   */
   const cargar = useCallback(async () => {
     if (!zarpe?.id) return
-    const { data: regs } = await supabase
-      .from('registros')
-      .select('*, lanchas (id, nombre), planes (id, nombre)')
-      .eq('fecha', zarpe.fecha)
-      .eq('lancha_id', zarpe.lancha_id)
 
-    const vivos = (regs || []).filter(r => !['cancelada'].includes(r.estado))
-    setRegistros(vivos)
+    let vivos = []
+    let pax = []
+    let est = []
 
-    if (vivos.length) {
-      const { data: pax } = await supabase
-        .from('pasajeros')
-        .select('*')
-        .in('registro_id', vivos.map(r => r.id))
-      setPasajeros(pax || [])
-    } else {
-      setPasajeros([])
+    if (navigator.onLine) {
+      const { data: regs, error } = await supabase
+        .from('registros')
+        .select('*, lanchas (id, nombre), planes (id, nombre)')
+        .eq('fecha', zarpe.fecha)
+        .eq('lancha_id', zarpe.lancha_id)
+
+      if (!error) {
+        vivos = (regs || []).filter(r => r.estado !== 'cancelada')
+        if (vivos.length) {
+          const { data } = await supabase.from('pasajeros').select('*')
+            .in('registro_id', vivos.map(r => r.id))
+          pax = data || []
+        }
+        const { data: e } = await supabase.from('estado_embarques').select('*')
+          .eq('zarpe_id', zarpe.id)
+        est = e || []
+        // La copia local se refresca con lo que se acaba de leer.
+        if (vivos.length) await db.registros.bulkPut(vivos)
+        if (pax.length) await db.pasajeros.bulkPut(pax)
+      }
     }
 
-    const { data: est } = await supabase
-      .from('estado_embarques')
-      .select('*')
-      .eq('zarpe_id', zarpe.id)
-    setEstados(est || [])
+    if (!vivos.length) {
+      const local = await leerDiaLocal(zarpe.fecha)
+      vivos = local.registros
+        .filter(r => r.lancha_id === zarpe.lancha_id && r.estado !== 'cancelada')
+      pax = local.pasajeros.filter(p => vivos.some(r => r.id === p.registro_id))
+      if (!est.length) est = derivarDeEmbarques(local.embarques.filter(e => e.zarpe_id === zarpe.id))
+    }
+
+    // Los hechos que aún no salieron del iPad cuentan igual.
+    const enCola = await db.cola.where('tabla').equals('embarques').toArray()
+    const propios = enCola.map(c => c.fila).filter(f => f.zarpe_id === zarpe.id)
+    if (propios.length) {
+      est = derivarDeEmbarques([
+        ...est.map(e => ({ ...e, evento: e.estado, ocurrido_at: e.ocurrido_at })),
+        ...propios,
+      ])
+    }
+
+    setRegistros(vivos)
+    setPasajeros(pax)
+    setEstados(est)
     setCargando(false)
   }, [zarpe?.id, zarpe?.fecha, zarpe?.lancha_id])
 
   useEffect(() => { cargar() }, [cargar])
+
+  // Si la cola cambia (se encoló algo o se drenó), la lista se repinta.
+  useEffect(() => alCambiarLaCola(cargar), [cargar])
 
   // Lo que marque otro dispositivo aparece aquí.
   useEffect(() => {
@@ -173,10 +232,16 @@ export function useEmbarque(zarpe) {
     return { esperados, embarcados, noLlegaron, faltan: Math.max(0, esperados - embarcados - noLlegaron) }
   }, [grupos, walkIns])
 
-  /** Registra un hecho. Nunca corrige: siempre inserta. */
+  /**
+   * Registra un hecho. Nunca corrige: siempre inserta.
+   *
+   * Se escribe PRIMERO en la cola local y se devuelve de inmediato: en el
+   * muelle nadie espera a la red para seguir embarcando. El envío ocurre
+   * detrás, y reenviarlo es inofensivo gracias al client_id.
+   */
   const registrarEvento = useCallback(async (fila, evento, extra = {}) => {
     if (!zarpe?.id) return { error: { message: 'Sin zarpe activo' } }
-    const { data: sesion } = await supabase.auth.getSession()
+    const { data: sesion } = await supabase.auth.getSession().catch(() => ({ data: null }))
 
     const evt = {
       zarpe_id: zarpe.id,
@@ -193,9 +258,17 @@ export function useEmbarque(zarpe) {
       client_id: nuevoClientId(),
     }
 
-    const { error } = await supabase.from('embarques').insert(evt)
-    if (!error) await cargar()
-    return { error }
+    const quien = extra.nombre || fila?.nombre || 'Alguien'
+    const ETIQUETA = {
+      check_in: 'embarcó', no_show: 'no llegó',
+      walk_in: 'sin reserva', desembarque: 'desembarcó',
+    }
+    await encolar('embarques', evt, `${quien} — ${ETIQUETA[evento] || evento}`)
+
+    // La copia local guarda el hecho aunque el servidor todavía no lo sepa.
+    await db.embarques.put(evt)
+    await cargar()
+    return { error: null }
   }, [zarpe?.id, cargar])
 
   const cerrar = useCallback(async () => {

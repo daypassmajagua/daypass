@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
+import { canalConReintento } from '../lib/offline/canalConReintento'
 
 /**
  * El estado del día y su sincronización entre los tres puntos.
@@ -42,16 +43,16 @@ export function useSincronizarDia(fecha) {
 
   useEffect(() => {
     if (!fecha) return
-    const canal = supabase
-      .channel(`dia:${fecha}`)
-      .on(
+    return canalConReintento(
+      `dia:${fecha}`,
+      canal => canal.on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'dias_operativos', filter: `fecha=eq.${fecha}` },
         payload => { if (payload.new) setDia(payload.new) }
-      )
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
-  }, [fecha, setDia])
+      ),
+      recargar,   // al volver de una caída, lo de mientras no llegó por el canal
+    )
+  }, [fecha, setDia, recargar])
 
   return { recargar }
 }
@@ -100,20 +101,17 @@ export async function cambiarEstadoManual(registroId, estado, motivo) {
 export function useRegistrosEnVivo(fecha, alCambiar) {
   useEffect(() => {
     if (!fecha) return
-    const canal = supabase
-      .channel(`registros:${fecha}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'registros', filter: `fecha=eq.${fecha}` },
-        alCambiar
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pasajeros' },
-        alCambiar
-      )
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
+    return canalConReintento(
+      `registros:${fecha}`,
+      canal => canal
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'registros', filter: `fecha=eq.${fecha}` },
+          alCambiar)
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'pasajeros' },
+          alCambiar),
+      alCambiar,
+    )
   }, [fecha, alCambiar])
 }
 
