@@ -769,6 +769,9 @@ function derivarEstadoEmbarques() {
     documento: e.documento || null,
     categoria: e.categoria || null,
     ocurrido_at: e.ocurrido_at,
+    // Los dos que añadió la 011: el manifiesto de Capitanía los exige.
+    tipo_documento: e.tipo_documento || null,
+    pais_id: e.pais_id || null,
   }))
 }
 
@@ -843,6 +846,37 @@ const RPC = {
     return { data: STORE.zarpes.filter(z => z.fecha === p_fecha), error: null }
   },
 
+  /**
+   * El regreso de las 3:30 (011). Solo vuelven las lanchas que fueron:
+   * programarle el regreso a una que nunca zarpó llenaría el muelle de zarpes
+   * vacíos que alguien tendría que cerrar a mano.
+   */
+  programar_regresos({ p_fecha, p_hora = null }) {
+    const hora = p_hora || '15:30'
+    const idas = STORE.zarpes.filter(z =>
+      z.fecha === p_fecha && z.sentido === 'ida' && ['zarpado', 'regresado'].includes(z.estado))
+
+    const porLancha = new Map()
+    idas.forEach(z => { if (!porLancha.has(z.lancha_id)) porLancha.set(z.lancha_id, z) })
+
+    porLancha.forEach((ida, lancha_id) => {
+      const ya = STORE.zarpes.some(z =>
+        z.fecha === p_fecha && z.lancha_id === lancha_id && z.sentido === 'regreso' && z.hora_programada === hora)
+      if (ya) return
+      const z = {
+        id: genId(), fecha: p_fecha, lancha_id, sentido: 'regreso',
+        hora_programada: hora, hora_real_salida: null, hora_real_regreso: null,
+        piloto_id: ida.piloto_id || null,
+        capitan: null, tripulacion: null, estado: 'programado',
+        cerrado_por: null, cerrado_at: null,
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      }
+      STORE.zarpes.push(z)
+      emitirCambio('zarpes', 'INSERT', z)
+    })
+    return { data: STORE.zarpes.filter(z => z.fecha === p_fecha && z.sentido === 'regreso'), error: null }
+  },
+
   cerrar_zarpe({ p_zarpe_id }) {
     const z = STORE.zarpes.find(x => x.id === p_zarpe_id)
     if (!z) return { data: null, error: { message: 'No existe ese zarpe' } }
@@ -881,6 +915,29 @@ const RPC = {
     } else {
       z.estado = 'regresado'
       z.hora_real_regreso = new Date().toISOString()
+
+      // Quien bajó terminó su pasadía. Quien no bajó se queda en 'en_isla' a
+      // propósito: esa es la alerta de faltantes, y no se apaga sola.
+      const bajaron = new Set(
+        estados.filter(e => e.estado === 'desembarque' && e.registro_id).map(e => e.registro_id))
+
+      STORE.registros
+        .filter(r => r.fecha === z.fecha && r.estado === 'en_isla' && bajaron.has(r.id))
+        .forEach(r => {
+          const antes = { ...r }
+          r.estado = 'completada'
+          anotarCambioEstado(r, antes.estado, r.estado, 'sistema')
+          emitirCambio('registros', 'UPDATE', r, antes)
+
+          // El enlace deja de editar y pasa a ser recuerdo: siete días para el
+          // agradecimiento y la reseña, y después no abre más.
+          const t = STORE.tokens_reserva.find(x => x.registro_id === r.id)
+          if (t && t.estado !== 'expirado') {
+            t.estado = 'finalizado'
+            t.expira_at = t.expira_at ||
+              new Date(new Date(z.fecha + 'T12:00:00').getTime() + 7 * 864e5).toISOString()
+          }
+        })
     }
 
     z.cerrado_por = MOCK_SESSION.user.id

@@ -11,6 +11,10 @@ import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
  * espera y se deriva su estado del último evento registrado.
  */
 
+/** En la ida cuenta haber subido; en el regreso, haber bajado. */
+const EVENTOS_IDA = ['check_in', 'walk_in']
+const EVENTOS_REGRESO = ['desembarque']
+
 /** Identificador estable de una persona dentro del zarpe. */
 export function claveDe(fila) {
   return fila.pasajero_id || fila.client_id || `${fila.registro_id}#${fila.indice}`
@@ -88,7 +92,27 @@ export function useZarpesDelDia(fecha) {
     return { error }
   }, [fecha, recargar])
 
-  return { zarpes, cargando, recargar, programar }
+  /**
+   * El regreso de las 3:30. Solo vuelven las lanchas que fueron: programarle
+   * el regreso a una que nunca zarpó llenaría el muelle de zarpes vacíos que
+   * alguien tendría que cerrar a mano.
+   *
+   * La hora sale del ajuste `hora_regreso`; se le puede pasar otra si ese día
+   * la lancha sale antes o después.
+   */
+  const programarRegreso = useCallback(async (hora = null) => {
+    const { error } = await supabase.rpc('programar_regresos', {
+      p_fecha: fecha, p_hora: hora,
+    })
+    await recargar()
+    return { error }
+  }, [fecha, recargar])
+
+  // Ya fue alguna lancha, así que hay regreso que programar.
+  const hayIdaCerrada = zarpes.some(z => z.sentido === 'ida' && ['zarpado', 'regresado'].includes(z.estado))
+  const hayRegreso = zarpes.some(z => z.sentido === 'regreso')
+
+  return { zarpes, cargando, recargar, programar, programarRegreso, hayIdaCerrada, hayRegreso }
 }
 
 /**
@@ -154,7 +178,16 @@ export function useEmbarque(zarpe) {
   const [registros, setRegistros] = useState([])
   const [pasajeros, setPasajeros] = useState([])
   const [estados, setEstados] = useState([])
+  // Lo que pasó en la ida de esa misma lancha. Solo se usa en el regreso, y
+  // manda: de vuelta solo puede bajar quien subió.
+  const [estadosIda, setEstadosIda] = useState([])
   const [cargando, setCargando] = useState(true)
+
+  const esRegreso = zarpe?.sentido === 'regreso'
+  // El hecho que cuenta como "listo" cambia con el sentido del viaje. Las dos
+  // listas son constantes del módulo, no literales aquí: un array nuevo en
+  // cada render rompería las dependencias de los useMemo de abajo.
+  const EVENTOS_OK = esRegreso ? EVENTOS_REGRESO : EVENTOS_IDA
 
   /**
    * Con red, del servidor; sin red, de la copia local que se precargó al
@@ -209,11 +242,51 @@ export function useEmbarque(zarpe) {
       ])
     }
 
+    // En el regreso hace falta saber a quién se llevó esa lancha por la
+    // mañana: la lista de vuelta no es "los que tenían reserva" sino "los que
+    // subieron", que incluye a los walk-in y excluye a los que no llegaron.
+    let ida = []
+    if (zarpe.sentido === 'regreso') {
+      let zarpesIda = []
+      if (navigator.onLine) {
+        const { data } = await supabase.from('zarpes').select('id')
+          .eq('fecha', zarpe.fecha).eq('lancha_id', zarpe.lancha_id).eq('sentido', 'ida')
+        zarpesIda = data || []
+      }
+      if (!zarpesIda.length) {
+        const local = await leerDiaLocal(zarpe.fecha)
+        zarpesIda = local.zarpes.filter(
+          z => z.lancha_id === zarpe.lancha_id && z.sentido === 'ida')
+      }
+
+      const idsIda = zarpesIda.map(z => z.id)
+      if (idsIda.length) {
+        if (navigator.onLine) {
+          const { data } = await supabase.from('estado_embarques').select('*').in('zarpe_id', idsIda)
+          ida = data || []
+        }
+        if (!ida.length) {
+          const local = await leerDiaLocal(zarpe.fecha)
+          ida = derivarDeEmbarques(local.embarques.filter(e => idsIda.includes(e.zarpe_id)))
+        }
+        const enColaIda = (await db.cola.where('tabla').equals('embarques').toArray())
+          .map(c => c.fila).filter(f => idsIda.includes(f.zarpe_id))
+        if (enColaIda.length) {
+          ida = derivarDeEmbarques([
+            ...ida.map(e => ({ ...e, evento: e.estado })),
+            ...enColaIda,
+          ])
+        }
+      }
+      ida = ida.filter(e => ['check_in', 'walk_in'].includes(e.estado))
+    }
+
     setRegistros(vivos)
     setPasajeros(pax)
     setEstados(est)
+    setEstadosIda(ida)
     setCargando(false)
-  }, [zarpe?.id, zarpe?.fecha, zarpe?.lancha_id])
+  }, [zarpe?.id, zarpe?.fecha, zarpe?.lancha_id, zarpe?.sentido])
 
   useEffect(() => { cargar() }, [cargar])
 
@@ -237,16 +310,26 @@ export function useEmbarque(zarpe) {
   }, [estados])
 
   /**
-   * La lista agrupada por reserva. Una reserva sin nombres cargados no puede
-   * quedarse fuera —son justo los grupos grandes— así que se muestra como
-   * plazas sin nombre, que igual se embarcan.
+   * La lista agrupada por reserva.
+   *
+   * En la IDA se espera a quien tiene reserva: los que tienen nombre cargado
+   * como filas propias, y las plazas que todavía no lo tienen —los grupos
+   * grandes— como "Persona N de M", que igual embarcan.
+   *
+   * En el REGRESO se espera a quien subió. No es lo mismo: el que no llegó en
+   * la mañana no puede bajar en la tarde, y el walk-in que subió sin reserva
+   * sí tiene que volver. Ponerlo al revés haría que el contador de faltantes
+   * —lo único que importa a las 3:30— dijera cualquier cosa.
    */
   const grupos = useMemo(() => {
     return registros.map(r => {
       const suyos = pasajeros.filter(p => p.registro_id === r.id)
       const plan = r.adultos + r.ninos + r.infantes + r.cortesias
 
-      const filas = suyos.map(p => ({
+      const subioEnLaIda = p =>
+        !esRegreso || estadosIda.some(e => e.pasajero_id === p.id)
+
+      const filas = suyos.filter(subioEnLaIda).map(p => ({
         tipo: 'nominal',
         pasajero_id: p.id,
         registro_id: r.id,
@@ -256,39 +339,66 @@ export function useEmbarque(zarpe) {
         estado: porClave.get(p.id)?.estado || null,
       }))
 
-      // Plazas de la reserva que todavía no tienen nombre.
+      // Cuántas plazas sin nombre hay que mostrar. En la ida, las que le
+      // faltan a la reserva; en el regreso, las que efectivamente subieron.
       const anonimos = estados.filter(e => e.registro_id === r.id && !e.pasajero_id)
-      const sinNombre = Math.max(0, plan - suyos.length)
-      for (let i = 0; i < Math.max(sinNombre, anonimos.length); i++) {
+      const cuantas = esRegreso
+        ? estadosIda.filter(e => e.registro_id === r.id && !e.pasajero_id).length
+        : Math.max(Math.max(0, plan - suyos.length), anonimos.length)
+
+      // En la ida la lista puede crecer si aparecen más eventos que plazas
+      // previstas: ningún hecho registrado puede quedar invisible. En el
+      // regreso NO: de vuelta caben exactamente los que subieron, y si hay más
+      // desembarques que embarques eso es un dato malo, no una fila de más.
+      for (let i = 0; i < cuantas; i++) {
         const ev = anonimos[i]
         filas.push({
           tipo: 'sin_nombre',
           registro_id: r.id,
           indice: i,
           client_id: ev?.client_id,
-          nombre: `Persona ${suyos.length + i + 1} de ${plan}`,
+          nombre: esRegreso
+            ? `Persona ${i + 1} de ${cuantas}`
+            : `Persona ${suyos.length + i + 1} de ${plan}`,
           estado: ev?.estado || null,
         })
       }
 
-      const embarcados = filas.filter(f => ['check_in', 'walk_in'].includes(f.estado)).length
-      return { registro: r, filas, plan, embarcados, faltan: filas.length - embarcados }
-    })
-  }, [registros, pasajeros, porClave, estados])
+      const listos = filas.filter(f => EVENTOS_OK.includes(f.estado)).length
+      return {
+        registro: r, filas, plan,
+        embarcados: listos,
+        faltan: filas.length - listos,
+      }
+    }).filter(g => g.filas.length > 0)   // en el regreso, quien no fue no aparece
+  }, [registros, pasajeros, porClave, estados, estadosIda, esRegreso, EVENTOS_OK])
 
-  // Los que llegaron sin reserva.
-  const walkIns = useMemo(
-    () => estados.filter(e => e.estado === 'walk_in' && !e.registro_id),
-    [estados]
-  )
+  /**
+   * Los que llegaron sin reserva. En el regreso son los que subieron así por
+   * la mañana: también tienen que volver, y sin esto nadie los contaría.
+   */
+  const walkIns = useMemo(() => {
+    if (!esRegreso) return estados.filter(e => e.estado === 'walk_in' && !e.registro_id)
+    return estadosIda
+      .filter(e => e.estado === 'walk_in' && !e.registro_id)
+      .map(e => ({
+        ...e,
+        // Su estado de vuelta es el del zarpe de regreso, no el de la ida.
+        estado: estados.find(x => x.nombre === e.nombre && x.documento === e.documento)?.estado || null,
+      }))
+  }, [estados, estadosIda, esRegreso])
 
   const contador = useMemo(() => {
-    const esperados = grupos.reduce((s, g) => s + g.filas.length, 0)
-    const embarcados = grupos.reduce((s, g) => s + g.embarcados, 0) + walkIns.length
+    const enFilas = grupos.reduce((s, g) => s + g.filas.length, 0)
+    const walkInsListos = esRegreso
+      ? walkIns.filter(w => EVENTOS_OK.includes(w.estado)).length
+      : walkIns.length
+    const esperados = enFilas + (esRegreso ? walkIns.length : 0)
+    const embarcados = grupos.reduce((s, g) => s + g.embarcados, 0) + walkInsListos
     const noLlegaron = grupos.reduce(
       (s, g) => s + g.filas.filter(f => f.estado === 'no_show').length, 0)
     return { esperados, embarcados, noLlegaron, faltan: Math.max(0, esperados - embarcados - noLlegaron) }
-  }, [grupos, walkIns])
+  }, [grupos, walkIns, esRegreso, EVENTOS_OK])
 
   /**
    * Registra un hecho. Nunca corrige: siempre inserta.
@@ -337,6 +447,10 @@ export function useEmbarque(zarpe) {
 
   return {
     grupos, walkIns, contador, cargando, registrarEvento, cerrar, recargar: cargar,
+    esRegreso,
+    // El hecho que se registra al tocar una fila, según el sentido del viaje.
+    eventoDelToque: esRegreso ? 'desembarque' : 'check_in',
+    eventosOk: EVENTOS_OK,
     // Crudos, para el manifiesto: lo arma armarManifiesto() y no esta pantalla.
     registros, pasajeros, estados,
   }

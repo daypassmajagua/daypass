@@ -24,7 +24,7 @@ const VENTANA_DESHACER = 8000
 
 // ─── Selección de zarpe ────────────────────────────────────────────────────────
 
-function SelectorZarpe({ zarpes, onElegir, onProgramar, onRecargar, fecha, cargando }) {
+function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, hayIdaCerrada, hayRegreso }) {
   const [programando, setProgramando] = useState(false)
   const [preparando, setPreparando] = useState(null)
 
@@ -86,7 +86,9 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onRecargar, fecha, carga
                   {z.sentido === 'ida' ? 'Ida' : 'Regreso'}
                   {z.hora_programada ? ` · ${z.hora_programada.slice(0, 5)}` : ''}
                   {preparado && z.pilotos?.nombre ? ` · ${z.pilotos.nombre}` : ''}
-                  {cerrado && ` · zarpó ${hora12(z.hora_real_salida) || ''}`}
+                  {cerrado && (z.sentido === 'regreso'
+                    ? ` · regresó ${hora12(z.hora_real_regreso) || ''}`
+                    : ` · zarpó ${hora12(z.hora_real_salida) || ''}`)}
                 </span>
               </span>
               {cerrado
@@ -111,6 +113,25 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onRecargar, fecha, carga
           </div>
         )
       })}
+
+      {/* El regreso de las 3:30. Aparece cuando ya salió alguna lancha: antes
+          no hay nada que traer de vuelta. */}
+      {hayIdaCerrada && !hayRegreso && (
+        <button
+          onClick={async () => {
+            setProgramando(true)
+            const { error } = await onProgramarRegreso()
+            setProgramando(false)
+            if (error) toast.error('No se pudo programar el regreso. ' + error.message)
+            else toast.success('Regreso programado')
+          }}
+          disabled={programando}
+          className="self-start mt-2 flex items-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold px-6 min-h-[64px] disabled:opacity-50"
+        >
+          <Anchor size={22} />
+          {programando ? 'Programando…' : 'Programar el regreso'}
+        </button>
+      )}
 
       {preparando && (
         <PrepararZarpe
@@ -245,13 +266,16 @@ function FormularioWalkIn({ onGuardar, onCerrar, paises = [] }) {
 
 export default function Embarque() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
-  const { zarpes, cargando, programar, recargar: recargarZarpes } = useZarpesDelDia(fechaActiva)
+  const {
+    zarpes, cargando, programar, programarRegreso, hayIdaCerrada, hayRegreso,
+    recargar: recargarZarpes,
+  } = useZarpesDelDia(fechaActiva)
   const [zarpeId, setZarpeId] = useState(null)
 
   const zarpe = useMemo(() => zarpes.find(z => z.id === zarpeId) || null, [zarpes, zarpeId])
   const {
     grupos, walkIns, contador, registrarEvento, cerrar, recargar,
-    registros, pasajeros, estados,
+    registros, pasajeros, estados, esRegreso, eventoDelToque, eventosOk,
   } = useEmbarque(zarpe)
   const extras = useDatosManifiesto(zarpe)
 
@@ -290,6 +314,8 @@ export default function Embarque() {
   const [busqueda, setBusqueda] = useState('')
   const [walkInAbierto, setWalkInAbierto] = useState(false)
   const [cerrando, setCerrando] = useState(false)
+  const [confirmandoFaltantes, setConfirmandoFaltantes] = useState(false)
+  const [marcandoGrupo, setMarcandoGrupo] = useState(false)
   // Toques recientes: volver a tocar dentro de la ventana deshace.
   // Va en estado, no en un ref: la fila tiene que repintarse cuando la
   // ventana se abre y cuando se cierra sola a los 8 segundos.
@@ -304,7 +330,9 @@ export default function Embarque() {
     return (
       <div className="min-h-screen bg-[#f4f4f0]">
         <SelectorZarpe zarpes={zarpes} onElegir={z => setZarpeId(z.id)}
-          onProgramar={programar} onRecargar={recargarZarpes}
+          onProgramar={programar} onProgramarRegreso={programarRegreso}
+          onRecargar={recargarZarpes}
+          hayIdaCerrada={hayIdaCerrada} hayRegreso={hayRegreso}
           fecha={fechaActiva} cargando={cargando} />
       </div>
     )
@@ -326,37 +354,64 @@ export default function Embarque() {
     if (cerrado) return
     const clave = claveDe(fila)
     const hace = recientes[clave]
-    const embarcado = ['check_in', 'walk_in'].includes(fila.estado)
+    const listo = eventosOk.includes(fila.estado)
 
     // Volver a tocar dentro de la ventana deshace lo que se acaba de marcar.
-    if (embarcado && hace && Date.now() - hace < VENTANA_DESHACER) {
+    // En el regreso no hay "no llegó" que registrar —ya está en la isla—, así
+    // que deshacer no aplica: el hecho queda y se corrige con la conciliación.
+    if (listo && hace && Date.now() - hace < VENTANA_DESHACER && !esRegreso) {
       setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
       await registrarEvento(fila, 'no_show')
       toast('Deshecho', { duration: 1500 })
       return
     }
-    if (embarcado) return   // ya estaba: un toque no lo tumba después de la ventana
+    if (listo) return   // ya estaba: un toque no lo tumba después de la ventana
 
     setRecientes(prev => ({ ...prev, [clave]: Date.now() }))
     // Pasada la ventana, la fila deja de ofrecer deshacer por sí sola.
     setTimeout(() => {
       setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
     }, VENTANA_DESHACER)
-    await registrarEvento(fila, 'check_in')
+    await registrarEvento(fila, eventoDelToque)
   }
 
+  /**
+   * Marcar un grupo entero de un toque.
+   *
+   * El candado no es adorno: cada llamada registra un hecho nuevo por
+   * persona, y como las plazas sin nombre no tienen identidad propia, dos
+   * toques seguidos antes de que la lista se repinte embarcan al grupo dos
+   * veces. En un muelle con 250 personas esperando, el segundo toque pasa.
+   */
   async function embarcarTodos(grupo) {
-    const pendientes = grupo.filas.filter(f => !['check_in', 'walk_in'].includes(f.estado))
-    for (const f of pendientes) await registrarEvento(f, 'check_in')
-    toast.success(`${plural(pendientes.length, 'persona embarcada', 'personas embarcadas')}`)
+    if (marcandoGrupo) return
+    setMarcandoGrupo(true)
+    try {
+      const pendientes = grupo.filas.filter(f => !eventosOk.includes(f.estado))
+      for (const f of pendientes) await registrarEvento(f, eventoDelToque)
+      toast.success(esRegreso
+        ? `${plural(pendientes.length, 'persona bajó', 'personas bajaron')}`
+        : `${plural(pendientes.length, 'persona embarcada', 'personas embarcadas')}`)
+    } finally {
+      setMarcandoGrupo(false)
+    }
   }
 
   async function cerrarZarpe() {
+    // A las 3:30 el que no bajó se quedó en la isla, y eso no se cierra a la
+    // ligera: se pregunta antes, con el número delante.
+    if (esRegreso && contador.faltan > 0 && !confirmandoFaltantes) {
+      setConfirmandoFaltantes(true)
+      return
+    }
     setCerrando(true)
     const { error } = await cerrar()
     setCerrando(false)
+    setConfirmandoFaltantes(false)
     if (error) { toast.error('No se pudo cerrar el zarpe. ' + error.message); return }
-    toast.success('Zarpe cerrado. Su gente ya está en la isla.')
+    toast.success(esRegreso
+      ? 'Regreso cerrado. Su Day Tour quedó completo.'
+      : 'Zarpe cerrado. Su gente ya está en la isla.')
     await recargar()
   }
 
@@ -375,24 +430,34 @@ export default function Embarque() {
           <div className="min-w-0 flex-1">
             <p className="text-[20px] font-bold text-[#101223] truncate">
               {zarpe.lanchas?.nombre}
+              {esRegreso && <span className="text-blue-700"> · Regreso</span>}
               {zarpe.hora_programada && <span className="text-[#3a3d52] font-normal"> · {zarpe.hora_programada.slice(0, 5)}</span>}
             </p>
             {cerrado && (
               <p className="text-[15px] text-[#3a3d52]">
-                Zarpó a las {hora12(zarpe.hora_real_salida) || ''}
+                {esRegreso
+                  ? `Regresó a las ${hora12(zarpe.hora_real_regreso) || ''}`
+                  : `Zarpó a las ${hora12(zarpe.hora_real_salida) || ''}`}
               </p>
             )}
           </div>
 
           {!cerrado && <IndicadorSync muelle />}
 
-          {/* El contador: lo que ella mira cada 30 segundos */}
+          {/* El contador: lo que ella mira cada 30 segundos.
+              En el regreso "faltan" quiere decir que se quedaron en la isla,
+              que es otra cosa muy distinta y por eso se pinta en rojo. */}
           <div className="text-right shrink-0">
             <p className="text-[34px] leading-none font-bold text-[#101223] tabular">
               {contador.embarcados}<span className="text-[#6a6d80]">/{contador.esperados}</span>
             </p>
-            <p className="text-[15px] text-[#3a3d52]">
-              {contador.faltan > 0 ? `faltan ${contador.faltan}` : 'todos a bordo'}
+            <p className={classNames(
+              'text-[15px] font-bold',
+              esRegreso && contador.faltan > 0 ? 'text-[#a41f1f]' : 'text-[#3a3d52]'
+            )}>
+              {contador.faltan > 0
+                ? (esRegreso ? `${contador.faltan} sin bajar` : `faltan ${contador.faltan}`)
+                : (esRegreso ? 'todos bajaron' : 'todos a bordo')}
             </p>
           </div>
         </div>
@@ -424,7 +489,7 @@ export default function Embarque() {
           const filas = g.filas.filter(coincide)
           if (!filas.length) return null
           const quien = g.registro.nombre_grupo || g.registro.agencia_nombre || g.registro.nombre_pasajero
-          const pendientes = g.filas.filter(f => !['check_in', 'walk_in'].includes(f.estado)).length
+          const pendientes = g.filas.filter(f => !eventosOk.includes(f.estado)).length
 
           return (
             <section key={g.registro.id}>
@@ -436,19 +501,26 @@ export default function Embarque() {
                 {!cerrado && pendientes > 0 && (
                   <button
                     onClick={() => embarcarTodos(g)}
-                    className="shrink-0 rounded-xl bg-[#101223] text-white text-[15px] font-bold px-4 min-h-[48px]"
+                    disabled={marcandoGrupo}
+                    className="shrink-0 rounded-xl bg-[#101223] text-white text-[15px] font-bold px-4 min-h-[48px] disabled:opacity-40"
                   >
-                    Embarcar los {pendientes} que faltan
+                    {esRegreso
+                      ? `Bajar los ${pendientes} que faltan`
+                      : `Embarcar los ${pendientes} que faltan`}
                   </button>
                 )}
               </div>
 
               <ul className="flex flex-col gap-1.5">
                 {filas.map(f => {
-                  const embarcado = ['check_in', 'walk_in'].includes(f.estado)
+                  // "Listo" es haber subido en la ida y haber bajado en el
+                  // regreso: la misma fila verde significa cosas distintas.
+                  const embarcado = eventosOk.includes(f.estado)
                   const noLlego = f.estado === 'no_show'
                   const clave = claveDe(f)
-                  const reciente = embarcado && Boolean(recientes[clave])
+                  // En el regreso no hay deshacer: no existe el "no llegó" de
+                  // alguien que ya está en la isla.
+                  const reciente = embarcado && !esRegreso && Boolean(recientes[clave])
 
                   return (
                     <li key={clave}>
@@ -557,10 +629,41 @@ export default function Embarque() {
             className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 text-white text-[17px] font-bold min-h-[64px] disabled:opacity-50"
           >
             <Anchor size={22} />
-            {cerrando ? 'Cerrando…' : 'Cerrar el zarpe'}
+            {cerrando ? 'Cerrando…' : esRegreso ? 'Cerrar el regreso' : 'Cerrar el zarpe'}
           </button>
         )}
       </div>
+
+      {/* A las 3:30 el que no bajó se quedó en la isla. Es lo único de todo el
+          día que no se puede arreglar después. */}
+      {confirmandoFaltantes && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
+            <h2 className="text-[24px] font-bold text-[#a41f1f]">
+              {plural(contador.faltan, 'persona no ha bajado', 'personas no han bajado')}
+            </h2>
+            <p className="text-[17px] text-[#101223]">
+              Si cierras ahora quedan registradas como que se quedaron en la isla.
+              Revisa la lista antes: es lo único del día que no se arregla después.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setConfirmandoFaltantes(false)}
+                className="flex-1 rounded-2xl bg-blue-600 text-white text-[18px] font-bold min-h-[64px]"
+              >
+                Volver a revisar
+              </button>
+              <button
+                onClick={cerrarZarpe}
+                disabled={cerrando}
+                className="flex-1 rounded-2xl bg-white ring-2 ring-[#a41f1f] text-[#a41f1f] text-[18px] font-bold min-h-[64px] disabled:opacity-50"
+              >
+                {cerrando ? 'Cerrando…' : 'Cerrar así'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lo que le va a faltar al documento, antes de imprimirlo y no después
           de que la autoridad lo devuelva. */}
