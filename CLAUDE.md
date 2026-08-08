@@ -128,7 +128,7 @@ nadie en el turno, aparece como pendiente.
   pedir.** Hay 23 tablas y decisiones que cambiaron en el camino.
 - Cada cambio de esquema va en migración nueva y numerada. Las migraciones se escriben aquí y las
   corre el dueño en Supabase.
-- Al terminar: `npm test`, `npm run build`, `npx eslint src` (línea base: 34 problemas), y probar
+- Al terminar: `npm test`, `npm run build`, `npx eslint src` (línea base: 31 problemas), y probar
   en `npm run demo`.
 - Un commit por bloque, con mensaje que diga qué bloque es.
 
@@ -141,5 +141,5 @@ npm run dev      # contra Supabase real (.env)
 npm run demo     # datos de muestra en memoria — puerto 5175
 npm run build
 npm test         # Vitest
-npx eslint src   # línea base: 34 problemas conocidos
+npx eslint src   # línea base: 31 problemas conocidos
 ```

@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import useAppStore from './store/useAppStore'
 import { useSincronizarDia, usePresencia } from './hooks/useDiaOperativo'
 import ProtectedRoute from './components/layout/ProtectedRoute'
+import ProveedorModo from './components/layout/ProveedorModo'
 import Navbar from './components/layout/Navbar'
 import Login from './pages/Login'
 import CheckInPublico from './pages/CheckInPublico'
@@ -38,6 +39,10 @@ function AppLayout({ children }) {
 
 export default function App() {
   return (
+    // El modo —oficina, muelle o isla— envuelve todo, incluida la página del
+    // cliente: un iPad configurado como muelle abre siempre así, sin importar
+    // quién inicie sesión.
+    <ProveedorModo>
     <BrowserRouter>
       <Toaster position="top-right" richColors closeButton />
       <Routes>
@@ -178,5 +183,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </ProveedorModo>
   )
 }

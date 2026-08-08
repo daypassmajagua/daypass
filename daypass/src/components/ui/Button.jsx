@@ -23,17 +23,27 @@ export default function Button({
   className = '',
   disabled = false,
   loading = false,
+  // Un botón que navega debe ser un <a>, no un <button> con onClick: así el
+  // teclado, el clic con rueda y "abrir en otra pestaña" funcionan solos.
+  // Se le pasa `as={Link}` y sus props.
+  as: Como = 'button',
   ...props
 }) {
+  const esBoton = Como === 'button'
+
   return (
-    <button
+    <Como
       className={classNames(
         'inline-flex items-center justify-center gap-2 font-bold tracking-[-.005em] transition-[background-color,transform] active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
         variants[variant],
         sizes[size],
         className
       )}
-      disabled={disabled || loading}
+      // `disabled` solo existe en <button>. En un enlace se marca con aria
+      // para que el lector de pantalla lo diga, ya que no se puede apagar.
+      {...(esBoton
+        ? { disabled: disabled || loading }
+        : { 'aria-disabled': disabled || loading || undefined })}
       {...props}
     >
       {loading && (
@@ -43,6 +53,6 @@ export default function Button({
         </svg>
       )}
       {children}
-    </button>
+    </Como>
   )
 }

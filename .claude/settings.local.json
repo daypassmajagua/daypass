@@ -184,7 +184,15 @@
       "Bash(grep -viE \"^\\\\S+: *\\\\*|^\\\\S+: *//\")",
       "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/cocina\" infantes.png)",
       "Bash(grep -nE \"^### Bloque|\\\\\\(\\\\`0[12][0-9]\\\\`\\\\\\)|pasadia\" docs/plan-v6.md)",
-      "Bash(perl -0pi -e \"s/línea base: 36 problemas/línea base: 34 problemas/g; s/línea base: 36 problemas conocidos/línea base: 34 problemas conocidos/g\" CLAUDE.md docs/plan-v6.md)"
+      "Bash(perl -0pi -e \"s/línea base: 36 problemas/línea base: 34 problemas/g; s/línea base: 36 problemas conocidos/línea base: 34 problemas conocidos/g\" CLAUDE.md docs/plan-v6.md)",
+      "Bash(perl -e ' *)",
+      "Bash(perl -0pi -e \"s|      \\\\{children\\\\}\\\\n    </button>\\\\n  \\\\\\)\\\\n\\\\}|      {children}\\\\n    </Como>\\\\n  \\)\\\\n}|\" src/components/ui/Button.jsx)",
+      "Bash(rm -f src/lib/modo.jsx)",
+      "Bash(perl -0pi -e \"s|import \\\\{ ProveedorModo \\\\} from './lib/modo'|import ProveedorModo from './components/layout/ProveedorModo'|\" src/App.jsx)",
+      "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/config\" config-nuevo.png)",
+      "Bash(perl -0pi -e \"s/  const \\\\{ createElement: h \\\\} = React/  const h = React.createElement || React.default?.createElement/\" patrones.mjs)",
+      "Bash(node patrones.mjs)",
+      "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/\")"
     ]
   }
 }
