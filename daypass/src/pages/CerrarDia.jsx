@@ -9,6 +9,7 @@ import { usePendientes } from '../hooks/usePendientes'
 import { useDiaOperativo, cerrarTentativo } from '../hooks/useDiaOperativo'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import { openPrintWindow, buildTentativoHTML, buildCocinaHTML } from '../lib/printDoc'
+import { calcularConteoCocina } from '../lib/conteoCocina'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
@@ -28,15 +29,21 @@ export default function CerrarDia() {
   const { fechaActiva } = useAppStore()
   const { registros, loading, refetch } = useRegistros(fechaActiva)
   const { dia, enPlaneacion } = useDiaOperativo(fechaActiva)
-  const { lista } = usePendientes(registros, { enPlaneacion })
+  const { lista } = usePendientes(registros, { enPlaneacion, tiposIngreso })
 
   const [lanchas, setLanchas] = useState([])
   const [pasajeros, setPasajeros] = useState([])
+  const [opcionesPlato, setOpcionesPlato] = useState([])
+  const [tiposIngreso, setTiposIngreso] = useState([])
   const [cerrando, setCerrando] = useState(false)
 
   useEffect(() => {
     supabase.from('lanchas').select('*').eq('activa', true)
       .then(({ data }) => setLanchas(data || []))
+    supabase.from('opciones_plato').select('*').eq('activo', true)
+      .then(({ data }) => setOpcionesPlato(data || []))
+    supabase.from('tipos_ingreso').select('*')
+      .then(({ data }) => setTiposIngreso(data || []))
   }, [])
 
   useEffect(() => {
@@ -70,31 +77,20 @@ export default function CerrarDia() {
 
   const sobrecupo = porLancha.filter(l => l.capacidad > 0 && l.pax > l.capacidad)
 
-  // ── Conteo de cocina
-  const cocina = useMemo(() => {
-    const porPlan = {}
-    activos.forEach(r => {
-      const nombre = r.planes?.nombre || 'Sin plan'
-      if (!porPlan[nombre]) porPlan[nombre] = 0
-      porPlan[nombre] += r.adultos + r.ninos + r.cortesias
-    })
-    const idsActivos = new Set(activos.map(r => r.id))
-    const restricciones = pasajeros.filter(
-      p => idsActivos.has(p.registro_id) && (p.restriccion_alimentaria || '').trim()
-    )
-    return {
-      filas: Object.entries(porPlan).sort((a, b) => b[1] - a[1]),
-      total: Object.values(porPlan).reduce((s, n) => s + n, 0),
-      infantes: activos.reduce((s, r) => s + r.infantes, 0),
-      restricciones,
-    }
-  }, [activos, pasajeros])
+  // ── Conteo de cocina: mismo cálculo que el documento impreso
+  const cocina = useMemo(
+    () => calcularConteoCocina(registros, pasajeros, opcionesPlato),
+    [registros, pasajeros, opcionesPlato]
+  )
 
   function imprimirTentativo() {
     openPrintWindow(`Tentativo — ${fechaActiva}`, buildTentativoHTML(registros, fechaActiva))
   }
   function imprimirCocina() {
-    openPrintWindow(`Conteo de cocina — ${fechaActiva}`, buildCocinaHTML(registros, pasajeros, fechaActiva))
+    openPrintWindow(
+      `Conteo de cocina — ${fechaActiva}`,
+      buildCocinaHTML(registros, pasajeros, opcionesPlato, fechaActiva)
+    )
   }
 
   async function cerrarYEnviar() {
@@ -204,24 +200,47 @@ export default function CerrarDia() {
               Lo que va a cocina
             </h2>
             <span className="text-[15px] font-bold text-tinta tabular shrink-0">
-              {plural(cocina.total, 'almuerzo', 'almuerzos')}
+              {plural(cocina.totalAlmuerzos, 'almuerzo', 'almuerzos')}
             </span>
           </div>
 
+          {/* Cocina no cocina planes: cocina platos. */}
           <ul className="flex flex-col gap-1.5">
-            {cocina.filas.map(([plan, n]) => (
-              <li key={plan} className="flex justify-between gap-3 text-sm">
-                <span className="text-tinta-2 truncate">{plan}</span>
-                <span className="font-bold text-tinta tabular shrink-0">{n}</span>
+            {cocina.filasPlato.map(f => (
+              <li key={f.nombre + f.plan} className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0">
+                  <span className="font-bold text-tinta">{f.nombre}</span>
+                  {f.plan && <span className="text-tinta-2"> · {f.plan}</span>}
+                </span>
+                <span className="font-bold text-tinta tabular shrink-0">{f.cantidad}</span>
               </li>
             ))}
+
+            {cocina.filasMenuFijo.map(f => (
+              <li key={f.plan} className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0">
+                  <span className="font-bold text-tinta">Menú fijo</span>
+                  <span className="text-tinta-2"> · {f.plan}</span>
+                </span>
+                <span className="font-bold text-tinta tabular shrink-0">{f.cantidad}</span>
+              </li>
+            ))}
+
+            {cocina.sinElegir > 0 && (
+              <li className="flex items-baseline justify-between gap-3 text-sm rounded-lg bg-coral-50 px-2.5 py-1.5 -mx-2.5">
+                <span className="min-w-0">
+                  <span className="font-bold text-coral-700">Sin plato elegido</span>
+                  <span className="text-coral-700/80"> · se confirma en el check-in</span>
+                </span>
+                <span className="font-bold text-coral-700 tabular shrink-0">{cocina.sinElegir}</span>
+              </li>
+            )}
           </ul>
 
-          {cocina.infantes > 0 && (
-            <p className="text-[13px] text-tinta-2 mt-3">
-              {plural(cocina.infantes, 'infante', 'infantes')} sin almuerzo (menores de 3 años).
-            </p>
-          )}
+          <p className="text-[13px] text-tinta-2 mt-3">
+            {cocina.totalAdultos} adultos · {cocina.totalNinos} niños · {cocina.totalCortesias} cortesías.
+            {cocina.totalInfantes > 0 && ` ${plural(cocina.totalInfantes, 'infante', 'infantes')} sin almuerzo (menores de 3 años).`}
+          </p>
 
           {cocina.restricciones.length > 0 ? (
             <div className="mt-4 rounded-xl bg-coral-50 px-3.5 py-3">
@@ -231,7 +250,8 @@ export default function CerrarDia() {
               <ul className="flex flex-col gap-0.5">
                 {cocina.restricciones.map(p => (
                   <li key={p.id} className="text-[13px] text-coral-700">
-                    <b>{p.restriccion_alimentaria}</b> · {p.nombre}
+                    <b>{p.nota}</b> · {p.nombre}
+                    {p.plato && <span className="opacity-80"> · pidió {p.plato}</span>}
                   </li>
                 ))}
               </ul>

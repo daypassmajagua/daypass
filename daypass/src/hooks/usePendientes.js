@@ -8,8 +8,15 @@ import { plural } from '../lib/utils'
  * No son alertas genéricas: cada una tiene nombre propio y un botón que lleva
  * directo a resolverla. Si no se puede actuar, no es un pendiente.
  */
-export function usePendientes(registros, { enPlaneacion } = {}) {
+export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {}) {
   const [nombres, setNombres] = useState({})
+
+  // Una cortesía no genera folio ni pago: pedirlos sería ruido.
+  const idsCortesia = useMemo(
+    () => new Set(tiposIngreso.filter(t => t.codigo === 'cortesia').map(t => t.id)),
+    [tiposIngreso]
+  )
+  const esCortesia = r => idsCortesia.has(r.tipo_ingreso_id)
 
   useEffect(() => {
     let vigente = true
@@ -88,7 +95,8 @@ export function usePendientes(registros, { enPlaneacion } = {}) {
     }
 
     // ── Folios Zeus, agrupado: se cargan todos de una sentada.
-    const sinFolio = vivas.filter(r => !r.folio_zeus)
+    // Las cortesías no llevan folio: recepción les cobra el tiquete directo.
+    const sinFolio = vivas.filter(r => !r.folio_zeus && !esCortesia(r))
     if (sinFolio.length) {
       lista.push({
         id: 'folios',
@@ -98,8 +106,8 @@ export function usePendientes(registros, { enPlaneacion } = {}) {
       })
     }
 
-    // ── Pagos sin confirmar.
-    const sinPago = vivas.filter(r => !r.forma_pago)
+    // ── Pagos sin confirmar. La cortesía no paga.
+    const sinPago = vivas.filter(r => !r.forma_pago && !esCortesia(r))
     if (sinPago.length) {
       lista.push({
         id: 'pagos',
@@ -153,5 +161,5 @@ export function usePendientes(registros, { enPlaneacion } = {}) {
         tardios: vivas.filter(r => r.cambio_tardio).length,
       },
     }
-  }, [registros, nombres, enPlaneacion])
+  }, [registros, nombres, enPlaneacion, idsCortesia])
 }

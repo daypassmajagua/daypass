@@ -28,7 +28,13 @@ export default function Hoy() {
 
   useRegistrosEnVivo(fechaActiva, refetch)
 
-  const { lista, resumen } = usePendientes(registros, { enPlaneacion })
+  // Las cortesías no llevan folio ni pago: el catálogo lo dice.
+  const [tiposIngreso, setTiposIngreso] = useState([])
+  useEffect(() => {
+    supabase.from('tipos_ingreso').select('*').then(({ data }) => setTiposIngreso(data || []))
+  }, [])
+
+  const { lista, resumen } = usePendientes(registros, { enPlaneacion, tiposIngreso })
 
   // El estado de mañana se muestra en su pestaña aunque estemos viendo hoy.
   const [estadoManana, setEstadoManana] = useState(null)

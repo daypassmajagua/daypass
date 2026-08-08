@@ -1,4 +1,5 @@
 import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils.js'
+import { calcularConteoCocina } from './conteoCocina.js'
 
 // ─── Estilos base compartidos ──────────────────────────────────────────────────
 const BASE_CSS = `
@@ -460,54 +461,22 @@ export function buildFoliosHTML(registros, fecha) {
 
 // ─── Conteo de cocina (D-1) ────────────────────────────────────────────────────
 /**
- * Lo que cocina necesita saber la noche anterior: cuántos almuerzos por plan y
- * qué restricciones alimentarias vienen. Se imprime en impresoras viejas, así
- * que la jerarquía no depende del color.
+ * Lo que cocina necesita saber la noche anterior: cuántos platos de cada tipo
+ * y qué restricciones alimentarias vienen. Se imprime en impresoras viejas,
+ * así que la jerarquía no depende del color.
  *
- * @param registros Reservas del día, con planes(nombre) resuelto.
- * @param pasajeros Pasajeros nominales del día, con su restricción si tienen.
+ * El cálculo vive en conteoCocina.js, compartido con la pantalla del cierre:
+ * si estuviera en dos sitios, tarde o temprano dirían cosas distintas.
+ *
+ * @param registros      Reservas del día, con planes(nombre) resuelto.
+ * @param pasajeros      Pasajeros nominales del día, con plato y restricción.
+ * @param opcionesPlato  Catálogo de opciones, para saber qué planes preguntan.
  */
-export function buildCocinaHTML(registros, pasajeros, fecha) {
-  const activos = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
-
-  // Almuerzos por plan. Los infantes no almuerzan; las cortesías sí comen.
-  const porPlan = {}
-  activos.forEach(r => {
-    const nombre = r.planes?.nombre || 'Sin plan'
-    if (!porPlan[nombre]) porPlan[nombre] = { adultos: 0, ninos: 0, cortesias: 0 }
-    porPlan[nombre].adultos   += r.adultos
-    porPlan[nombre].ninos     += r.ninos
-    porPlan[nombre].cortesias += r.cortesias
-  })
-
-  const filas = Object.entries(porPlan).sort((a, b) => {
-    const ta = a[1].adultos + a[1].ninos + a[1].cortesias
-    const tb = b[1].adultos + b[1].ninos + b[1].cortesias
-    return tb - ta
-  })
-
-  const totalAdultos   = activos.reduce((s, r) => s + r.adultos, 0)
-  const totalNinos     = activos.reduce((s, r) => s + r.ninos, 0)
-  const totalCortesias = activos.reduce((s, r) => s + r.cortesias, 0)
-  const totalInfantes  = activos.reduce((s, r) => s + r.infantes, 0)
-  const totalAlmuerzos = totalAdultos + totalNinos + totalCortesias
-
-  const idsActivos = new Set(activos.map(r => r.id))
-  const porRegistro = {}
-  activos.forEach(r => { porRegistro[r.id] = r })
-
-  const restricciones = (pasajeros || [])
-    .filter(p => idsActivos.has(p.registro_id) && (p.restriccion_alimentaria || '').trim())
-    .map(p => {
-      const r = porRegistro[p.registro_id]
-      return {
-        nombre: p.nombre,
-        grupo: r?.nombre_grupo || r?.agencia_nombre || '',
-        lancha: r?.lanchas?.nombre || '',
-        nota: p.restriccion_alimentaria.trim(),
-      }
-    })
-    .sort((a, b) => a.nota.localeCompare(b.nota))
+export function buildCocinaHTML(registros, pasajeros, opcionesPlato, fecha) {
+  const {
+    filasPlato, filasMenuFijo, sinElegir, restricciones,
+    totalAdultos, totalNinos, totalCortesias, totalInfantes, totalAlmuerzos,
+  } = calcularConteoCocina(registros, pasajeros, opcionesPlato)
 
   return `
 <div class="page">
@@ -531,39 +500,49 @@ export function buildCocinaHTML(registros, pasajeros, fecha) {
     <div class="stat"><span class="stat-value">${totalInfantes}</span><span class="stat-label">Infantes</span></div>
   </div>
 
-  <div class="section-title">Almuerzos por plan</div>
+  <div class="section-title">Qué se cocina</div>
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
+          <th>Plato</th>
           <th>Plan</th>
-          <th style="text-align:center">Adultos</th>
-          <th style="text-align:center">Niños</th>
-          <th style="text-align:center">Cortesías</th>
-          <th style="text-align:center">Total</th>
+          <th style="text-align:center">Cantidad</th>
         </tr>
       </thead>
       <tbody>
-        ${filas.map(([plan, c]) => `
+        ${filasPlato.map(f => `
         <tr>
-          <td style="font-weight:700">${esc(plan)}</td>
-          <td style="text-align:center">${c.adultos || '—'}</td>
-          <td style="text-align:center">${c.ninos || '—'}</td>
-          <td style="text-align:center">${c.cortesias || '—'}</td>
-          <td style="text-align:center; font-weight:800">${c.adultos + c.ninos + c.cortesias}</td>
+          <td style="font-weight:700; font-size:13px">${esc(f.nombre)}</td>
+          <td style="font-size:10.5px; color:#6b7280">${esc(f.plan)}</td>
+          <td style="text-align:center; font-weight:800; font-size:15px">${f.cantidad}</td>
         </tr>`).join('')}
+
+        ${filasMenuFijo.map(f => `
         <tr>
-          <td style="font-weight:800; border-top:2px solid #1e2045">TOTAL</td>
-          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalAdultos}</td>
-          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalNinos}</td>
-          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalCortesias}</td>
-          <td style="text-align:center; font-weight:800; border-top:2px solid #1e2045">${totalAlmuerzos}</td>
+          <td style="font-weight:700; font-size:13px">Menú fijo</td>
+          <td style="font-size:10.5px; color:#6b7280">${esc(f.plan)} — sin opciones</td>
+          <td style="text-align:center; font-weight:800; font-size:15px">${f.cantidad}</td>
+        </tr>`).join('')}
+
+        ${sinElegir > 0 ? `
+        <tr>
+          <td style="font-weight:700; font-size:13px">Sin plato elegido</td>
+          <td style="font-size:10.5px; color:#6b7280">confirmar con la oficina antes de servir</td>
+          <td style="text-align:center; font-weight:800; font-size:15px">${sinElegir}</td>
+        </tr>` : ''}
+
+        <tr>
+          <td colspan="2" style="font-weight:800; border-top:2px solid #1e2045">TOTAL DE ALMUERZOS</td>
+          <td style="text-align:center; font-weight:800; font-size:15px; border-top:2px solid #1e2045">${totalAlmuerzos}</td>
         </tr>
       </tbody>
     </table>
   </div>
   <p style="font-size:10.5px; color:#6b7280; margin-top:6px">
-    Los infantes menores de 3 años no cuentan como almuerzo. Las cortesías sí comen.
+    ${totalAdultos} adultos · ${totalNinos} niños · ${totalCortesias} cortesías.
+    Los infantes menores de 3 años no cuentan como almuerzo${totalInfantes > 0 ? ` (vienen ${totalInfantes})` : ''}.
+    Las cortesías sí comen.
   </p>
 
   ${restricciones.length ? `
@@ -571,7 +550,7 @@ export function buildCocinaHTML(registros, pasajeros, fecha) {
     <div class="warning-title">RESTRICCIONES ALIMENTARIAS — ${restricciones.length} ${restricciones.length === 1 ? 'persona' : 'personas'}</div>
     ${restricciones.map(r => `
       <div class="warning-row">
-        <strong>${esc(r.nota.toUpperCase())}</strong> · ${esc(r.nombre)}${r.grupo ? ` (${esc(r.grupo)})` : ''}${r.lancha ? ` · ${esc(r.lancha)}` : ''}
+        <strong>${esc(r.nota.toUpperCase())}</strong> · ${esc(r.nombre)}${r.grupo ? ` (${esc(r.grupo)})` : ''}${r.plato ? ` · pidió ${esc(r.plato)}` : ''}${r.lancha ? ` · ${esc(r.lancha)}` : ''}
       </div>`).join('')}
   </div>` : `
   <div class="section-title">Restricciones alimentarias</div>
