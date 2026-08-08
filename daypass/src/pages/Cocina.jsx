@@ -11,6 +11,7 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
+import CierreCocina from '../components/cocina/CierreCocina'
 
 /**
  * El conteo de cocina, para cocina.
@@ -141,6 +142,10 @@ export default function Cocina() {
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
+          {/* Arriba del número: quien lo mira tiene que saber si todavía se
+              mueve antes de ponerse a cocinar con él. */}
+          <CierreCocina fecha={fechaActiva} onCambio={refetch} />
+
           <Card className="p-5">
             <div className="flex items-center justify-between gap-3 mb-4">
               <h2 className="flex items-center gap-2 text-[17px] font-bold text-tinta">

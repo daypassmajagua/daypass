@@ -17,25 +17,28 @@ import Card from '../ui/Card'
  */
 export default function HoraDeZarpe() {
   const [hora, setHora] = useState('')
+  const [cocina, setCocina] = useState('')
   const [dias, setDias] = useState('')
-  const [original, setOriginal] = useState({ hora: '', dias: '' })
+  const [original, setOriginal] = useState({ hora: '', dias: '', cocina: '' })
   const [cargando, setCargando] = useState(true)
   const [guardando, setGuardando] = useState(false)
 
   useEffect(() => {
     supabase.from('ajustes').select('clave, valor')
-      .in('clave', ['checkin_cierra_hora', 'checkin_abre_dias'])
+      .in('clave', ['checkin_cierra_hora', 'checkin_abre_dias', 'cocina_cierra_hora'])
       .then(({ data }) => {
         const mapa = {}
         ;(data || []).forEach(a => { mapa[a.clave] = a.valor })
         const h = (mapa.checkin_cierra_hora || '08:30').slice(0, 5)
         const d = mapa.checkin_abre_dias || '2'
-        setHora(h); setDias(d); setOriginal({ hora: h, dias: d })
+        const c = (mapa.cocina_cierra_hora || h).slice(0, 5)
+        setHora(h); setDias(d); setCocina(c)
+        setOriginal({ hora: h, dias: d, cocina: c })
         setCargando(false)
       })
   }, [])
 
-  const cambio = hora !== original.hora || dias !== original.dias
+  const cambio = hora !== original.hora || dias !== original.dias || cocina !== original.cocina
 
   async function guardar() {
     setGuardando(true)
@@ -50,12 +53,15 @@ export default function HoraDeZarpe() {
       supabase.from('ajustes')
         .update({ valor: String(dias), actualizado_at: cuando, actualizado_por: quien })
         .eq('clave', 'checkin_abre_dias'),
+      supabase.from('ajustes')
+        .update({ valor: cocina, actualizado_at: cuando, actualizado_por: quien })
+        .eq('clave', 'cocina_cierra_hora'),
     ]
     const errores = (await Promise.all(escrituras)).map(r => r.error).filter(Boolean)
     setGuardando(false)
 
     if (errores.length) { toast.error('No se pudo guardar. ' + errores[0].message); return }
-    setOriginal({ hora, dias })
+    setOriginal({ hora, dias, cocina })
     toast.success(`El registro en línea cierra a las ${hora}`)
   }
 
@@ -87,6 +93,16 @@ export default function HoraDeZarpe() {
         </label>
 
         <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-bold text-tinta">Cocina cierra su lista</span>
+          <input
+            type="time"
+            value={cocina}
+            onChange={e => setCocina(e.target.value)}
+            className="rounded-xl border border-linea bg-white px-3.5 py-2.5 min-h-[44px] text-[16px] tabular focus:outline-none focus:border-blue-600"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
           <span className="text-sm font-bold text-tinta">Almuerzo y firma se abren</span>
           <select
             value={dias}
@@ -108,7 +124,9 @@ export default function HoraDeZarpe() {
 
       <p className="text-[13px] text-tinta-2">
         Los nombres se reciben desde que existe la reserva, sin esperar esos días:
-        un nombre cargado temprano es uno que nadie escribe en el muelle.
+        un nombre cargado temprano es uno que nadie escribe en el muelle. La hora
+        de cocina es la de siempre — para un día suelto se mueve desde la pantalla
+        de Cocina, sin cambiar esta.
       </p>
     </Card>
   )

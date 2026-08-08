@@ -167,6 +167,12 @@ export default function CheckInPublico() {
   // 08:30 → 8:30 a.m. El servidor la manda en 24 horas; aquí se lee como se
   // habla. Si el servidor todavía no la manda, se asume la de siempre.
   const horaZarpe = formatoHora(reserva?.cierra_a, idioma)
+  const horaCocina = formatoHora(reserva?.cocina_cierra_a, idioma)
+
+  // Como con puede_registrar: si la migración 010 todavía no corrió, el campo
+  // llega vacío y se asume abierta. Peor sería esconderle el almuerzo a todo
+  // el mundo por una migración pendiente.
+  const cocinaAbierta = reserva?.puede_elegir_plato ?? true
 
   function editar(i, campo, valor) {
     setPasajeros(prev => prev.map((p, j) => j === i ? { ...p, [campo]: valor } : p))
@@ -376,8 +382,10 @@ export default function CheckInPublico() {
                   </Campo>
                 </div>
 
-                {/* Etapa 2 · el plato, si el plan lo permite */}
-                {hayPlatos && p.categoria !== 'infante' && (
+                {/* Etapa 2 · el plato, si el plan lo permite y cocina todavía
+                    recibe. Cuando cocina cierra el selector desaparece en vez
+                    de aceptar un cambio que no va a llegar a la isla. */}
+                {hayPlatos && p.categoria !== 'infante' && cocinaAbierta && (
                   <Campo etiqueta={t.plato}>
                     <select value={p.opcion_plato_id}
                       onChange={e => editar(i, 'opcion_plato_id', e.target.value)}
@@ -405,6 +413,12 @@ export default function CheckInPublico() {
             >
               <Plus size={18} /> {t.agregarPersona}
             </button>
+
+            {hayPlatos && !cocinaAbierta && (
+              <p className="text-[15px] text-tinta-2">
+                {t.cocinaCerrada.replace('{hora}', horaCocina)}
+              </p>
+            )}
 
             {!hayPlatos && (
               <p className="text-[15px] text-tinta-2">{t.sinOpciones}</p>
