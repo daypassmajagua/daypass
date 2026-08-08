@@ -50,6 +50,21 @@ db.version(2).stores({
   zarpe_alojamiento: 'id, zarpe_id',
 })
 
+/**
+ * v3 · Los tokens, para poder leer un QR sin señal.
+ *
+ * El pase del cliente codifica `daypass:{token}`. Sin esta tabla local, un QR
+ * escaneado en el muelle no se puede resolver a su reserva cuando no hay red
+ * —que es justo cuando el lector serviría de algo—.
+ *
+ * Solo el token y a qué reserva apunta. Nada más: es la única pieza de la
+ * copia local que un tercero podría usar para abrir la página de un cliente,
+ * así que no lleva ni un dato de más.
+ */
+db.version(3).stores({
+  tokens: 'token, registro_id',
+})
+
 /** Cuándo se llenó por última vez la copia de este día. */
 export async function marcarPrecarga(fecha, resumen) {
   await db.meta.put({

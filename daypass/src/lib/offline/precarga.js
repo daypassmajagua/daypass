@@ -38,12 +38,17 @@ export async function precargarDia(fecha) {
 
   // Los pasajeros van por lotes: una reserva de grupo puede traer 40.
   let pasajeros = []
+  // Y los tokens, para poder resolver un QR sin señal. Solo el token y su
+  // reserva: nada más de esa tabla baja al dispositivo.
+  let tokens = []
   if (registros.length) {
-    const { data } = await supabase
-      .from('pasajeros')
-      .select('*')
-      .in('registro_id', registros.map(r => r.id))
-    pasajeros = data || []
+    const ids = registros.map(r => r.id)
+    const [pax, tok] = await Promise.all([
+      supabase.from('pasajeros').select('*').in('registro_id', ids),
+      supabase.from('tokens_reserva').select('token, registro_id').in('registro_id', ids),
+    ])
+    pasajeros = pax.data || []
+    tokens = tok.data || []
   }
 
   // Los embarques ya registrados, para que el muelle no repita a nadie
@@ -68,10 +73,11 @@ export async function precargarDia(fecha) {
   await limpiarDia(fecha)
   await db.transaction('rw',
     db.registros, db.pasajeros, db.zarpes, db.embarques,
-    db.zarpe_empleados, db.zarpe_alojamiento, db.catalogos,
+    db.zarpe_empleados, db.zarpe_alojamiento, db.tokens, db.catalogos,
     async () => {
       if (registros.length) await db.registros.bulkPut(registros)
       if (pasajeros.length) await db.pasajeros.bulkPut(pasajeros)
+      if (tokens.length) await db.tokens.bulkPut(tokens)
       if (zarpes.length) await db.zarpes.bulkPut(zarpes)
       if (embarques.length) await db.embarques.bulkPut(embarques)
       if (zarpeEmpleados.length) await db.zarpe_empleados.bulkPut(zarpeEmpleados)
@@ -128,4 +134,26 @@ export async function leerDiaLocal(fecha) {
 export async function leerCatalogoLocal(nombre) {
   const fila = await db.catalogos.get(nombre)
   return fila?.filas || []
+}
+
+/**
+ * De un QR a una reserva, sin pedirle nada al servidor.
+ *
+ * El pase del cliente codifica `daypass:{token}`. Se acepta también el token
+ * pelado y la URL completa, porque un QR de un enlace viejo —o uno que alguien
+ * pegue a mano— tiene que servir igual: en el muelle no es momento de explicar
+ * formatos.
+ */
+export async function resolverToken(texto) {
+  const crudo = (texto || '').trim()
+  if (!crudo) return null
+
+  const token = crudo.startsWith('daypass:')
+    ? crudo.slice('daypass:'.length)
+    : crudo.includes('/r/')
+      ? crudo.split('/r/').pop().split(/[?#]/)[0]
+      : crudo
+
+  const fila = await db.tokens.get(token)
+  return fila?.registro_id || null
 }

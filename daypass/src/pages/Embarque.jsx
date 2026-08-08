@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  Check, ChevronLeft, FileText, Search, Settings2, Ship, UserPlus, X, Anchor, Undo2,
+  Check, ChevronLeft, FileText, QrCode, Search, Settings2, Ship, UserPlus, X, Anchor, Undo2,
 } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useZarpesDelDia, useEmbarque, useDatosManifiesto, claveDe } from '../hooks/useEmbarque'
 import { armarManifiesto } from '../lib/manifiesto'
+import { resolverToken } from '../lib/offline/precarga'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
+import LectorQR from '../components/zarpe/LectorQR'
 import IndicadorSync from '../components/layout/IndicadorSync'
 
 /**
@@ -304,6 +306,32 @@ export default function Embarque() {
     manifiesto.sinDocumento > 0 && `con ${manifiesto.sinDocumento} sin documento`,
   ].filter(Boolean)
 
+  /**
+   * Un pase leído. Se resuelve contra la copia local —sin pedirle nada al
+   * servidor, que en el muelle puede no estar— y se lleva a su grupo.
+   *
+   * No embarca solo: deja el grupo filtrado y a la vista para que ella toque.
+   * El QR dice quién es, no cuántos vinieron, y en un grupo de 24 la que sabe
+   * cuántos subieron es ella.
+   */
+  async function alLeerPase(texto) {
+    setLectorAbierto(false)
+    const registroId = await resolverToken(texto)
+    if (!registroId) {
+      toast.error('Ese pase no es de hoy. Búscalo por el nombre.')
+      return
+    }
+    const grupo = grupos.find(g => g.registro.id === registroId)
+    if (!grupo) {
+      toast.error('Ese pase no es de esta lancha.')
+      return
+    }
+    const quien = grupo.registro.nombre_grupo || grupo.registro.nombre_pasajero
+    setBusqueda('')
+    setGrupoResaltado(registroId)
+    toast.success(`${quien} — ${grupo.embarcados} de ${grupo.filas.length} ya ${esRegreso ? 'bajaron' : 'a bordo'}`)
+  }
+
   function imprimirManifiesto() {
     openPrintWindow(
       `Manifiesto — ${zarpe.lanchas?.nombre || ''} ${fechaActiva}`,
@@ -316,6 +344,9 @@ export default function Embarque() {
   const [cerrando, setCerrando] = useState(false)
   const [confirmandoFaltantes, setConfirmandoFaltantes] = useState(false)
   const [marcandoGrupo, setMarcandoGrupo] = useState(false)
+  const [lectorAbierto, setLectorAbierto] = useState(false)
+  // Un pase leído deja su reserva sola en pantalla, hasta que ella la suelte.
+  const [grupoResaltado, setGrupoResaltado] = useState(null)
   // Toques recientes: volver a tocar dentro de la ventana deshace.
   // Va en estado, no en un ref: la fila tiene que repintarse cuando la
   // ventana se abre y cuando se cierra sola a los 8 segundos.
@@ -462,7 +493,21 @@ export default function Embarque() {
           </div>
         </div>
 
-        <div className="relative">
+        {/* Un pase leído deja su reserva sola. Se suelta con un toque, porque
+            si el lector se equivoca de grupo la lista no puede quedar
+            secuestrada. */}
+        {grupoResaltado && (
+          <button
+            onClick={() => setGrupoResaltado(null)}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-blue-50 ring-2 ring-blue-600 text-blue-700 text-[17px] font-bold min-h-[56px]"
+          >
+            <X size={20} />
+            Ver toda la lancha otra vez
+          </button>
+        )}
+
+        <div className="flex items-center gap-3">
+        <div className="relative flex-1 min-w-0">
           <Search size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6d80] pointer-events-none" />
           <input
             value={busqueda}
@@ -481,11 +526,25 @@ export default function Embarque() {
             </button>
           )}
         </div>
+
+        {/* El pase, cuando lo traen. Nunca es requisito: al lado del buscador
+            y no encima, porque buscar por nombre sigue siendo el camino. */}
+        {!cerrado && (
+          <button
+            onClick={() => setLectorAbierto(true)}
+            className="shrink-0 w-[72px] min-h-[60px] rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] flex items-center justify-center"
+            aria-label="Leer el pase con la cámara"
+          >
+            <QrCode size={28} />
+          </button>
+        )}
+        </div>
       </header>
 
       {/* La lista */}
       <main className="flex-1 px-4 py-4 flex flex-col gap-5 pb-32">
         {grupos.map(g => {
+          if (grupoResaltado && g.registro.id !== grupoResaltado) return null
           const filas = g.filas.filter(coincide)
           if (!filas.length) return null
           const quien = g.registro.nombre_grupo || g.registro.agencia_nombre || g.registro.nombre_pasajero
@@ -678,6 +737,10 @@ export default function Embarque() {
             El manifiesto va {faltasDelManifiesto.join(' y ')}
           </p>
         </div>
+      )}
+
+      {lectorAbierto && (
+        <LectorQR onLeer={alLeerPase} onCerrar={() => setLectorAbierto(false)} />
       )}
 
       {walkInAbierto && (
