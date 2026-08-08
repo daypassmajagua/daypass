@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { to: '/nuevo', label: 'Nueva reserva', icon: PlusCircle },
   { to: '/dia', label: 'El día', icon: List },
   { to: '/embarque', label: 'Embarque', icon: Anchor },
-  { to: '/cocina', label: 'Cocina', icon: ChefHat },
+  { to: '/cocina', label: 'Almuerzos', icon: ChefHat },
   { to: '/equipo', label: 'Lanchas y equipo', icon: Ship },
   { to: '/folios', label: 'Folios', icon: ClipboardList },
   { to: '/historial', label: 'Historial', icon: History },

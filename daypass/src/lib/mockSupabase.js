@@ -847,6 +847,44 @@ const RPC = {
   },
 
   /**
+   * "Ya le pasé este número a cocina" (013).
+   *
+   * El almuerzo lo comanda el mesero en la mesa, así que el conteo del
+   * check-in es un pronóstico. Lo que hace falta saber es con qué número
+   * preparó cocina, para poder decir cuánto se movió desde entonces.
+   */
+  marcar_revision_cocina({ p_fecha, p_conteo }) {
+    const dia = diaDe(p_fecha)
+    dia.cocina_revisado_at = new Date().toISOString()
+    dia.cocina_revisado_por = MOCK_SESSION.user.id
+    dia.cocina_revisado_por_nombre = MOCK_SESSION.user.user_metadata.full_name
+    dia.cocina_revisado_conteo = p_conteo
+    emitirCambio('dias_operativos', 'UPDATE', dia)
+    return {
+      data: {
+        fecha: dia.fecha,
+        revisado_at: dia.cocina_revisado_at,
+        revisado_por: dia.cocina_revisado_por_nombre,
+        conteo: dia.cocina_revisado_conteo,
+      },
+      error: null,
+    }
+  },
+
+  revision_cocina({ p_fecha }) {
+    const dia = STORE.dias_operativos.find(d => d.fecha === p_fecha)
+    if (!dia) return { data: null, error: null }
+    return {
+      data: {
+        revisado_at: dia.cocina_revisado_at || null,
+        revisado_por: dia.cocina_revisado_por_nombre || null,
+        conteo: dia.cocina_revisado_conteo || null,
+      },
+      error: null,
+    }
+  },
+
+  /**
    * El regreso de las 3:30 (011). Solo vuelven las lanchas que fueron:
    * programarle el regreso a una que nunca zarpó llenaría el muelle de zarpes
    * vacíos que alguien tendría que cerrar a mano.

@@ -44,7 +44,6 @@ export const T = {
     plato: 'Plato',
     elegirPlato: 'Elegir plato',
     sinOpciones: 'Tu plan trae un menú fijo: no hay nada que elegir.',
-    cocinaCerrada: 'La cocina cerró su lista a las {hora}, así que el almuerzo ya no se puede elegir aquí. Pídelo cuando llegues a la isla.',
 
     condicionesTitulo: 'Condiciones del Day Tour',
     condicionesAyuda: 'Léelas completas antes de firmar.',
@@ -118,7 +117,6 @@ export const T = {
     plato: 'Dish',
     elegirPlato: 'Choose dish',
     sinOpciones: 'Your plan comes with a set menu: nothing to choose.',
-    cocinaCerrada: 'The kitchen closed its list at {hora}, so lunch can no longer be chosen here. Just ask for it when you arrive on the island.',
 
     condicionesTitulo: 'Day Tour Terms',
     condicionesAyuda: 'Please read them in full before signing.',

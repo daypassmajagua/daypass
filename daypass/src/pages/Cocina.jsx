@@ -11,18 +11,24 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
-import CierreCocina from '../components/cocina/CierreCocina'
+import RevisionCocina from '../components/cocina/RevisionCocina'
 
 /**
- * El conteo de cocina, para cocina.
+ * El pronóstico de almuerzos.
  *
- * Existe porque el número se mira en pantalla y no en papel. Cocina revisa los
- * platos el mismo día en la mañana, después del desayuno, y para entonces el
- * check-in del cliente ya cerró: lo que ve aquí es definitivo.
+ * Ojo con el nombre: esto NO es lo que se va a servir. El almuerzo lo comanda
+ * el mesero en la mesa, y esa comanda es la que manda. Lo de aquí es lo que
+ * los clientes eligieron en su check-in, que sirve para que cocina prepare y
+ * compre, no para obligar a nadie.
  *
- * Pero entre el cierre de la noche anterior y esa revisión el número todavía
- * se mueve —cada cliente que elige almuerzo a las 11 p.m. lo cambia—, así que
- * la pantalla se actualiza sola. Un papel impreso anoche diría otra cosa.
+ * Por eso el número no se congela: sigue moviéndose hasta que zarpa la lancha.
+ * Un cliente que elige a las nueve de la mañana suma información; cerrarle la
+ * puerta solo haría el pronóstico peor.
+ *
+ * Cocina no tiene perfil propio, así que esta pantalla la abre quien trabaja
+ * en la isla y le pasa el número. Ese traspaso se marca arriba, y desde
+ * entonces la pantalla dice cuánto se movió — que es lo que el mesero necesita
+ * saber antes de comandar.
  *
  * Números grandes a propósito: esto se lee de pie, de lejos y con las manos
  * ocupadas.
@@ -115,8 +121,8 @@ export default function Cocina() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
       <PageHeader
-        title="Cocina"
-        subtitle={formatDate(fechaActiva)}
+        title="Almuerzos"
+        subtitle={`Lo que eligieron en el check-in · ${formatDate(fechaActiva)}`}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <DateNav value={fechaActiva} onChange={setFechaActiva} />
@@ -143,9 +149,10 @@ export default function Cocina() {
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
-          {/* Arriba del número: quien lo mira tiene que saber si todavía se
-              mueve antes de ponerse a cocinar con él. */}
-          <CierreCocina fecha={fechaActiva} onCambio={refetch} />
+          {/* Arriba del número: el mesero comanda en la mesa, así que esto es
+              un pronóstico. Lo que hay que saber antes de usarlo es si cocina
+              ya lo vio y cuánto se movió desde entonces. */}
+          <RevisionCocina fecha={fechaActiva} cocina={cocina} onCambio={refetch} />
 
           <Card className="p-5">
             <div className="flex items-center justify-between gap-3 mb-4">
