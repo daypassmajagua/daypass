@@ -7,6 +7,7 @@ Documentos de referencia en `docs/`:
 - `spec-checkin-qr.md` — ciclo reserva → check-in → QR → embarque → regreso
 - `spec-contingencia-personas.md` — contingencia y perfiles de personas
 - `sistema-diseno.md` — patrones, modos y reglas visuales
+- `fases.md` — orden, dependencias, riesgo y qué bloquea qué
 
 ---
 
