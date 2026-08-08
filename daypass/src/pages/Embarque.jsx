@@ -7,6 +7,7 @@ import {
 import useAppStore from '../store/useAppStore'
 import { useZarpesDelDia, useEmbarque, useDatosManifiesto, claveDe } from '../hooks/useEmbarque'
 import { armarManifiesto } from '../lib/manifiesto'
+import { sePuedeNombrar } from '../lib/plazas'
 import { resolverToken } from '../lib/offline/precarga'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
@@ -149,13 +150,17 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
 // ─── Walk-in ───────────────────────────────────────────────────────────────────
 
 /**
- * Alguien llegó al muelle sin reserva y sube igual.
+ * Los datos de una persona, en el muelle.
  *
- * Pide tipo de documento y país además del nombre porque va en el manifiesto
- * como todos los demás, y la Capitanía los exige. Cédula y Colombia vienen
- * puestos: es lo que trae la mayoría, y en el muelle cada toque cuesta.
+ * Sirve para los dos casos que llegan sin nombre: el que aparece sin reserva y
+ * la plaza suelta de un grupo cuyo listado no alcanzó a llegar. Piden lo mismo
+ * —nombre, tipo de documento, número y país— porque los dos van al manifiesto
+ * y la Capitanía los exige igual.
+ *
+ * Cédula y Colombia vienen puestos: es lo que trae la mayoría, y aquí cada
+ * toque cuesta.
  */
-function FormularioWalkIn({ onGuardar, onCerrar, paises = [] }) {
+function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
   const [nombre, setNombre] = useState('')
   const [documento, setDocumento] = useState('')
   const [tipoDocumento, setTipoDocumento] = useState('cc')
@@ -173,7 +178,7 @@ function FormularioWalkIn({ onGuardar, onCerrar, paises = [] }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[22px] font-bold text-[#101223]">Llegó sin reserva</h2>
+          <h2 className="text-[22px] font-bold text-[#101223]">{titulo}</h2>
           <button onClick={onCerrar} className="w-12 h-12 flex items-center justify-center rounded-xl text-[#3a3d52]">
             <X size={26} />
           </button>
@@ -257,7 +262,7 @@ function FormularioWalkIn({ onGuardar, onCerrar, paises = [] }) {
           }}
           className="rounded-2xl bg-blue-600 text-white text-[19px] font-bold min-h-[64px] disabled:opacity-40"
         >
-          Embarcar
+          {cta}
         </button>
       </div>
     </div>
@@ -276,7 +281,7 @@ export default function Embarque() {
 
   const zarpe = useMemo(() => zarpes.find(z => z.id === zarpeId) || null, [zarpes, zarpeId])
   const {
-    grupos, walkIns, contador, registrarEvento, cerrar, recargar,
+    grupos, walkIns, contador, registrarEvento, nombrarPlaza, cerrar, recargar,
     registros, pasajeros, estados, esRegreso, eventoDelToque, eventosOk,
   } = useEmbarque(zarpe)
   const extras = useDatosManifiesto(zarpe)
@@ -345,6 +350,7 @@ export default function Embarque() {
   const [confirmandoFaltantes, setConfirmandoFaltantes] = useState(false)
   const [marcandoGrupo, setMarcandoGrupo] = useState(false)
   const [lectorAbierto, setLectorAbierto] = useState(false)
+  const [nombrando, setNombrando] = useState(null)
   // Un pase leído deja su reserva sola en pantalla, hasta que ella la suelte.
   const [grupoResaltado, setGrupoResaltado] = useState(null)
   // Toques recientes: volver a tocar dentro de la ventana deshace.
@@ -581,13 +587,19 @@ export default function Embarque() {
                   // alguien que ya está en la isla.
                   const reciente = embarcado && !esRegreso && Boolean(recientes[clave])
 
+                  // Nombrar solo tiene sentido antes de que suba: los
+                  // embarques son inmutables, así que nombrar a alguien que ya
+                  // subió anónimo crearía una fila nueva sin quitar la vieja y
+                  // el grupo contaría una persona de más.
+                  const puedeNombrarse = sePuedeNombrar(f, { embarcado, cerrado })
+
                   return (
-                    <li key={clave}>
+                    <li key={clave} className="flex items-stretch gap-2">
                       <button
                         onClick={() => alTocar(f)}
                         disabled={cerrado}
                         className={classNames(
-                          'w-full flex items-center gap-4 rounded-2xl px-5 min-h-[64px] text-left ring-2 transition-colors',
+                          'flex-1 min-w-0 flex items-center gap-4 rounded-2xl px-5 min-h-[64px] text-left ring-2 transition-colors',
                           embarcado ? 'bg-verde-500 ring-verde-500'
                             : noLlego ? 'bg-white ring-[#c8c9d4] opacity-60'
                             : 'bg-white ring-[#101223]'
@@ -627,6 +639,20 @@ export default function Embarque() {
                           <span className="shrink-0 text-[15px] font-bold text-[#3a3d52]">No llegó</span>
                         )}
                       </button>
+
+                      {/* Aparte del botón de embarcar, no dentro: un toque
+                          sigue siendo un toque, y quien tenga prisa embarca
+                          sin escribir nada. */}
+                      {puedeNombrarse && (
+                        <button
+                          onClick={() => setNombrando(f)}
+                          className="shrink-0 w-[76px] rounded-2xl bg-white ring-2 ring-[#c8c9d4] text-[#3a3d52] flex flex-col items-center justify-center gap-0.5"
+                          aria-label={`Ponerle nombre a la ${f.nombre.toLowerCase()}`}
+                        >
+                          <UserPlus size={20} />
+                          <span className="text-[13px] font-bold">Nombre</span>
+                        </button>
+                      )}
                     </li>
                   )
                 })}
@@ -695,7 +721,11 @@ export default function Embarque() {
 
       {/* A las 3:30 el que no bajó se quedó en la isla. Es lo único de todo el
           día que no se puede arreglar después. */}
-      {confirmandoFaltantes && (
+      {/* El contador se sigue moviendo mientras el aviso está abierto: si la
+          cola termina de drenar y ya no falta nadie, el aviso desaparece solo.
+          Dejarlo diciendo "0 personas no han bajado" sería peor que no
+          mostrarlo. */}
+      {confirmandoFaltantes && contador.faltan > 0 && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
             <h2 className="text-[24px] font-bold text-[#a41f1f]">
@@ -744,7 +774,9 @@ export default function Embarque() {
       )}
 
       {walkInAbierto && (
-        <FormularioWalkIn
+        <FormularioPersona
+          titulo="Llegó sin reserva"
+          cta="Embarcar"
           paises={extras.paises}
           onCerrar={() => setWalkInAbierto(false)}
           onGuardar={async datos => {
@@ -752,6 +784,23 @@ export default function Embarque() {
             setWalkInAbierto(false)
             if (error) toast.error('No se pudo registrar. ' + error.message)
             else toast.success(`${datos.nombre} embarcado`)
+          }}
+        />
+      )}
+
+      {/* Una plaza suelta que sí trae a alguien delante. Se nombra y sube de un
+          golpe: la Capitanía la quiere nominal y la persona está ahí. */}
+      {nombrando && (
+        <FormularioPersona
+          titulo="¿Quién es?"
+          cta={esRegreso ? 'Guardar y bajar' : 'Guardar y embarcar'}
+          paises={extras.paises}
+          onCerrar={() => setNombrando(null)}
+          onGuardar={async datos => {
+            const { error } = await nombrarPlaza(nombrando, datos)
+            setNombrando(null)
+            if (error) toast.error('No se pudo guardar. ' + error.message)
+            else toast.success(`${datos.nombre} — ${esRegreso ? 'bajó' : 'a bordo'}`)
           }}
         />
       )}

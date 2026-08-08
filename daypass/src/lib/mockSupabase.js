@@ -1248,12 +1248,23 @@ class QB {
           const ya = STORE.embarques.find(e => e.client_id === item.client_id)
           if (ya) return ya
         }
+        // Un id que venga en la fila manda, como en Postgres: la columna tiene
+        // default, y un valor explícito gana. El muelle depende de eso —genera
+        // el id del pasajero para poder embarcarlo en el mismo gesto, sin
+        // esperar respuesta del servidor—, y un mock que lo reemplaza rompe
+        // ese enlace sin que la base real lo rompa.
         const row = {
           ...item,
-          id: genId(),
+          id: item.id || genId(),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
+        // Y la clave primaria sigue siendo única. Reenviar la cola dos veces
+        // devuelve la fila que ya estaba, igual que hace arriba con el
+        // client_id de los embarques: no duplica y no falla.
+        const repetido = (STORE[this._table] || []).find(x => x.id === row.id)
+        if (repetido) return repetido
+
         STORE[this._table].push(row)
         if (this._table === 'registros') {
           row.cambio_tardio = false

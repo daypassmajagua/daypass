@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { db } from '../lib/offline/db'
 import { encolar, alCambiarLaCola } from '../lib/offline/cola'
 import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
+import { plazasSinNombre } from '../lib/plazas'
 
 /**
  * El embarque de un zarpe.
@@ -242,6 +243,18 @@ export function useEmbarque(zarpe) {
       ])
     }
 
+    // Y los nombres que se acaban de escribir en el muelle. Con red, la lista
+    // de pasajeros viene del servidor y todavía no los tiene; sin esto la
+    // plaza recién nombrada desaparecería un segundo y volvería, que en un
+    // muelle se lee como que no se guardó.
+    const paxEnCola = (await db.cola.where('tabla').equals('pasajeros').toArray())
+      .map(c => c.fila)
+      .filter(p => vivos.some(r => r.id === p.registro_id))
+    if (paxEnCola.length) {
+      const ya = new Set(pax.map(p => p.id))
+      pax = [...pax, ...paxEnCola.filter(p => !ya.has(p.id))]
+    }
+
     // En el regreso hace falta saber a quién se llevó esa lancha por la
     // mañana: la lista de vuelta no es "los que tenían reserva" sino "los que
     // subieron", que incluye a los walk-in y excluye a los que no llegaron.
@@ -339,17 +352,18 @@ export function useEmbarque(zarpe) {
         estado: porClave.get(p.id)?.estado || null,
       }))
 
-      // Cuántas plazas sin nombre hay que mostrar. En la ida, las que le
-      // faltan a la reserva; en el regreso, las que efectivamente subieron.
+      // Cuántas plazas sin nombre hay que mostrar. La regla vive en
+      // plazas.js, que es donde se prueba: de ella depende que un grupo no
+      // aparezca con más ni con menos gente de la que tiene.
       const anonimos = estados.filter(e => e.registro_id === r.id && !e.pasajero_id)
-      const cuantas = esRegreso
-        ? estadosIda.filter(e => e.registro_id === r.id && !e.pasajero_id).length
-        : Math.max(Math.max(0, plan - suyos.length), anonimos.length)
+      const cuantas = plazasSinNombre({
+        plan,
+        conNombre: suyos.length,
+        anonimos: anonimos.length,
+        esRegreso,
+        subieron: estadosIda.filter(e => e.registro_id === r.id && !e.pasajero_id).length,
+      })
 
-      // En la ida la lista puede crecer si aparecen más eventos que plazas
-      // previstas: ningún hecho registrado puede quedar invisible. En el
-      // regreso NO: de vuelta caben exactamente los que subieron, y si hay más
-      // desembarques que embarques eso es un dato malo, no una fila de más.
       for (let i = 0; i < cuantas; i++) {
         const ev = anonimos[i]
         filas.push({
@@ -440,13 +454,54 @@ export function useEmbarque(zarpe) {
     return { error: null }
   }, [zarpe?.id, cargar])
 
+  /**
+   * Ponerle nombre a una plaza suelta, en el muelle y antes de que suba.
+   *
+   * La Capitanía exige la lista nominal: una plaza sin nombre en el manifiesto
+   * es un problema con la autoridad, no un hueco cosmético. Aquí se resuelve
+   * donde ocurre —la persona está enfrente— en vez de dejarlo para la oficina,
+   * que ya no la tiene delante.
+   *
+   * Crea el pasajero de verdad y lo embarca de un golpe. El pasajero se
+   * encola primero para que llegue antes que su embarque: al revés, la llave
+   * foránea rechazaría el embarque de alguien que todavía no existe.
+   *
+   * Solo se ofrece en plazas que NO han subido. Nombrar una que ya subió
+   * anónima crearía una fila nueva sin borrar la vieja —los embarques son
+   * inmutables— y el grupo pasaría a contar una persona de más.
+   */
+  const nombrarPlaza = useCallback(async (fila, datos) => {
+    if (!zarpe?.id || !fila?.registro_id) return { error: { message: 'Plaza sin reserva' } }
+
+    const pasajero = {
+      id: nuevoClientId(),
+      registro_id: fila.registro_id,
+      nombre: (datos.nombre || '').trim(),
+      tipo_documento: datos.tipo_documento || null,
+      documento: (datos.documento || '').trim() || null,
+      pais_id: datos.pais_id || null,
+      categoria: datos.categoria || 'adulto',
+    }
+
+    // La clave de cola es su propio id: pasajeros no tiene client_id, y el id
+    // ya es único en la base, que es lo único que la cola necesita.
+    await encolar('pasajeros', pasajero, `${pasajero.nombre} — nombre`, pasajero.id)
+    await db.pasajeros.put(pasajero)
+
+    return registrarEvento(
+      { pasajero_id: pasajero.id, registro_id: fila.registro_id, nombre: pasajero.nombre },
+      esRegreso ? 'desembarque' : 'check_in'
+    )
+  }, [zarpe?.id, esRegreso, registrarEvento])
+
   const cerrar = useCallback(async () => {
     const { data, error } = await supabase.rpc('cerrar_zarpe', { p_zarpe_id: zarpe.id })
     return { zarpe: Array.isArray(data) ? data[0] : data, error }
   }, [zarpe?.id])
 
   return {
-    grupos, walkIns, contador, cargando, registrarEvento, cerrar, recargar: cargar,
+    grupos, walkIns, contador, cargando, registrarEvento, nombrarPlaza, cerrar,
+    recargar: cargar,
     esRegreso,
     // El hecho que se registra al tocar una fila, según el sentido del viaje.
     eventoDelToque: esRegreso ? 'desembarque' : 'check_in',

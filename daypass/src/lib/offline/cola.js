@@ -35,12 +35,19 @@ export async function listarPendientes() {
 
 /**
  * Encola un hecho. Devuelve de inmediato: la interfaz no espera a la red.
- * @param tabla   Tabla destino en Supabase.
- * @param fila    La fila a insertar, con su client_id ya generado.
+ *
+ * @param tabla      Tabla destino en Supabase.
+ * @param fila       La fila a insertar, con su client_id ya generado.
+ * @param claveCola  Clave con la que se guarda en la cola. Por defecto el
+ *                   client_id de la fila, que es lo que usan los embarques.
+ *                   Las tablas que no tienen esa columna —pasajeros, por
+ *                   ejemplo— pasan su propio id: también es único en la base,
+ *                   así que un reenvío da 23505 y se trata como enviado. Esa
+ *                   es la única propiedad que la cola necesita.
  */
-export async function encolar(tabla, fila, descripcion) {
+export async function encolar(tabla, fila, descripcion, claveCola) {
   await db.cola.put({
-    client_id: fila.client_id,
+    client_id: claveCola || fila.client_id,
     tabla,
     fila,
     descripcion: descripcion || tabla,
