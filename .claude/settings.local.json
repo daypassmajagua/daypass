@@ -195,7 +195,10 @@
       "Bash(MSYS_NO_PATHCONV=1 node ver.mjs \"http://localhost:5175\" \"/\")",
       "Bash(perl -0pi -e \"s|import \\\\{\\\\nimport \\\\{ reservaCon, CON_CANAL, CON_PAIS \\\\} from '../lib/columnas'\\\\n|import {\\\\n|\" src/pages/Informes.jsx)",
       "Bash(perl -0pi -e \"s|\\(\\\\} from 'lucide-react'\\\\n\\)|\\\\$1import { reservaCon, CON_CANAL, CON_PAIS } from '../lib/columnas'\\\\n|\" src/pages/Informes.jsx)",
-      "Bash(grep -E \"select\\\\\\('\\\\*|select\\\\\\(\\\\`\\\\*\")"
+      "Bash(grep -E \"select\\\\\\('\\\\*|select\\\\\\(\\\\`\\\\*\")",
+      "Bash(awk '{s+=$1} END {print s\" politicas en total\"}')",
+      "Bash(awk '{print $NF}')",
+      "Bash(sed -n '/^## 5 · Qué decidir/,$p' docs/fases.md)"
     ]
   }
 }

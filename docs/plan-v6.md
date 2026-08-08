@@ -86,8 +86,12 @@ Desbloquea todo lo demás: sin esto no se sabe a quién mostrarle qué ni a qui�
 - **Bitácora** de acciones sensibles (cierre, cambios tras el cierre, tarifas, cortesías, estados
   manuales, cierre de zarpe, envío de manifiesto, ajustes de inventario, anulaciones). El
   `super_admin` **también** queda auditado.
-- **Aislamiento por hotel** (`hotel_id` + RLS). Se hace aquí porque después significa reescribir
-  todas las políticas. Es lo que hace que el hotel #2 cueste cero de infraestructura.
+> **Sin multi-tenant.** Una versión anterior de este plan proponía `hotel_id` + RLS «para que el
+> hotel #2 cueste cero». **No hay hotel #2.** DayPASS es exclusivamente para el Hotel San Pedro de
+> Majagua, confirmado por el dueño. Nada en el esquema debe prepararse para otro.
+>
+> Si algún día cambiara, el costo de agregarlo es reescribir las políticas de RLS para que
+> incluyan la columna: mecánico, acotado y sin migración de datos. No justifica construirlo hoy.
 
 ### Bloque 3 · Personas y organizaciones (`016`)
 

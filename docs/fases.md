@@ -54,19 +54,21 @@ muelle, a las 8 de la mañana**.
 **Qué hacer:** antes o dentro de la fase 2, cambiar esos ocho `select('*')` por listas explícitas
 de columnas. Es mecánico y de bajo riesgo hacerlo *antes*; es un incendio hacerlo *después*.
 
-### 1.2 · Partir la fase 2 en dos migraciones
+### 1.2 · No hay multi-tenant
 
-La fase 2 mete en un solo bloque dos cosas que no se parecen: **roles con RLS** y **aislamiento
-por hotel (`hotel_id` en 23 tablas)**.
+La versión anterior de este documento proponía partir la fase 2 en dos migraciones porque metía
+roles y `hotel_id` en el mismo bloque. **Eso ya no aplica: no hay multi-tenant.**
 
-El argumento del plan para hacer el multi-tenant ahí es correcto —después significa reescribir
-todas las políticas— pero juntarlas en una migración deja **un solo punto de fallo para dos
-trabajos independientes**. Y el `alter table` sobre 23 tablas, varias de ellas en la publicación
-de Realtime, es exactamente lo que ya provocó un interbloqueo en la 007.
+El plan v6 justificaba el aislamiento por hotel diciendo que «hace que el hotel #2 cueste cero de
+infraestructura». Confirmado con el dueño: **DayPASS es exclusivamente para el Hotel San Pedro de
+Majagua.** No hay hotel #2, ni está sobre la mesa vender el producto.
 
-**Propuesta:** `015_roles.sql` y `016_multi_tenant.sql`, separadas. Si la segunda choca contra el
-lock de Realtime, se reintenta sola sin perder la primera. Eso corre los números siguientes uno
-más — lo dejo marcado abajo en las dos numeraciones para que elijas.
+Así que la fase 2 es una sola migración —`015_roles.sql`— y la numeración es la simple: cada fase
+toma el número siguiente, sin desdoblar.
+
+Si algún día cambiara, agregarlo cuesta reescribir las políticas de RLS para que incluyan la
+columna. Es mecánico, acotado y sin migración de datos — no justifica construirlo hoy contra un
+supuesto que nadie pidió.
 
 ### 1.3 · Notificaciones antes que operación ampliada
 
@@ -87,8 +89,7 @@ masivos y restaurante externo son comerciales y aguantan; que se quede alguien e
 
 ## 2 · Las fases
 
-Las migraciones van con dos números: **(A)** la numeración que ya acordamos y **(B)** la que
-resulta si aceptas partir la fase 2. Elige una y la aplico a todos los documentos.
+Una migración por fase, numeradas de corrido desde la `015`.
 
 ---
 
@@ -165,7 +166,7 @@ Embarque. No toca datos y se revierte con un `git revert`, pero son las pantalla
 
 ### Fase 2 · Roles y guardias
 
-**Migración:** (A) `015` · (B) `015_roles` + `016_multi_tenant`
+**Migración:** `015`
 
 **Qué incluye**
 - `perfiles` con los ocho roles (cocina fuera)
@@ -173,7 +174,6 @@ Embarque. No toca datos y se revierte con un `git revert`, pero son las pantalla
 - `navegacion.js`: una sola fuente de verdad para menú, redirección y protección
 - Calendario de guardias: habilita acciones por día sin cambiar el rol base
 - Bitácora de acciones sensibles, con el `super_admin` también auditado
-- Aislamiento por hotel (`hotel_id` + RLS)
 
 **Depende de**
 - La fase 1, para que las pantallas nuevas nazcan con patrones
@@ -194,7 +194,6 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 | Los 8 archivos que leen `registros` | `select('*')` revienta contra columnas revocadas |
 | `precarga.js` | Es la copia local del muelle: el fallo aparece sin señal y a las 8 a.m. |
 | `Navbar` y `ProtectedRoute` | Hoy son listas sueltas; pasan a derivarse de `navegacion.js` |
-| `alter table` × 23 (multi-tenant) | Realtime sostiene locks; ya provocó un interbloqueo en la 007 |
 
 **Umbral: B — imprescindible para que opere el equipo.** No para Daniela sola.
 
@@ -202,7 +201,7 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 
 ### Fase 3 · Personas y organizaciones
 
-**Migración:** (A) `016` · (B) `017`
+**Migración:** `016`
 
 **Qué incluye**
 - `personas` con el documento como llave natural, y `pasajeros.persona_id`
@@ -237,7 +236,7 @@ de tratamiento en el check-in y una política de retención.
 
 ### Fase 4 · Tickets de soporte
 
-**Migración:** (A) `017` · (B) `018`
+**Migración:** `017`
 
 **Qué incluye**
 - `tickets` con el contexto capturado solo
@@ -266,7 +265,7 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 
 ### Fase 5 · Dinero y control
 
-**Migración:** (A) `018`–`020` · (B) `019`–`021`
+**Migración:** `018`–`020`
 
 **Qué incluye**
 - **Pagos y cartera**: tipo, valor, estado, soporte; cartera por agencia con antigüedad; tasa de
@@ -310,7 +309,7 @@ tiquetes y tiquetes no depende de metas. Se pueden repartir.
 
 ### Fase 6 · Comunicación *(propuesta: adelantada desde la 7)*
 
-**Migración:** (A) `023` · (B) `024` — o el número que le toque si aceptas el intercambio
+**Migración:** `023` — la última, aunque la fase vaya penúltima por el intercambio
 
 **Qué incluye**
 - Matriz de notificaciones configurable por usuario y evento, cuatro canales
@@ -345,7 +344,7 @@ importar el primer día que pase.
 
 ### Fase 7 · Operación ampliada *(propuesta: atrasada desde la 6)*
 
-**Migración:** (A) `021`–`022` · (B) `022`–`023`
+**Migración:** `021`–`022`
 
 **Qué incluye**
 - **Eventos masivos**: el evento por encima de la reserva, con lancha **por pasajero**. Gematours,
@@ -416,13 +415,13 @@ esté partido.
    Fase 1 ──────────┤ patrones · modos · Config          (sin migración)
                     │        ║ puede ir en paralelo con la 0
                     ▼
-   Fase 2 ──────────┤ roles · guardias · multi-tenant       (015 [+016])
+   Fase 2 ──────────┤ roles y guardias                      (015)
                     │  ⚠ requiere antes: los 8 select('*')  → umbral B
          ┌──────────┼──────────┐
          ▼          ▼          ▼
    Fase 3      Fase 4      Fase 5
    personas    tickets     dinero y tiquetes                → umbral C
-   (016/017)   (017/018)   (018-020 / 019-021)
+   (016)       (017)       (018–020)
          │          │          │
          └──────────┴────┬─────┘
                          ▼
@@ -465,9 +464,12 @@ que toque el front debería ir en paralelo con la fase 1 mientras extrae patrone
 
 ## 5 · Qué decidir para poder seguir
 
-1. **¿Se parte la fase 2 en dos migraciones?** (§1.2) Define toda la numeración de ahí en adelante.
+1. ~~¿Se parte la fase 2 en dos migraciones?~~ **Resuelto: no.** No hay multi-tenant (§1.2), así
+   que la fase 2 es una sola migración y la numeración es de corrido desde la `015`.
 2. **¿Se intercambian las fases 6 y 7?** (§1.3) Notificaciones antes que operación ampliada.
-3. **¿Los ocho `select('*')` se arreglan antes de la fase 2 o dentro?** (§1.1) Recomiendo antes: es
-   mecánico, no rompe nada y quita el mayor riesgo de esa fase.
+3. ~~¿Los ocho `select('*')` se arreglan antes de la fase 2 o dentro?~~ **Hecho, antes.** Están en
+   `src/lib/columnas.js` con 27 pruebas. Aparecieron **tres** niveles y no dos: `forma_pago` no es
+   un precio —dice cómo se paga, no cuánto— y la isla lo necesita para saber si a alguien se le
+   carga el almuerzo o es cortesía del hotel.
 4. **¿Los tickets suben justo después del umbral A?** No es lo que dice el plan, pero si el piloto
    dura meses, el canal de reportes vale más temprano que tarde.

@@ -159,7 +159,8 @@ Suena a lujo y es lo contrario: **es lo que impide que vuelva a pasar lo de los 
 Cuando alguien va a armar una pantalla nueva, entra ahí, ve que el patrón existe y lo usa. Sin esa
 página, no sabe qué hay y lo inventa.
 
-Además es el argumento visual cuando le muestres el producto a otro hotel.
+Y sirve de referencia cuando entre alguien nuevo al equipo: en vez de leer código para saber qué
+hay, lo ve.
 
 ---
 
