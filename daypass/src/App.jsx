@@ -16,6 +16,7 @@ import Folios from './pages/Folios'
 import Historial from './pages/Historial'
 import Informes from './pages/Informes'
 import Config from './pages/Config'
+import Cocina from './pages/Cocina'
 
 function AppLayout({ children }) {
   // Una sola suscripción al día y a la presencia para toda la app.
@@ -99,6 +100,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <CerrarDia />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cocina"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Cocina />
               </AppLayout>
             </ProtectedRoute>
           }

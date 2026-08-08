@@ -8,6 +8,7 @@ import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
+import HoraDeZarpe from '../components/config/HoraDeZarpe'
 import Modal from '../components/ui/Modal'
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Settings } from 'lucide-react'
 
@@ -59,6 +60,10 @@ export default function Config() {
           </Button>
         }
       />
+
+      {/* Va arriba de los catálogos: no es una lista, es una sola decisión
+          que cambia lo que el cliente puede hacer desde su celular. */}
+      <HoraDeZarpe />
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">

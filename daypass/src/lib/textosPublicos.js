@@ -66,7 +66,8 @@ export const T = {
 
     // Estados
     cerrado: 'Tu reserva está confirmada',
-    cerradoDetalle: 'Ya cerramos la lista de este día, así que el registro en línea se cerró con ella. Preséntate en el muelle de La Bodeguita y allá terminamos tu ingreso.',
+    // {hora} se reemplaza con la hora de zarpe que tenga configurada el hotel.
+    cerradoDetalle: 'El registro en línea cierra a las {hora}, cuando zarpa la lancha. Preséntate en el muelle de La Bodeguita y allá terminamos tu ingreso.',
     quienesVan: 'Quiénes vienen',
     sinNombresAun: 'No alcanzamos a recibir los nombres. Lleva el documento de cada persona: la Capitanía de Puerto lo pide antes de zarpar.',
     aunNo: 'Todavía es pronto',
@@ -136,7 +137,7 @@ export const T = {
     verDetalle: 'See my booking details',
 
     cerrado: 'Your booking is confirmed',
-    cerradoDetalle: 'We have closed the list for this day, so online registration closed with it. Come to the La Bodeguita dock and we will finish your check-in there.',
+    cerradoDetalle: 'Online registration closes at {hora}, when the boat departs. Come to the La Bodeguita dock and we will finish your check-in there.',
     quienesVan: 'Who is coming',
     sinNombresAun: 'We did not receive the names in time. Bring everyone’s ID: the Port Authority asks for it before we sail.',
     aunNo: 'A little early',

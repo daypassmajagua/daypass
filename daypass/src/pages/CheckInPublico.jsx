@@ -28,6 +28,14 @@ function nuevoClientId() {
   return crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+/** '08:30' → '8:30 a.m.' El servidor la guarda en 24 horas; nadie habla así. */
+function formatoHora(hhmm, idioma) {
+  const [h, m] = (hhmm || '08:30').split(':').map(Number)
+  if (Number.isNaN(h)) return idioma === 'en' ? '8:30 am' : '8:30 a.m.'
+  const sufijo = idioma === 'en' ? (h < 12 ? 'am' : 'pm') : (h < 12 ? 'a.m.' : 'p.m.')
+  return `${h % 12 || 12}:${String(m || 0).padStart(2, '0')} ${sufijo}`
+}
+
 // ─── Piezas ────────────────────────────────────────────────────────────────────
 
 function Marco({ children, idioma, onIdioma }) {
@@ -152,10 +160,13 @@ export default function CheckInPublico() {
   const hayPlatos = opciones.length > 0
 
   // Los que ya están en la base, no las filas vacías del formulario.
-  const pasajerosGuardados = useMemo(
-    () => (reserva?.pasajeros || []).filter(p => p.nombre?.trim()),
-    [reserva]
-  )
+  // Sin useMemo: filtrar una lista de veinte no cuesta nada, y memoizarlo le
+  // impedía al compilador de React conservar la memoización de cargar().
+  const pasajerosGuardados = (reserva?.pasajeros || []).filter(p => p.nombre?.trim())
+
+  // 08:30 → 8:30 a.m. El servidor la manda en 24 horas; aquí se lee como se
+  // habla. Si el servidor todavía no la manda, se asume la de siempre.
+  const horaZarpe = formatoHora(reserva?.cierra_a, idioma)
 
   function editar(i, campo, valor) {
     setPasajeros(prev => prev.map((p, j) => j === i ? { ...p, [campo]: valor } : p))
@@ -220,6 +231,12 @@ export default function CheckInPublico() {
   const yaPaso = new Date(reserva.fecha + 'T23:59:59') < new Date()
   const listo = Boolean(reserva.check_in_at)
 
+  // El servidor manda puede_registrar desde la migración 009. Si el front sale
+  // antes que ella, ese campo llega vacío y sin este respaldo todo el mundo
+  // vería la puerta cerrada. Con él, se comporta como antes hasta que la
+  // migración corra.
+  const puedeRegistrar = reserva.puede_registrar ?? (reserva.estado_dia === 'planeando')
+
   return (
     <Marco idioma={idioma} onIdioma={cambiarIdioma}>
       {/* Encabezado de la reserva */}
@@ -257,15 +274,22 @@ export default function CheckInPublico() {
         <Aviso tono="verde" titulo={t.gracias} detalle={t.graciasDetalle} />
       )}
 
-      {/* ── Día ya cerrado ──
-          Sin check-in y con la lista cerrada, el cliente igual viaja: la
-          reserva existe y el pase nunca fue obligatorio para embarcar. Un
-          "cerrado" a secas lo dejaba sin saber qué hacer, así que se le
-          devuelve lo que sí le sirve: adónde ir y a quiénes alcanzamos a
-          registrar. */}
-      {!listo && !yaPaso && reserva.estado_dia !== 'planeando' && (
+      {/* ── Ya zarpó ──
+          El registro en línea cierra a la hora de zarpe, no cuando la
+          coordinadora cierra el día: para entonces el cliente todavía está
+          despierto y muchas veces es justo cuando abre el enlace.
+
+          Quien llega después igual viaja —la reserva existe y el pase nunca
+          fue obligatorio para embarcar—, así que en vez de un "cerrado" a
+          secas se le devuelve lo que sí le sirve: adónde ir y a quiénes
+          alcanzamos a registrar. */}
+      {!listo && !yaPaso && !puedeRegistrar && (
         <div className="flex flex-col gap-5">
-          <Aviso tono="verde" titulo={t.cerrado} detalle={t.cerradoDetalle} />
+          <Aviso
+            tono="verde"
+            titulo={t.cerrado}
+            detalle={t.cerradoDetalle.replace('{hora}', horaZarpe)}
+          />
 
           {pasajerosGuardados.length > 0 ? (
             <div className="rounded-2xl bg-white p-5 flex flex-col gap-3 shadow-[0_1px_2px_rgba(22,24,44,.05)]">
@@ -288,7 +312,7 @@ export default function CheckInPublico() {
       )}
 
       {/* ── El formulario ── */}
-      {!listo && !yaPaso && reserva.estado_dia === 'planeando' && (
+      {!listo && !yaPaso && puedeRegistrar && (
         <div className="flex flex-col gap-8">
           {/* Etapa 1 · quiénes vienen */}
           <section className="flex flex-col gap-4">
