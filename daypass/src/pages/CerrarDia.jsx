@@ -22,6 +22,7 @@ import { useEdadMaxInfante } from '../hooks/useAjuste'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
+import AlertaTiquetes from '../components/cierre/AlertaTiquetes'
 
 /**
  * El ritual de las 7 p.m.
@@ -226,6 +227,9 @@ export default function CerrarDia() {
             </p>
           )}
         </Card>
+
+        {/* ── Tiquetes ── */}
+        <AlertaTiquetes fecha={fechaActiva} />
 
         {/* ── Cocina ── */}
         <Card className="p-5">

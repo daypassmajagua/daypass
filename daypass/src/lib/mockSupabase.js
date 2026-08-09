@@ -614,6 +614,13 @@ const STORE = {
   ],
   firmas: [],
   tickets: [],
+  tiquetes_lotes: [],
+  // Un saldo de muestra: sin él la alerta del cierre no se puede ver en la
+  // demo, y es justamente la pantalla que hay que poder mostrarle al hotel.
+  movimientos_tiquete: [
+    { id: 'mt-1', tipo: 'zarpe',  clase: 'saldo_inicial', fecha: '2026-08-01', cantidad: 120 },
+    { id: 'mt-2', tipo: 'parque', clase: 'saldo_inicial', fecha: '2026-08-01', cantidad: 45 },
+  ],
 }
 
 /**
@@ -1162,6 +1169,83 @@ const RPC = {
   documento_vigente({ p_idioma = 'es' }) {
     const d = STORE.documentos_legales.find(x => x.idioma === p_idioma && !x.vigente_hasta)
     return { data: d ? { id: d.id, titulo: d.titulo, contenido: d.contenido, version: d.version } : null, error: null }
+  },
+
+  /**
+   * Como `consumo_tiquetes_del_dia` de la 022: **tres poblaciones**, no una.
+   * Los huéspedes de alojamiento no están en `embarques` y sí consumen
+   * tiquete — es el error que la planilla arrastra y que aquí no se repite.
+   */
+  consumo_tiquetes_del_dia({ p_fecha }) {
+    const idsIda = STORE.zarpes
+      .filter(z => z.fecha === p_fecha && z.sentido === 'ida').map(z => z.id)
+    const estados = derivarEstadoEmbarques().filter(e => idsIda.includes(e.zarpe_id))
+
+    const consume = registroId => {
+      const r = STORE.registros.find(x => x.id === registroId)
+      const ti = STORE.tipos_ingreso.find(t => t.id === r?.tipo_ingreso_id)
+      return ti?.consume_tiquete ?? true   // ante la duda, se cuenta
+    }
+
+    const conReserva = estados.filter(e =>
+      ['check_in', 'walk_in'].includes(e.estado) && e.registro_id && consume(e.registro_id)).length
+    const sinReserva = estados.filter(e => e.estado === 'walk_in' && !e.registro_id).length
+    const alojamiento = STORE.zarpe_alojamiento.filter(a => idsIda.includes(a.zarpe_id)).length
+
+    return {
+      data: {
+        fecha: p_fecha,
+        con_reserva: conReserva,
+        walk_in_sin_reserva: sinReserva,
+        alojamiento,
+        total: conReserva + sinReserva + alojamiento,
+      },
+      error: null,
+    }
+  },
+
+  saldo_tiquetes() {
+    const suma = tipo => STORE.movimientos_tiquete
+      .filter(m => m.tipo === tipo)
+      .reduce((s, m) => s + m.cantidad, 0)
+    return { data: [
+      { tipo: 'parque', saldo: suma('parque') },
+      { tipo: 'zarpe',  saldo: suma('zarpe') },
+    ], error: null }
+  },
+
+  /** «Quedan 30 y mañana van 87.» */
+  alerta_tiquetes({ p_fecha }) {
+    const dia = p_fecha || hoyLocal()
+    // Anclado al mediodía: sumarle un día a medianoche se corre de fecha al
+    // pasar por UTC, que es justo lo que la regla 6 evita.
+    const manana = new Date(dia + 'T12:00:00')
+    manana.setDate(manana.getDate() + 1)
+    const fechaManana = manana.toISOString().slice(0, 10)
+
+    const necesita = STORE.registros
+      .filter(r => r.fecha === fechaManana && !['cancelada', 'noshow'].includes(r.estado))
+      .filter(r => {
+        const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
+        return ti?.consume_tiquete ?? true
+      })
+      .reduce((s, r) => s + r.adultos + r.ninos + (r.infantes || 0) + (r.cortesias || 0), 0)
+
+    const saldos = {}
+    let minimo = Infinity
+    RPC.saldo_tiquetes().data.forEach(s => { saldos[s.tipo] = s.saldo; minimo = Math.min(minimo, s.saldo) })
+    if (!Number.isFinite(minimo)) minimo = 0
+
+    return {
+      data: {
+        fecha: fechaManana,
+        necesita,
+        saldos,
+        alcanza: minimo >= necesita,
+        faltan: Math.max(necesita - minimo, 0),
+      },
+      error: null,
+    }
   },
 
   /** Como `atender_ticket` de la 021: solo quien mantiene el sistema. */

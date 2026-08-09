@@ -323,15 +323,32 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 
 ### Fase 5 · Dinero y control
 
-**Migración:** `022`–`024`
+**Migración:** `022` (tiquetes, escrita) · `023` (pagos) · `024` (metas)
+
+> **El orden cambió a propósito.** El plan ponía pagos primero, pero las tres partes son
+> independientes (§3) y solo una detiene la operación: sin tiquetes la lancha no sale. Pagos y
+> metas informan; esto embarca.
 
 **Qué incluye**
-- **Pagos y cartera**: tipo, valor, estado, soporte; cartera por agencia con antigüedad; tasa de
-  no-show por agencia
-- **Tiquetes**: kardex combinado, saldo inicial digitado una vez, compras por lote, consumo
-  derivado del embarque, alerta predictiva al cerrar
-- **Cortesías, metas y liquidación**: reporte mensual de cortesías, metas por año y responsable,
-  comisiones por agencia
+- ✅ **Tiquetes** (`022`): kardex combinado zarpe + parque, saldo inicial digitado una vez,
+  compras por lote con proveedor y soporte, consumo recalculable por día, `registros.tiquete_responsable`
+  (hotel · agencia · cliente · empresa), y la alerta predictiva en el cierre del día
+- ⬜ **Pagos y cartera** (`023`): tipo, valor, estado, soporte; cartera por agencia con
+  antigüedad; tasa de no-show por agencia
+- ⬜ **Cortesías, metas y liquidación** (`024`): reporte mensual de cortesías, metas por año y
+  responsable, comisiones por agencia
+
+> **La corrección que justifica sola el kardex.** El plan pedía *"consumo derivado del embarque"*,
+> y hacerlo así habría copiado el error de la planilla: la regla 11 dice que **alojamiento sí
+> consume tiquete**, pero los huéspedes de alojamiento **no están en `embarques`** — viajan por
+> `zarpe_alojamiento` (007), que solo alimenta el manifiesto. El consumo cuenta **tres
+> poblaciones**: embarcados con reserva cuyo tipo consume, walk-ins sin reserva, y los alojados.
+> Cuando se digite el saldo inicial **no va a cuadrar con la planilla, y estará bien**.
+
+> **Por qué el consumo es un movimiento por día y no uno por persona.** `embarques` es append-only
+> y los iPads reenvían su cola; descontar un tiquete por evento habría descontado de más en el
+> primer reenvío. El día se recuenta y se guarda un solo movimiento por tipo, actualizable —así un
+> cambio tardío mueve el número en vez de duplicarlo.
 
 **Depende de**
 - La fase 2 para las metas (hay que saber de quién es cada una) y para que la cartera no la vea
