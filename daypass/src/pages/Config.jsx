@@ -105,7 +105,10 @@ const CATALOGOS = {
     singular: 'agencia',
     articulo: 'Nueva',
     crearPrimero: 'Crear la primera agencia',
-    tabla: 'agencias',
+    // La tabla se llama `organizaciones` desde la 020: guarda también
+    // instituciones, proveedores y aliados. Aquí se muestran todas porque
+    // Config es donde se administran; el tipo las distingue.
+    tabla: 'organizaciones',
     orden: 'nombre',
     campoActivo: 'activa',
     vacio: {

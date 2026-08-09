@@ -108,13 +108,17 @@ const TEMPORADAS = [
   { id: 't-alta4', nombre: 'Temporada Alta 2026 Fin de Año',tipo: 'alta',  fecha_inicio: '2026-11-15', fecha_fin: '2026-12-31' },
 ]
 
-const AGENCIAS = [
-  { id: 'ag-1', nombre: 'Aviatur',          contacto: 'María Ríos',     email: 'mrios@aviatur.com',      activa: true },
-  { id: 'ag-2', nombre: 'Despegar',         contacto: 'Juan Mora',      email: 'jmora@despegar.com',     activa: true },
-  { id: 'ag-3', nombre: 'Decameron Travel', contacto: 'Claudia Pineda', email: 'cpineda@decameron.com',  activa: true },
-  { id: 'ag-4', nombre: 'Copa Airlines',    contacto: 'Luis Arango',    email: 'larango@copaair.com',    activa: true },
-  { id: 'ag-5', nombre: 'Viajes Éxito',     contacto: 'Patricia Mora',  email: 'pmora@viajesexito.com',  activa: true },
-  { id: 'ag-6', nombre: 'Hotelbeds',        contacto: 'Steve Carter',   email: 'scarter@hotelbeds.com',  activa: true },
+// Se llamaban agencias hasta la 020. Ahora son organizaciones y el `tipo` las
+// distingue: las instituciones no venden pasadías, reciben el manifiesto.
+const ORGANIZACIONES = [
+  { id: 'ag-1', nombre: 'Aviatur',          contacto: 'María Ríos',     email: 'mrios@aviatur.com',      tipo: 'agencia',     activa: true },
+  { id: 'ag-2', nombre: 'Despegar',         contacto: 'Juan Mora',      email: 'jmora@despegar.com',     tipo: 'agencia',     activa: true },
+  { id: 'ag-3', nombre: 'Decameron Travel', contacto: 'Claudia Pineda', email: 'cpineda@decameron.com',  tipo: 'agencia',     activa: true },
+  { id: 'ag-4', nombre: 'Copa Airlines',    contacto: 'Luis Arango',    email: 'larango@copaair.com',    tipo: 'agencia',     activa: true },
+  { id: 'ag-5', nombre: 'Viajes Éxito',     contacto: 'Patricia Mora',  email: 'pmora@viajesexito.com',  tipo: 'agencia',     activa: true },
+  { id: 'ag-6', nombre: 'Hotelbeds',        contacto: 'Steve Carter',   email: 'scarter@hotelbeds.com',  tipo: 'agencia',     activa: true },
+  { id: 'or-1', nombre: 'Capitanía de Puerto de Cartagena', contacto: null, email: null, tipo: 'institucion', activa: true },
+  { id: 'or-2', nombre: 'CorpoTurismo',     contacto: null,             email: null,                     tipo: 'institucion', activa: true },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -137,7 +141,7 @@ function joinRegistro(r) {
     planes:   STORE.planes.find(p => p.id === r.plan_id)   || null,
     canales:  STORE.canales.find(c => c.id === r.canal_id) || null,
     paises:   STORE.paises.find(p => p.id === r.pais_id)   || null,
-    agencias: r.agencia_id ? STORE.agencias.find(a => a.id === r.agencia_id) : null,
+    agencias: r.agencia_id ? STORE.organizaciones.find(a => a.id === r.agencia_id) : null,
   }
 }
 
@@ -542,7 +546,12 @@ const STORE = {
   planes:     [...PLANES],
   paises:     [...PAISES],
   temporadas: [...TEMPORADAS],
-  agencias:   [...AGENCIAS],
+  organizaciones: [...ORGANIZACIONES],
+  personas:   [],
+  vinculos:   [],
+  etiquetas:  [],
+  persona_etiquetas: [],
+  organizacion_correos: [],
   clientes:   [],
   registros:  buildRegistros(),
   pasajeros:  [],
@@ -790,6 +799,41 @@ function diaDe(fecha) {
  */
 /** Los roles que pueden ver plata. Igual que `puedo_ver_dinero()` en la 015. */
 const VEN_DINERO = ['super_admin', 'gerencia', 'directora', 'asesora', 'asesora_comercial']
+
+/** El documento sin puntos, espacios ni guiones. Igual que `documento_norm`. */
+export function normalizarDocumento(doc) {
+  return (doc || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
+}
+
+/**
+ * Espeja al trigger `pasajeros_enlazan_persona` de la 020: quien trae
+ * documento se vuelve persona y se reconoce la próxima vez. Sin documento
+ * devuelve null — esa plaza viaja sin identidad y no es un error.
+ */
+function enlazarPersona(pax) {
+  const norm = normalizarDocumento(pax.documento)
+  if (!norm || !(pax.nombre || '').trim()) return null
+
+  const ya = STORE.personas.find(p => normalizarDocumento(p.documento) === norm)
+  if (ya) {
+    // Solo se completa lo que faltaba: el nombre no se pisa.
+    ya.tipo_documento = ya.tipo_documento || pax.tipo_documento || null
+    ya.pais_id = ya.pais_id || pax.pais_id || null
+    return ya.id
+  }
+
+  const nueva = {
+    id: genId(),
+    nombre_completo: pax.nombre.trim(),
+    tipo_documento: pax.tipo_documento || null,
+    documento: (pax.documento || '').trim(),
+    pais_id: pax.pais_id || null,
+    telefono: null, email: null, notas: null,
+    created_at: new Date().toISOString(),
+  }
+  STORE.personas.push(nueva)
+  return nueva.id
+}
 
 function rolActual() {
   return STORE.perfiles.find(p => p.user_id === MOCK_SESSION.user.id)?.rol || null
@@ -1119,6 +1163,24 @@ const RPC = {
     return { data: d ? { id: d.id, titulo: d.titulo, contenido: d.contenido, version: d.version } : null, error: null }
   },
 
+  /** Como `buscar_personas` de la 020: por documento o por nombre, desde 3 letras. */
+  buscar_personas({ p_texto, p_limite = 8 }) {
+    const texto = (p_texto || '').trim()
+    if (texto.length < 3) return { data: [], error: null }
+    const norm = normalizarDocumento(texto)
+    const encaja = p => {
+      const pd = normalizarDocumento(p.documento)
+      return (norm && pd && pd.startsWith(norm))
+        || p.nombre_completo.toLowerCase().includes(texto.toLowerCase())
+    }
+    const veces = p => STORE.pasajeros.filter(x => x.persona_id === p.id).length
+    const filas = STORE.personas.filter(encaja)
+      .sort((a, b) => veces(b) - veces(a) || a.nombre_completo.localeCompare(b.nombre_completo))
+      .slice(0, Math.min(p_limite || 8, 25))
+      .map(p => ({ ...p, veces: veces(p) }))
+    return { data: filas, error: null }
+  },
+
   guardar_pasajeros_por_token({ p_token, p_pasajeros }) {
     const t = STORE.tokens_reserva.find(x => x.token === p_token && x.estado !== 'expirado')
     if (!t) return { data: null, error: { message: 'Este enlace ya no está disponible' } }
@@ -1127,19 +1189,50 @@ const RPC = {
     if ((dia?.estado || 'planeando') !== 'planeando') {
       return { data: null, error: { message: 'La lista de este día ya se cerró' } }
     }
-    STORE.pasajeros = STORE.pasajeros.filter(p => p.registro_id !== r.id)
+    // Como el servidor desde la 018: se empareja por id en vez de borrar y
+    // reinsertar. Borrar a alguien que ya embarcó choca contra la
+    // inmutabilidad de `embarques`, y eso hacía fallar el guardado entero
+    // justo en la hora del embarque.
+    const recibidos = []
     ;(p_pasajeros || []).forEach(p => {
       if (!(p.nombre || '').trim()) return
-      STORE.pasajeros.push({
-        id: genId(), registro_id: r.id, nombre: p.nombre.trim(),
-        tipo_documento: p.tipo_documento || null, documento: p.documento || null,
-        pais_id: p.pais_id || null, categoria: p.categoria || 'adulto',
+      const previo = p.id && STORE.pasajeros.find(x => x.id === p.id && x.registro_id === r.id)
+      const campos = {
+        nombre: p.nombre.trim(),
+        tipo_documento: p.tipo_documento || null,
+        documento: p.documento || null,
+        pais_id: p.pais_id || null,
+        categoria: p.categoria || 'adulto',
         opcion_plato_id: p.opcion_plato_id || null,
-        almuerza: p.almuerza !== false,
         restriccion_alimentaria: p.restriccion_alimentaria || null,
-        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      })
+        updated_at: new Date().toISOString(),
+      }
+      if (previo) {
+        Object.assign(previo, campos)
+        previo.persona_id = enlazarPersona(previo) || previo.persona_id
+        recibidos.push(previo.id)
+      } else {
+        const nuevo = {
+          id: genId(), registro_id: r.id, ...campos,
+          almuerza: p.almuerza !== false,
+          created_at: new Date().toISOString(),
+        }
+        nuevo.persona_id = enlazarPersona(nuevo)
+        STORE.pasajeros.push(nuevo)
+        recibidos.push(nuevo.id)
+      }
     })
+
+    const embarcado = STORE.pasajeros.find(p =>
+      p.registro_id === r.id && !recibidos.includes(p.id)
+      && STORE.embarques.some(e => e.pasajero_id === p.id))
+    if (embarcado) {
+      return { data: null, error: { message:
+        `${embarcado.nombre} ya embarcó y no se puede quitar de la lista desde aquí. En el muelle te ayudan con el cambio.` } }
+    }
+    STORE.pasajeros = STORE.pasajeros.filter(p =>
+      p.registro_id !== r.id || recibidos.includes(p.id))
+
     emitirCambio('pasajeros', 'UPDATE', { registro_id: r.id })
     return RPC.reserva_publica({ p_token })
   },
@@ -1402,6 +1495,12 @@ class QB {
         const repetido = (STORE[this._table] || []).find(x => x.id === row.id)
         if (repetido) return repetido
 
+        // El trigger de la 020: quien trae documento se vuelve persona sin que
+        // nadie tenga que acordarse de crearla.
+        if (this._table === 'pasajeros') {
+          row.persona_id = enlazarPersona(row) || row.persona_id || null
+        }
+
         STORE[this._table].push(row)
         if (this._table === 'registros') {
           row.cambio_tardio = false
@@ -1508,6 +1607,15 @@ const mockAuth = {
 }
 
 // ─── Export ────────────────────────────────────────────────────────────────────
+
+/**
+ * Los datos del demo, para las comprobaciones automáticas.
+ *
+ * Se exporta solo para poder vaciar una tabla y verificar qué quedó dentro
+ * después de una operación. La app **no** lo usa: pasa por `createMockClient`
+ * como si fuera Supabase, que es lo único que hace fiel a la demo.
+ */
+export const __store = STORE
 
 export function createMockClient() {
   return {

@@ -42,24 +42,59 @@ function aFilaDeBase(p, registroId) {
   }
 }
 
-/** Guarda la lista completa de una reserva: reemplaza lo que hubiera. */
+/**
+ * Guarda la lista de una reserva emparejando por id.
+ *
+ * **No borra y reinserta**, aunque sea más corto de escribir. `embarques`
+ * apunta a `pasajeros` con `on delete set null`, y ese `set null` es un UPDATE
+ * que el trigger de inmutabilidad rechaza: borrar a alguien que ya subió a la
+ * lancha hacía fallar el guardado entero. Pasa a diario si alguien corrige una
+ * reserva después de las 8:30.
+ *
+ * Además, reinsertar cambia los `id` de todos los pasajeros, y con ellos el
+ * enlace a su persona y el `almuerza` que alguien marcó a mano.
+ *
+ * Es la misma forma que usa `guardar_pasajeros_por_token` desde la 018.
+ */
 export async function guardarPasajeros(registroId, lista) {
   if (!registroId) return { error: null }
 
-  const { error: errorBorrado } = await supabase
+  const conNombre = lista.filter(p => (p.nombre || '').trim())
+
+  const { data: previos, error: errorLectura } = await supabase
     .from('pasajeros')
-    .delete()
+    .select('id')
     .eq('registro_id', registroId)
-  if (errorBorrado) return { error: errorBorrado }
+  if (errorLectura) return { error: errorLectura }
 
-  const filas = lista
-    .filter(p => (p.nombre || '').trim())
-    .map(p => aFilaDeBase(p, registroId))
+  const vigentes = new Set(conNombre.map(p => p.id).filter(Boolean))
+  const sobran = (previos || []).map(p => p.id).filter(id => !vigentes.has(id))
 
-  if (!filas.length) return { error: null }
+  const nuevos = conNombre.filter(p => !p.id).map(p => aFilaDeBase(p, registroId))
+  if (nuevos.length) {
+    const { error } = await supabase.from('pasajeros').insert(nuevos)
+    if (error) return { error }
+  }
 
-  const { error } = await supabase.from('pasajeros').insert(filas)
-  return { error }
+  for (const p of conNombre.filter(p => p.id)) {
+    const { error } = await supabase
+      .from('pasajeros')
+      .update(aFilaDeBase(p, registroId))
+      .eq('id', p.id)
+    if (error) return { error }
+  }
+
+  if (sobran.length) {
+    const { error } = await supabase.from('pasajeros').delete().in('id', sobran)
+    if (error) {
+      // El mensaje crudo de Postgres aquí es «Los embarques no se corrigen»,
+      // que no le dice nada a quien está editando una reserva.
+      return { error: { ...error, message:
+        'No se pudo quitar a alguien de la lista: ya embarcó. En el muelle se corrige.' } }
+    }
+  }
+
+  return { error: null }
 }
 
 /** Cuántos nombres tiene cada reserva del día, para la columna del listado. */

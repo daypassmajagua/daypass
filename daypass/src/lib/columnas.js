@@ -78,7 +78,10 @@ export const CON_PLAN = 'planes (id, nombre)'
 export const CON_PLAN_COMPLETO = 'planes (id, nombre, categoria, nivel)'
 export const CON_CANAL = 'canales (id, codigo, nombre)'
 export const CON_PAIS = 'paises (id, codigo, nombre)'
-export const CON_AGENCIA = 'agencias (id, nombre)'
+// La tabla se llama `organizaciones` desde la 020 —guarda también a la
+// Capitanía, que de agencia no tiene nada— pero la reserva sigue preguntando
+// por su agencia, así que el nombre de la operación se conserva con un alias.
+export const CON_AGENCIA = 'agencias:organizaciones (id, nombre)'
 
 /** Sin nada de dinero: muelle y cocina. */
 export const RESERVA = CAMPOS_RESERVA.join(', ')

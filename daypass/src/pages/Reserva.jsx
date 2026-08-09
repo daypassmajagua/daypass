@@ -24,6 +24,7 @@ import DatePicker from '../components/ui/DatePicker'
 import BuscadorAgencia from '../components/ui/BuscadorAgencia'
 import TarjetasPlan from '../components/reserva/TarjetasPlan'
 import FichasLancha from '../components/reserva/FichasLancha'
+import PrecargaPersona from '../components/reserva/PrecargaPersona'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
 import PageHeader from '../components/layout/PageHeader'
 import { RESERVA_CON_DINERO } from '../lib/columnas'
@@ -184,7 +185,7 @@ export default function Reserva() {
         supabase.from('planes').select('*').eq('activo', true).order('nombre'),
         supabase.from('canales').select('*').order('nombre'),
         supabase.from('paises').select('*').order('nombre'),
-        supabase.from('agencias').select('*').eq('activa', true).order('nombre'),
+        supabase.from('organizaciones').select('*').eq('activa', true).order('nombre'),
         supabase.from('tipos_ingreso').select('*').eq('activo', true),
         supabase.from('opciones_plato').select('*').eq('activo', true),
       ])
@@ -466,6 +467,22 @@ export default function Reserva() {
                 options={[{ value: '', label: '— País —' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))]} />
             )} />
           </div>
+
+          {/* Si esa cédula ya vino antes, se ofrece lo que sabemos de ella.
+              Solo al crear: en una reserva que ya existe, los datos son los que
+              se acordaron ese día y no se tocan (regla 4). */}
+          {!id && (
+            <PrecargaPersona
+              documento={valores.identificacion}
+              onUsar={p => {
+                setValue('nombre_pasajero', p.nombre_completo, { shouldDirty: true })
+                if (p.pais_id) setValue('pais_id', p.pais_id, { shouldDirty: true })
+                if (p.telefono && !valores.telefono) setValue('telefono', p.telefono, { shouldDirty: true })
+                if (p.email && !valores.email) setValue('email', p.email, { shouldDirty: true })
+                toast.success(`Datos de ${p.nombre_completo}`)
+              }}
+            />
+          )}
 
           {/* El check-in remoto y las tarjetas viajan por aquí */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

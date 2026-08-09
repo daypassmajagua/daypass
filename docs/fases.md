@@ -213,16 +213,28 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 
 ### Fase 3 · Personas y organizaciones
 
-**Migración:** `020`
+**Migración:** `020` — escrita, pendiente de correr.
 
 **Qué incluye**
-- `personas` con el documento como llave natural, y `pasajeros.persona_id`
-- `agencias` → organizaciones con `tipo_organizacion`, incluidas las instituciones
-- `vinculos` y `etiquetas_persona` (calculadas y asignadas, separadas)
-- Los correos de destino se mudan de `ajustes` a la ficha de cada institución
-- Unir duplicados, con bitácora
-- Precarga en la reserva y en el check-in
-- Deshacer el solapamiento entre `categoria_pasajero` y `tipos_ingreso`
+- ✅ `personas` con el documento como llave **opcional y única cuando existe**, y
+  `pasajeros.persona_id` + `registros.persona_id` (el titular)
+- ✅ `agencias` → `organizaciones` con `tipo`, incluidas las instituciones
+- ✅ `vinculos` y `persona_etiquetas` (calculadas y asignadas, en filas distintas)
+- ✅ `organizacion_correos` con propósito: de ahí sale el destino del manifiesto
+- ✅ `unir_personas()`, solo dirección o coordinación, con bitácora
+- ✅ Precarga por documento **en la reserva**
+- ✅ El solapamiento de `cortesia` cerrado con CHECK en `pasajeros` y `embarques`
+
+> **La precarga NO va en el check-in público, y es a propósito.** Dejar que
+> cualquiera con un enlace escriba un documento y vea a quién pertenece sería
+> regalar la base de datos entera. `buscar_personas` exige sesión del equipo.
+> Lo que el cliente sí ve precargado es lo suyo, que ya funcionaba.
+
+> **Falta la autorización de tratamiento (Ley 1581).** El mecanismo existe
+> —`documentos_legales` + `firmas`, migración 008—: cuando llegue el texto del
+> abogado se publica como documento vigente y queda recogida sin tocar código.
+> **Hasta entonces esto se puede probar, pero no debería usarse para nada
+> distinto de operar el pasadía.**
 
 **Depende de** — la fase 2, porque comparte las políticas de RLS y `personas` guarda documentos de
 identidad, que es justo lo que hay que proteger por rol.
