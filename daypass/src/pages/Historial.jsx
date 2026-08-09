@@ -6,7 +6,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -167,7 +167,7 @@ export default function Historial() {
       </Card>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Cargando...</div>
+        <Esqueleto filas={6} />
       ) : error ? (
         <EstadoError error={error} onReintentar={fetchRegistros} />
       ) : registros.length === 0 ? (

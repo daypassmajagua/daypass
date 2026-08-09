@@ -24,7 +24,7 @@ export default function InsigniaEstado({ estado, tamano = 'normal', className = 
       className={classNames(
         'inline-flex items-center rounded-[10px] font-bold whitespace-nowrap',
         tamano === 'grande' ? 'px-3.5 py-2 text-[15px]' : 'px-3 py-1.5 text-[13px]',
-        ESTADO_COLORS[estado] || 'bg-[#ececE8] text-tinta-2',
+        ESTADO_COLORS[estado] || 'bg-linea text-tinta-2',
         className
       )}
     >

@@ -139,15 +139,32 @@ funciona depende de que exista.
 
 ---
 
-### Fase 1 · Diseño base
+### Fase 1 · Diseño base — ✅ completa
 
 **Migración:** ninguna.
 
 **Qué incluye**
-- Los ocho patrones a `components/patrones/`
-- `ModoProvider` con los tres modos
-- Los tres estados obligatorios (cargando · vacío · error)
-- Rehacer `Config.jsx` con los patrones, como prueba de que alcanzan
+- ✅ Los ocho patrones en `components/patrones/`, más `Esqueleto` y `EstadoError`
+- ✅ `ProveedorModo` con los tres modos, marcados por dispositivo
+- ✅ Los tres estados obligatorios: **cargando con esqueleto, no con texto**;
+  vacío que invita a actuar; error que distingue "no hay" de "no pude cargar"
+- ✅ `Config.jsx` rehecha con los patrones
+- ✅ **Cero colores fuera del sistema**: los que se escribían a mano —`#101223`
+  35 veces, `#3a3d52` 22— eran tokens sin nombre. Ahora son `sol-*` (el muelle
+  y la isla, subidos de contraste), `peligro-*` (lo que no se deshace, aparte
+  del coral, que es "pendiente"), `alarma-*` (falta gente), `mar-*` (en la
+  isla) y `aviso-*`. 134 clases reemplazadas, y `components/ui/` sin una sola
+  `gray-*`: era el sistema contaminándose a sí mismo
+- ✅ **Cero controles nativos** (regla 7): los `<select>` del muelle, del
+  check-in del cliente y de Configuración pasan a `ui/Select` —que gana el
+  tamaño `sol` de 60 px en vez de que el muelle se invente el suyo— y las horas
+  a `ui/SelectorHora`, en cuartos
+
+> **Un fallo que la 020 dejó armado y esto desactivó:** el muelle y el check-in
+> del cliente todavía ofrecían la categoría *Cortesía*, que esa migración
+> rechaza con un CHECK. Habría fallado al guardar, en el muelle y con la fila
+> esperando. La cortesía no es una edad: es por qué entró esa persona, y eso
+> vive en el tipo de ingreso de su reserva.
 
 **Depende de** — nada técnico. Pero **va antes de la fase 2** por una razón práctica: la fase 2
 trae pantallas nuevas (Panorama, Resultados, Llegadas) y si los patrones no existen, cada una

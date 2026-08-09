@@ -3,7 +3,7 @@ import { classNames } from '../../lib/utils'
 const variants = {
   primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-[0_2px_8px_rgba(74,90,232,.28)]',
   secondary: 'bg-blue-50 text-blue-700 hover:bg-blue-100',
-  danger: 'bg-[#d2322d] text-white hover:bg-[#b3261e]',
+  danger: 'bg-peligro-500 text-white hover:bg-peligro-600',
   ghost: 'text-tinta-2 hover:bg-blue-50 hover:text-blue-700',
   success: 'bg-verde-500 text-white hover:bg-verde-600',
   // Coral: reservado para acciones sobre lo pendiente y lo tardío.

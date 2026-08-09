@@ -48,7 +48,7 @@ export default function BuscadorAgencia({
 
   return (
     <div className="flex flex-col gap-1" ref={wrapRef}>
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-tinta">{label}</label>
 
       {value && !abierto ? (
         <div className="flex items-center gap-2 rounded-xl border border-linea bg-white px-3 py-2.5 min-h-[44px]">

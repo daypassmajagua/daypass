@@ -118,12 +118,12 @@ export const ESTADO_LABELS = {
 // Un color fijo por estado, idéntico en tablas, gráficas y documentos:
 // la asesora aprende el código una sola vez.
 export const ESTADO_COLORS = {
-  tentativa: 'bg-[#ececE8] text-tinta-2',
+  tentativa: 'bg-linea text-tinta-2',
   confirmada: 'bg-blue-50 text-blue-700',
-  en_isla: 'bg-[#e7f3fb] text-[#1d6fa5]',
+  en_isla: 'bg-mar-50 text-mar-700',
   completada: 'bg-verde-50 text-verde-500',
   noshow: 'bg-coral-50 text-coral-600',
-  cancelada: 'bg-[#fce9e8] text-[#d2322d]',
+  cancelada: 'bg-peligro-50 text-peligro-500',
 }
 
 export const FORMA_PAGO_LABELS = {

@@ -129,7 +129,7 @@ export default function LectorQR({ onLeer, onCerrar }) {
             </p>
             <button
               onClick={onCerrar}
-              className="rounded-2xl bg-white text-[#101223] text-[18px] font-bold px-8 min-h-[64px]"
+              className="rounded-2xl bg-white text-sol-tinta text-[18px] font-bold px-8 min-h-[64px]"
             >
               Buscar por nombre
             </button>

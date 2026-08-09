@@ -4,6 +4,8 @@ import { Clock } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
+import Select from '../ui/Select'
+import SelectorHora from '../ui/SelectorHora'
 
 /**
  * La hora de zarpe: el único corte que le importa al cliente.
@@ -82,40 +84,30 @@ export default function HoraDeZarpe() {
       </div>
 
       <div className="flex items-end gap-4 flex-wrap">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-bold text-tinta">Hora de zarpe</span>
-          <input
-            type="time"
-            value={hora}
-            onChange={e => setHora(e.target.value)}
-            className="rounded-xl border border-linea bg-white px-3.5 py-2.5 min-h-[44px] text-[16px] tabular focus:outline-none focus:border-blue-600"
-          />
-        </label>
+        <SelectorHora label="Hora de zarpe" value={hora} onChange={setHora} className="w-44" />
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-bold text-tinta">Cocina cierra su lista</span>
-          <input
-            type="time"
-            value={cocina}
-            onChange={e => setCocina(e.target.value)}
-            className="rounded-xl border border-linea bg-white px-3.5 py-2.5 min-h-[44px] text-[16px] tabular focus:outline-none focus:border-blue-600"
-          />
-        </label>
+        <SelectorHora
+          label="Cocina cierra su lista"
+          value={cocina}
+          onChange={setCocina}
+          className="w-44"
+        />
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-bold text-tinta">Almuerzo y firma se abren</span>
-          <select
+        <div className="flex flex-col gap-1.5">
+          <Select
+            label="Almuerzo y firma se abren"
             value={dias}
-            onChange={e => setDias(e.target.value)}
-            className="rounded-xl border border-linea bg-white px-3.5 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:border-blue-600"
-          >
-            <option value="1">1 día antes</option>
-            <option value="2">2 días antes</option>
-            <option value="3">3 días antes</option>
-            <option value="5">5 días antes</option>
-            <option value="7">7 días antes</option>
-          </select>
-        </label>
+            onChange={setDias}
+            className="w-44"
+            options={[
+              { value: '1', label: '1 día antes' },
+              { value: '2', label: '2 días antes' },
+              { value: '3', label: '3 días antes' },
+              { value: '5', label: '5 días antes' },
+              { value: '7', label: '7 días antes' },
+            ]}
+          />
+        </div>
 
         <Button onClick={guardar} loading={guardando} disabled={!cambio}>
           Guardar

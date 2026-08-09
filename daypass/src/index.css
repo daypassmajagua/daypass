@@ -64,6 +64,55 @@
   --color-arena-500: #b5904d;
   --color-arena-700: #8a6a33;
 
+  /* ── A pleno sol — el muelle y la isla ──
+     No son otra marca: es la misma tinta subida de contraste porque esas dos
+     pantallas se usan de pie, afuera y con reflejo. Existían desde el primer
+     día escritas a mano —35 y 22 veces— así que ya eran tokens; solo les
+     faltaba el nombre. Sin él, quien arma una pantalla de muelle nueva copia
+     un hex de otra y el sistema se despeina de a poco. */
+  --color-sol-fondo: #f4f4f0;
+  --color-sol-linea: #c8c9d4;
+  --color-sol-linea-2: #d8d8d2;   /* lo cerrado, lo que ya no se toca */
+  --color-sol-tinta: #101223;
+  --color-sol-tinta-2: #3a3d52;
+  --color-sol-tinta-3: #6a6d80;   /* lo secundario: iconos, "de 24" */
+
+  /* ── Alarma — falta gente en el regreso, revisar antes de cobrar ──
+     Subida de contraste como todo lo de afuera. Es distinta de `peligro`:
+     peligro es una acción que no se deshace, alarma es un hecho que hay que
+     resolver. */
+  --color-alarma-50: #ffe0e0;
+  --color-alarma-300: #e08a8a;
+  --color-alarma-700: #a41f1f;
+  --color-alarma-900: #7a1f1f;
+
+  /* ── Mar — quien ya está en la isla, y lo que se cobra a la habitación ── */
+  --color-mar-50: #e7f3fb;
+  --color-mar-300: #7da2e8;
+  --color-mar-700: #1d6fa5;
+  --color-mar-900: #1b3a75;
+
+  --color-tinta-3: #8d8f9e;       /* el punto de un día ya cerrado */
+
+  /* ── Peligro — borrar, cancelar, lo que no se deshace ──
+     Aparte del coral a propósito: el coral dice "pendiente" y "tardío", que es
+     una llamada de atención. Esto dice "esto no se puede deshacer". Si
+     compartieran color, la reserva sin folio y el botón de eliminar se verían
+     igual de graves, y no lo son. */
+  --color-peligro-50: #fce9e8;
+  --color-peligro-500: #d2322d;
+  --color-peligro-600: #b3261e;
+
+  /* ── Aviso — algo que revisar, sin que nada esté roto ──
+     Hoy solo lo usa la revisión de cocina. */
+  --color-aviso-50: #fff4d6;
+  --color-aviso-300: #e8c76a;
+  --color-aviso-700: #6b4d05;
+
+  /* El verde que solo se usa vivo, sobre el navy de la franja del día: los
+     verdes de `verde-*` se apagan sobre fondo oscuro. */
+  --color-verde-vivo: #57e6a9;
+
   --font-sans: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
 
   --radius-control: 12px;
@@ -153,6 +202,23 @@ th {
 table,
 input[type="number"] {
   font-variant-numeric: tabular-nums;
+}
+
+/**
+ * El degradado de la marca: la barra de la oficina y el encabezado de la
+ * página del cliente.
+ *
+ * Vive aquí y no en cada archivo porque estaba escrito dos veces con dos
+ * colores intermedios a mano. Dos copias de un degradado son dos degradados
+ * que se van a separar el día que alguien retoque uno.
+ */
+.degradado-marca {
+  background-image: linear-gradient(
+    to right,
+    var(--color-brand-900),
+    #2b3170 50%,
+    #34418f
+  );
 }
 
 /* Piso de calidad: foco visible en todo control, del color de acción. */

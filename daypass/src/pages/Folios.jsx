@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Copy, CheckCircle2, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
 import DateNav from '../components/ui/DateNav'
 import FranjaDia from '../components/layout/FranjaDia'
@@ -157,7 +157,7 @@ export default function Folios() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Cargando...</div>
+        <Esqueleto filas={4} />
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (

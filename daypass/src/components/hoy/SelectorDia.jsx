@@ -13,7 +13,7 @@ const ESTADO_TONO = {
   planeando:         'bg-blue-50 text-blue-700',
   tentativo_cerrado: 'bg-verde-50 text-verde-600',
   en_operacion:      'bg-brand-900 text-white',
-  cerrado:           'bg-[#ececE8] text-tinta-2',
+  cerrado:           'bg-linea text-tinta-2',
 }
 
 function manana() {

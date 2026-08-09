@@ -14,9 +14,16 @@ import useClickOutside from '../../hooks/useClickOutside'
  * Para react-hook-form, envolver en <Controller> y pasar field.value/field.onChange.
  */
 // En iPad todo control se toca con el dedo: mínimo 44px de alto.
+//
+// `sol` es el muelle y la isla: de pie, una mano, a pleno sol. 60px y texto
+// grande. Existe aquí y no como un control aparte a propósito — el muelle
+// tenía dos `<select>` nativos porque el de la oficina le quedaba chico, y esa
+// es exactamente la excusa con la que un sistema de diseño se empieza a
+// deshacer. Es la misma pieza en otro tamaño, no otra pieza.
 const sizes = {
-  sm: 'px-2.5 py-1.5 text-xs rounded-lg min-h-[36px] [@media(pointer:coarse)]:min-h-[44px]',
-  md: 'px-3 py-2.5 text-sm rounded-xl min-h-[44px]',
+  sm:  'px-2.5 py-1.5 text-xs rounded-lg min-h-[36px] [@media(pointer:coarse)]:min-h-[44px]',
+  md:  'px-3 py-2.5 text-sm rounded-xl min-h-[44px]',
+  sol: 'px-4 text-[18px] rounded-xl min-h-[60px]',
 }
 
 export default function Select({
@@ -73,7 +80,7 @@ export default function Select({
           className={classNames(
             labelOculta
               ? 'xl:hidden text-[12px] font-bold uppercase tracking-wider text-tinta-2'
-              : 'text-sm font-medium text-gray-700'
+              : 'text-sm font-medium text-tinta'
           )}
         >
           {label}
@@ -93,19 +100,28 @@ export default function Select({
             }
           }}
           className={classNames(
-            'w-full flex items-center justify-between gap-2 border bg-white text-left transition-colors',
+            'w-full flex items-center justify-between gap-2 bg-white text-left transition-colors',
             sizes[size],
+            // Afuera el borde es de 2px: a pleno sol un borde fino desaparece.
+            size === 'sol' ? 'border-2' : 'border',
             'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
-            error ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-brand-400',
+            error
+              ? 'border-peligro-500 bg-peligro-50'
+              : size === 'sol' ? 'border-sol-linea' : 'border-linea hover:border-brand-400',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
-          <span className={classNames('truncate', selected && selected.label && String(selected.value) !== '' ? 'text-gray-900' : 'text-gray-500')}>
+          <span className={classNames(
+            'truncate',
+            selected && selected.label && String(selected.value) !== ''
+              ? (size === 'sol' ? 'text-sol-tinta' : 'text-tinta')
+              : (size === 'sol' ? 'text-sol-tinta-3' : 'text-tinta-2')
+          )}>
             {selected ? selected.label : placeholder}
           </span>
           <ChevronDown
-            size={size === 'sm' ? 14 : 16}
-            className={classNames('shrink-0 text-gray-400 transition-transform', open && 'rotate-180')}
+            size={size === 'sm' ? 14 : size === 'sol' ? 22 : 16}
+            className={classNames('shrink-0 text-tinta-3 transition-transform', open && 'rotate-180')}
           />
         </button>
 
@@ -130,8 +146,10 @@ export default function Select({
                   data-selected={isSel}
                   onClick={() => pick(o.value)}
                   className={classNames(
-                    'w-full flex items-center justify-between gap-2 px-3.5 py-2.5 min-h-[44px] text-left transition-colors',
-                    size === 'sm' ? 'text-[13px]' : 'text-[15px]',
+                    'w-full flex items-center justify-between gap-2 px-3.5 text-left transition-colors',
+                    // Afuera la fila es de 60px, como todo lo que se toca de pie.
+                    size === 'sol' ? 'py-3 min-h-[60px] text-[18px]' : 'py-2.5 min-h-[44px]',
+                    size === 'sm' ? 'text-[13px]' : size === 'sol' ? '' : 'text-[15px]',
                     isSel ? 'bg-blue-50 text-blue-700 font-bold' : 'text-tinta hover:bg-blue-50/60',
                     'focus:outline-none focus:bg-blue-50'
                   )}

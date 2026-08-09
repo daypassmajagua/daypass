@@ -4,7 +4,7 @@ import { Lock, PlusCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import { usePendientes } from '../hooks/usePendientes'
 import { useDiaOperativo, useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { aFechaLocal, fraseFecha, hoyLocal } from '../lib/utils'
@@ -83,7 +83,7 @@ export default function Hoy() {
       </div>
 
       {loading ? (
-        <p className="text-tinta-2 py-10">Cargando el día...</p>
+        <Esqueleto filas={4} />
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : (

@@ -62,7 +62,7 @@ export default function Navbar() {
           completo solo cabe desde 1536px; por debajo se usa el cajón
           táctil. En el sprint de roles cada persona verá solo lo suyo y
           esto vuelve a caber holgado. */}
-      <header className="bg-gradient-to-r from-brand-900 via-[#2b3170] to-[#34418f] text-white sticky top-0 z-40 shadow-[0_4px_20px_rgba(30,32,69,.18)] pt-[env(safe-area-inset-top)]">
+      <header className="degradado-marca text-white sticky top-0 z-40 shadow-[0_4px_20px_rgba(30,32,69,.18)] pt-[env(safe-area-inset-top)]">
         {/* A todo el ancho, no max-w-7xl: con el contenedor limitado a
             1280px el menú se solapaba aunque la pantalla fuera más grande. */}
         <div className="px-3 sm:px-5 flex items-center justify-between gap-4 h-16">

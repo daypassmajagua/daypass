@@ -3,7 +3,7 @@ import { ChefHat, Printer, TriangleAlert, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import { useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { calcularConteoCocina } from '../lib/conteoCocina'
 import { openPrintWindow, buildCocinaHTML } from '../lib/printDoc'
@@ -145,7 +145,7 @@ export default function Cocina() {
       />
 
       {loading ? (
-        <p className="text-tinta-2 py-10">Cargando el conteo…</p>
+        <Esqueleto filas={3} />
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (

@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { usePerfil } from '../hooks/usePerfil'
 import { classNames, formatDateShort } from '../lib/utils'
 import { TIPOS_TICKET, ETIQUETA_ESTADO_TICKET } from '../lib/tickets'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
@@ -28,7 +28,7 @@ const ESTADOS = ['nuevo', 'visto', 'en_curso', 'resuelto', 'no_va']
 const TONO_ESTADO = {
   nuevo:    'bg-blue-50 text-blue-700',
   visto:    'bg-fondo text-tinta-2',
-  en_curso: 'bg-[#fff4d6] text-[#6b4d05]',
+  en_curso: 'bg-aviso-50 text-aviso-700',
   resuelto: 'bg-verde-50 text-verde-600',
   no_va:    'bg-fondo text-tinta-2',
 }
@@ -90,7 +90,7 @@ export default function Reportes() {
       />
 
       {cargando ? (
-        <p className="text-tinta-2 py-10">Buscando los reportes…</p>
+        <Esqueleto filas={3} />
       ) : error ? (
         <EstadoError error={error} onReintentar={cargar} />
       ) : !visibles.length ? (

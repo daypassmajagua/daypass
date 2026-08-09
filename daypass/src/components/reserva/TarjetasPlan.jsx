@@ -12,7 +12,7 @@ export default function TarjetasPlan({ planes, temporada, value, onChange, error
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
-        <label className="text-sm font-medium text-gray-700">Plan</label>
+        <label className="text-sm font-medium text-tinta">Plan</label>
         {error && <span className="text-xs text-coral-600 font-bold">{error}</span>}
       </div>
 

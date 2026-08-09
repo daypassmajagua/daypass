@@ -49,7 +49,7 @@ export default function IndicadorSync({ muelle = false }) {
           muelle ? 'px-4 min-h-[52px] text-[16px] ring-2' : 'px-3 min-h-[40px] text-[13px]',
           tono === 'verde' && (muelle ? 'bg-white text-verde-600 ring-verde-500' : 'bg-verde-50 text-verde-600'),
           tono === 'ambar' && (muelle ? 'bg-coral-50 text-coral-700 ring-coral-500' : 'bg-coral-50 text-coral-700'),
-          tono === 'gris'  && (muelle ? 'bg-white text-[#3a3d52] ring-[#c8c9d4]' : 'bg-fondo text-tinta-2')
+          tono === 'gris'  && (muelle ? 'bg-white text-sol-tinta-2 ring-sol-linea' : 'bg-fondo text-tinta-2')
         )}
         title="Ver el estado de la conexión"
       >
@@ -107,7 +107,7 @@ export default function IndicadorSync({ muelle = false }) {
                     {item.intentos >= 3 && (
                       <button
                         onClick={async () => { await descartar(item.client_id); setLista(await listarPendientes()) }}
-                        className="shrink-0 rounded-lg px-3 min-h-[40px] text-[13px] font-bold text-[#d2322d] bg-[#fce9e8]"
+                        className="shrink-0 rounded-lg px-3 min-h-[40px] text-[13px] font-bold text-peligro-500 bg-peligro-50"
                       >
                         Descartar
                       </button>

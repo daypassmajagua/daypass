@@ -11,7 +11,7 @@ export default function Stepper({ label, ayuda, value, onChange, min = 0, max = 
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-tinta">
         {label}
         {ayuda && <span className="block text-[13px] text-tinta-2 font-normal">{ayuda}</span>}
       </label>

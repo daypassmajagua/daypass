@@ -11,6 +11,7 @@ import { sePuedeNombrar } from '../lib/plazas'
 import { resolverToken } from '../lib/offline/precarga'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
+import Select from '../components/ui/Select'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 import LectorQR from '../components/zarpe/LectorQR'
 import IndicadorSync from '../components/layout/IndicadorSync'
@@ -26,13 +27,23 @@ import { EstadoError } from '../components/patrones'
 
 const VENTANA_DESHACER = 8000
 
+/** Los mismos del enum `tipo_documento` (002), en el orden en que se usan. */
+const TIPOS_DOCUMENTO = [
+  { value: 'cc', label: 'C.C.' },
+  { value: 'ce', label: 'C.E.' },
+  { value: 'pasaporte', label: 'Pasaporte' },
+  { value: 'ti', label: 'T.I.' },
+  { value: 'rc', label: 'R.C.' },
+  { value: 'otro', label: 'Otro' },
+]
+
 // ─── Selección de zarpe ────────────────────────────────────────────────────────
 
 function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, error, hayIdaCerrada, hayRegreso }) {
   const [programando, setProgramando] = useState(false)
   const [preparando, setPreparando] = useState(null)
 
-  if (cargando) return <p className="text-[18px] text-[#3a3d52] p-6">Buscando los zarpes del día…</p>
+  if (cargando) return <p className="text-[18px] text-sol-tinta-2 p-6">Buscando los zarpes del día…</p>
 
   // Antes de decir "no hay zarpes": si la consulta falló y tampoco hay copia
   // local, decirlo. "No hay" y "no pude cargar" llevan a decisiones opuestas.
@@ -41,10 +52,10 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   if (!zarpes.length) {
     return (
       <div className="p-6 flex flex-col items-start gap-4">
-        <p className="text-[20px] font-bold text-[#101223]">
+        <p className="text-[20px] font-bold text-sol-tinta">
           Todavía no hay zarpes programados para {fraseFecha(fecha).toLowerCase()}.
         </p>
-        <p className="text-[17px] text-[#3a3d52]">
+        <p className="text-[17px] text-sol-tinta-2">
           Se crea uno por cada lancha que tenga gente ese día.
         </p>
         <button
@@ -66,7 +77,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4 flex-wrap">
-        <h1 className="text-[24px] font-bold text-[#101223] tracking-[-.02em]">
+        <h1 className="text-[24px] font-bold text-sol-tinta tracking-[-.02em]">
           ¿Qué lancha vas a embarcar?
         </h1>
         <Link to="/" className="text-[16px] font-bold text-blue-700 underline min-h-[44px] flex items-center">
@@ -82,15 +93,15 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
               onClick={() => onElegir(z)}
               className={classNames(
                 'flex-1 flex items-center gap-4 rounded-2xl px-5 min-h-[80px] text-left ring-2 transition-colors',
-                cerrado ? 'bg-white ring-[#d8d8d2]' : 'bg-white ring-[#101223]'
+                cerrado ? 'bg-white ring-sol-linea-2' : 'bg-white ring-sol-tinta'
               )}
             >
-              <Ship size={28} className={cerrado ? 'text-[#6a6d80]' : 'text-blue-700'} />
+              <Ship size={28} className={cerrado ? 'text-sol-tinta-3' : 'text-blue-700'} />
               <span className="flex-1 min-w-0">
-                <span className="block text-[20px] font-bold text-[#101223]">
+                <span className="block text-[20px] font-bold text-sol-tinta">
                   {z.lanchas?.nombre || 'Lancha'}
                 </span>
-                <span className="block text-[16px] text-[#3a3d52]">
+                <span className="block text-[16px] text-sol-tinta-2">
                   {z.sentido === 'ida' ? 'Ida' : 'Regreso'}
                   {z.hora_programada ? ` · ${z.hora_programada.slice(0, 5)}` : ''}
                   {preparado && z.pilotos?.nombre ? ` · ${z.pilotos.nombre}` : ''}
@@ -101,7 +112,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
               </span>
               {cerrado
                 ? <span className="text-[16px] font-bold text-verde-600 shrink-0">Cerrado</span>
-                : <ChevronLeft size={26} className="rotate-180 text-[#6a6d80] shrink-0" />}
+                : <ChevronLeft size={26} className="rotate-180 text-sol-tinta-3 shrink-0" />}
             </button>
 
             {!cerrado && (
@@ -111,7 +122,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
                   'shrink-0 w-[92px] rounded-2xl ring-2 text-[14px] font-bold flex flex-col items-center justify-center gap-1 transition-colors',
                   preparado
                     ? 'bg-verde-50 ring-verde-500 text-verde-600'
-                    : 'bg-white ring-[#c8c9d4] text-[#3a3d52]'
+                    : 'bg-white ring-sol-linea text-sol-tinta-2'
                 )}
               >
                 <Settings2 size={20} />
@@ -134,7 +145,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
             else toast.success('Regreso programado')
           }}
           disabled={programando}
-          className="self-start mt-2 flex items-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold px-6 min-h-[64px] disabled:opacity-50"
+          className="self-start mt-2 flex items-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold px-6 min-h-[64px] disabled:opacity-50"
         >
           <Anchor size={22} />
           {programando ? 'Programando…' : 'Programar el regreso'}
@@ -183,67 +194,69 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[22px] font-bold text-[#101223]">{titulo}</h2>
-          <button onClick={onCerrar} className="w-12 h-12 flex items-center justify-center rounded-xl text-[#3a3d52]">
+          <h2 className="text-[22px] font-bold text-sol-tinta">{titulo}</h2>
+          <button onClick={onCerrar} className="w-12 h-12 flex items-center justify-center rounded-xl text-sol-tinta-2">
             <X size={26} />
           </button>
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[16px] font-bold text-[#101223]">Nombre</span>
+          <span className="text-[16px] font-bold text-sol-tinta">Nombre</span>
           <input
             value={nombre} onChange={e => setNombre(e.target.value)} autoFocus
-            className="rounded-xl border-2 border-[#c8c9d4] px-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            className="rounded-xl border-2 border-sol-linea px-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
           />
         </label>
 
         <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3">
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <span className="text-[16px] font-bold text-sol-tinta">Tipo</span>
+            <Select
+              size="sol"
+              value={tipoDocumento}
+              onChange={setTipoDocumento}
+              options={TIPOS_DOCUMENTO}
+            />
+          </div>
           <label className="flex flex-col gap-1.5 min-w-0">
-            <span className="text-[16px] font-bold text-[#101223]">Tipo</span>
-            <select
-              value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)}
-              className="rounded-xl border-2 border-[#c8c9d4] bg-white px-3 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
-            >
-              <option value="cc">C.C.</option>
-              <option value="ce">C.E.</option>
-              <option value="pasaporte">Pasaporte</option>
-              <option value="ti">T.I.</option>
-              <option value="rc">R.C.</option>
-              <option value="otro">Otro</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1.5 min-w-0">
-            <span className="text-[16px] font-bold text-[#101223]">Documento</span>
+            <span className="text-[16px] font-bold text-sol-tinta">Documento</span>
             <input
               value={documento} onChange={e => setDocumento(e.target.value)} inputMode="numeric"
-              className="rounded-xl border-2 border-[#c8c9d4] px-4 min-h-[60px] text-[18px] tabular focus:outline-none focus:border-blue-600"
+              className="rounded-xl border-2 border-sol-linea px-4 min-h-[60px] text-[18px] tabular focus:outline-none focus:border-blue-600"
             />
           </label>
         </div>
 
-        <label className="flex flex-col gap-1.5 min-w-0">
-          <span className="text-[16px] font-bold text-[#101223]">País</span>
-          <select
-            value={paisElegido} onChange={e => setPaisId(e.target.value)}
-            className="rounded-xl border-2 border-[#c8c9d4] bg-white px-3 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
-          >
-            <option value="">Sin especificar</option>
-            {paises.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-          </select>
-        </label>
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <span className="text-[16px] font-bold text-sol-tinta">País</span>
+          <Select
+            size="sol"
+            value={paisElegido}
+            onChange={setPaisId}
+            placeholder="Sin especificar"
+            options={[
+              { value: '', label: 'Sin especificar' },
+              ...paises.map(p => ({ value: p.id, label: p.nombre })),
+            ]}
+          />
+        </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-[16px] font-bold text-[#101223]">Categoría</span>
+          <span className="text-[16px] font-bold text-sol-tinta">Categoría</span>
           <div className="grid grid-cols-2 gap-2">
+            {/* Solo edades. `cortesia` estaba aquí y era el solapamiento que
+                deshizo la 020: por qué entró alguien lo dice el tipo de
+                ingreso de su reserva, no su categoría — y desde esa migración
+                la base rechaza el valor, así que esto fallaba en el muelle. */}
             {[
               { v: 'adulto', l: 'Adulto' }, { v: 'nino', l: 'Niño' },
-              { v: 'infante', l: 'Infante' }, { v: 'cortesia', l: 'Cortesía' },
+              { v: 'infante', l: 'Infante' },
             ].map(o => (
               <button
                 key={o.v} type="button" onClick={() => setCategoria(o.v)}
                 className={classNames(
                   'rounded-xl min-h-[60px] text-[17px] font-bold ring-2 transition-colors',
-                  categoria === o.v ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-[#101223] ring-[#c8c9d4]'
+                  categoria === o.v ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-sol-tinta ring-sol-linea'
                 )}
               >
                 {o.l}
@@ -370,7 +383,7 @@ export default function Embarque() {
 
   if (!zarpe) {
     return (
-      <div className="min-h-screen bg-[#f4f4f0]">
+      <div className="min-h-screen bg-sol-fondo">
         <SelectorZarpe zarpes={zarpes} onElegir={z => setZarpeId(z.id)}
           onProgramar={programar} onProgramarRegreso={programarRegreso}
           onRecargar={recargarZarpes}
@@ -458,25 +471,25 @@ export default function Embarque() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f4f0] flex flex-col">
+    <div className="min-h-screen bg-sol-fondo flex flex-col">
       {/* Cabecera fija: buscador y contador siempre a la vista */}
-      <header className="sticky top-0 z-30 bg-[#f4f4f0] border-b-2 border-[#d8d8d2] px-4 py-3 flex flex-col gap-3">
+      <header className="sticky top-0 z-30 bg-sol-fondo border-b-2 border-sol-linea-2 px-4 py-3 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setZarpeId(null)}
-            className="w-12 h-12 flex items-center justify-center rounded-xl text-[#101223] shrink-0"
+            className="w-12 h-12 flex items-center justify-center rounded-xl text-sol-tinta shrink-0"
             aria-label="Cambiar de lancha"
           >
             <ChevronLeft size={28} />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-[20px] font-bold text-[#101223] truncate">
+            <p className="text-[20px] font-bold text-sol-tinta truncate">
               {zarpe.lanchas?.nombre}
               {esRegreso && <span className="text-blue-700"> · Regreso</span>}
-              {zarpe.hora_programada && <span className="text-[#3a3d52] font-normal"> · {zarpe.hora_programada.slice(0, 5)}</span>}
+              {zarpe.hora_programada && <span className="text-sol-tinta-2 font-normal"> · {zarpe.hora_programada.slice(0, 5)}</span>}
             </p>
             {cerrado && (
-              <p className="text-[15px] text-[#3a3d52]">
+              <p className="text-[15px] text-sol-tinta-2">
                 {esRegreso
                   ? `Regresó a las ${hora12(zarpe.hora_real_regreso) || ''}`
                   : `Zarpó a las ${hora12(zarpe.hora_real_salida) || ''}`}
@@ -490,12 +503,12 @@ export default function Embarque() {
               En el regreso "faltan" quiere decir que se quedaron en la isla,
               que es otra cosa muy distinta y por eso se pinta en rojo. */}
           <div className="text-right shrink-0">
-            <p className="text-[34px] leading-none font-bold text-[#101223] tabular">
-              {contador.embarcados}<span className="text-[#6a6d80]">/{contador.esperados}</span>
+            <p className="text-[34px] leading-none font-bold text-sol-tinta tabular">
+              {contador.embarcados}<span className="text-sol-tinta-3">/{contador.esperados}</span>
             </p>
             <p className={classNames(
               'text-[15px] font-bold',
-              esRegreso && contador.faltan > 0 ? 'text-[#a41f1f]' : 'text-[#3a3d52]'
+              esRegreso && contador.faltan > 0 ? 'text-alarma-700' : 'text-sol-tinta-2'
             )}>
               {contador.faltan > 0
                 ? (esRegreso ? `${contador.faltan} sin bajar` : `faltan ${contador.faltan}`)
@@ -519,18 +532,18 @@ export default function Embarque() {
 
         <div className="flex items-center gap-3">
         <div className="relative flex-1 min-w-0">
-          <Search size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6a6d80] pointer-events-none" />
+          <Search size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-sol-tinta-3 pointer-events-none" />
           <input
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             placeholder="Buscar por nombre o documento"
-            className="w-full rounded-2xl border-2 border-[#c8c9d4] bg-white pl-13 pr-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            className="w-full rounded-2xl border-2 border-sol-linea bg-white pl-13 pr-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
             style={{ paddingLeft: '3.25rem' }}
           />
           {busqueda && (
             <button
               onClick={() => setBusqueda('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-[#3a3d52]"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-sol-tinta-2"
               aria-label="Limpiar la búsqueda"
             >
               <X size={24} />
@@ -543,7 +556,7 @@ export default function Embarque() {
         {!cerrado && (
           <button
             onClick={() => setLectorAbierto(true)}
-            className="shrink-0 w-[72px] min-h-[60px] rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] flex items-center justify-center"
+            className="shrink-0 w-[72px] min-h-[60px] rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta flex items-center justify-center"
             aria-label="Leer el pase con la cámara"
           >
             <QrCode size={28} />
@@ -564,15 +577,15 @@ export default function Embarque() {
           return (
             <section key={g.registro.id}>
               <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h2 className="text-[18px] font-bold text-[#101223] flex-1 min-w-0 truncate">{quien}</h2>
-                <span className="text-[16px] font-bold tabular text-[#3a3d52] shrink-0">
+                <h2 className="text-[18px] font-bold text-sol-tinta flex-1 min-w-0 truncate">{quien}</h2>
+                <span className="text-[16px] font-bold tabular text-sol-tinta-2 shrink-0">
                   {g.embarcados}/{g.filas.length}
                 </span>
                 {!cerrado && pendientes > 0 && (
                   <button
                     onClick={() => embarcarTodos(g)}
                     disabled={marcandoGrupo}
-                    className="shrink-0 rounded-xl bg-[#101223] text-white text-[15px] font-bold px-4 min-h-[48px] disabled:opacity-40"
+                    className="shrink-0 rounded-xl bg-sol-tinta text-white text-[15px] font-bold px-4 min-h-[48px] disabled:opacity-40"
                   >
                     {esRegreso
                       ? `Bajar los ${pendientes} que faltan`
@@ -606,13 +619,13 @@ export default function Embarque() {
                         className={classNames(
                           'flex-1 min-w-0 flex items-center gap-4 rounded-2xl px-5 min-h-[64px] text-left ring-2 transition-colors',
                           embarcado ? 'bg-verde-500 ring-verde-500'
-                            : noLlego ? 'bg-white ring-[#c8c9d4] opacity-60'
-                            : 'bg-white ring-[#101223]'
+                            : noLlego ? 'bg-white ring-sol-linea opacity-60'
+                            : 'bg-white ring-sol-tinta'
                         )}
                       >
                         <span className={classNames(
                           'w-9 h-9 shrink-0 rounded-full flex items-center justify-center ring-2',
-                          embarcado ? 'bg-white ring-white' : 'ring-[#c8c9d4]'
+                          embarcado ? 'bg-white ring-white' : 'ring-sol-linea'
                         )}>
                           {embarcado && <Check size={22} className="text-verde-600" strokeWidth={3.5} />}
                         </span>
@@ -620,14 +633,14 @@ export default function Embarque() {
                         <span className="flex-1 min-w-0">
                           <span className={classNames(
                             'block text-[18px] font-bold truncate',
-                            embarcado ? 'text-white' : 'text-[#101223]'
+                            embarcado ? 'text-white' : 'text-sol-tinta'
                           )}>
                             {f.nombre}
                           </span>
                           {(f.documento || f.categoria) && (
                             <span className={classNames(
                               'block text-[15px] tabular truncate',
-                              embarcado ? 'text-white/85' : 'text-[#3a3d52]'
+                              embarcado ? 'text-white/85' : 'text-sol-tinta-2'
                             )}>
                               {[f.documento, f.categoria !== 'adulto' ? f.categoria : null]
                                 .filter(Boolean).join(' · ')}
@@ -641,7 +654,7 @@ export default function Embarque() {
                           </span>
                         )}
                         {noLlego && (
-                          <span className="shrink-0 text-[15px] font-bold text-[#3a3d52]">No llegó</span>
+                          <span className="shrink-0 text-[15px] font-bold text-sol-tinta-2">No llegó</span>
                         )}
                       </button>
 
@@ -651,7 +664,7 @@ export default function Embarque() {
                       {puedeNombrarse && (
                         <button
                           onClick={() => setNombrando(f)}
-                          className="shrink-0 w-[76px] rounded-2xl bg-white ring-2 ring-[#c8c9d4] text-[#3a3d52] flex flex-col items-center justify-center gap-0.5"
+                          className="shrink-0 w-[76px] rounded-2xl bg-white ring-2 ring-sol-linea text-sol-tinta-2 flex flex-col items-center justify-center gap-0.5"
                           aria-label={`Ponerle nombre a la ${f.nombre.toLowerCase()}`}
                         >
                           <UserPlus size={20} />
@@ -668,7 +681,7 @@ export default function Embarque() {
 
         {walkIns.length > 0 && (
           <section>
-            <h2 className="text-[18px] font-bold text-[#101223] mb-2">
+            <h2 className="text-[18px] font-bold text-sol-tinta mb-2">
               Sin reserva ({walkIns.length})
             </h2>
             <ul className="flex flex-col gap-1.5">
@@ -684,7 +697,7 @@ export default function Embarque() {
         )}
 
         {grupos.every(g => !g.filas.filter(coincide).length) && (
-          <p className="text-[18px] text-[#3a3d52] py-8 text-center">
+          <p className="text-[18px] text-sol-tinta-2 py-8 text-center">
             {busqueda ? 'Nadie coincide con esa búsqueda.' : 'Esta lancha no tiene gente asignada.'}
           </p>
         )}
@@ -693,11 +706,11 @@ export default function Embarque() {
       {/* Acciones fijas abajo.
           El manifiesto también después de cerrado: la Capitanía puede pedirlo
           otra vez y no hay razón para esconderlo. */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-[#f4f4f0] border-t-2 border-[#d8d8d2] px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-3">
+      <div className="fixed bottom-0 inset-x-0 z-30 bg-sol-fondo border-t-2 border-sol-linea-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-3">
         {!cerrado && (
           <button
             onClick={() => setWalkInAbierto(true)}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold min-h-[64px]"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold min-h-[64px]"
           >
             <UserPlus size={22} />
             Sin reserva
@@ -706,7 +719,7 @@ export default function Embarque() {
         <button
           onClick={imprimirManifiesto}
           disabled={manifiesto.total === 0}
-          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-[#101223] text-[#101223] text-[17px] font-bold min-h-[64px] disabled:opacity-40"
+          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold min-h-[64px] disabled:opacity-40"
         >
           <FileText size={22} />
           <span>Manifiesto</span>
@@ -733,10 +746,10 @@ export default function Embarque() {
       {confirmandoFaltantes && contador.faltan > 0 && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
-            <h2 className="text-[24px] font-bold text-[#a41f1f]">
+            <h2 className="text-[24px] font-bold text-alarma-700">
               {plural(contador.faltan, 'persona no ha bajado', 'personas no han bajado')}
             </h2>
-            <p className="text-[17px] text-[#101223]">
+            <p className="text-[17px] text-sol-tinta">
               Si cierras ahora quedan registradas como que se quedaron en la isla.
               Revisa la lista antes: es lo único del día que no se arregla después.
             </p>
@@ -750,7 +763,7 @@ export default function Embarque() {
               <button
                 onClick={cerrarZarpe}
                 disabled={cerrando}
-                className="flex-1 rounded-2xl bg-white ring-2 ring-[#a41f1f] text-[#a41f1f] text-[18px] font-bold min-h-[64px] disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-white ring-2 ring-alarma-700 text-alarma-700 text-[18px] font-bold min-h-[64px] disabled:opacity-50"
               >
                 {cerrando ? 'Cerrando…' : 'Cerrar así'}
               </button>
@@ -766,8 +779,8 @@ export default function Embarque() {
           <p className={classNames(
             'mx-auto max-w-2xl rounded-xl px-4 py-2 text-[15px] font-bold text-center ring-2',
             manifiesto.piloto
-              ? 'bg-[#fff4d6] ring-[#e8c76a] text-[#6b4d05]'
-              : 'bg-[#ffe0e0] ring-[#e08a8a] text-[#7a1f1f]'
+              ? 'bg-aviso-50 ring-aviso-300 text-aviso-700'
+              : 'bg-alarma-50 ring-alarma-300 text-alarma-900'
           )}>
             El manifiesto va {faltasDelManifiesto.join(' y ')}
           </p>

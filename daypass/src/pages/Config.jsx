@@ -189,7 +189,7 @@ function FilaCatalogo({ fila, config, onEditar, onEliminar, onAlternar }) {
         </button>
         <button
           onClick={() => onEliminar(fila)}
-          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-[#d2322d] rounded-xl hover:bg-[#fce9e8]"
+          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-peligro-500 rounded-xl hover:bg-peligro-50"
           aria-label={`Eliminar ${vista.titulo}`}
         >
           <Trash2 size={16} />

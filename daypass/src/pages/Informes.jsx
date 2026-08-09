@@ -6,7 +6,7 @@ import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -497,7 +497,7 @@ export default function Informes() {
       </Card>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-gray-400">Cargando...</div>
+        <Esqueleto filas={4} />
       ) : error ? (
         <EstadoError error={error} onReintentar={fetchData} />
       ) : filtrados.length === 0 ? (

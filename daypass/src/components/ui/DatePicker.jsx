@@ -84,7 +84,7 @@ export default function DatePicker({
 
   return (
     <div className={classNames('flex flex-col gap-1', className)} ref={wrapRef}>
-      {label && <label className="text-sm font-medium text-gray-700">{label}</label>}
+      {label && <label className="text-sm font-medium text-tinta">{label}</label>}
       <div className="relative">
         <button
           type="button"
@@ -100,15 +100,15 @@ export default function DatePicker({
               ? 'border-0 bg-transparent hover:bg-brand-50 focus:outline-none'
               : classNames(
                   'border bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
-                  error ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-brand-400'
+                  error ? 'border-peligro-500 bg-peligro-50' : 'border-linea hover:border-brand-400'
                 ),
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
-          <span className={classNames('truncate capitalize', value ? 'text-gray-900' : 'text-gray-500')}>
+          <span className={classNames('truncate capitalize', value ? 'text-tinta' : 'text-tinta-2')}>
             {value ? formatDisplay(value) : placeholder}
           </span>
-          <CalendarDays size={size === 'sm' ? 14 : 16} className="shrink-0 text-gray-400" />
+          <CalendarDays size={size === 'sm' ? 14 : 16} className="shrink-0 text-tinta-3" />
         </button>
 
         {open && (
@@ -147,7 +147,7 @@ export default function DatePicker({
             {/* Días de la semana */}
             <div className="grid grid-cols-7 mb-1">
               {DIAS.map(d => (
-                <span key={d} className="text-center text-[11px] font-semibold text-gray-400 uppercase py-1">
+                <span key={d} className="text-center text-[11px] font-semibold text-tinta-3 uppercase py-1">
                   {d}
                 </span>
               ))}

@@ -12,7 +12,7 @@ export default function FichasLancha({ lanchas, ocupacion, value, onChange, paxN
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-2">
-        <label className="text-sm font-medium text-gray-700">Lancha</label>
+        <label className="text-sm font-medium text-tinta">Lancha</label>
         {error && <span className="text-xs text-coral-600 font-bold">{error}</span>}
       </div>
 
@@ -53,7 +53,7 @@ export default function FichasLancha({ lanchas, ocupacion, value, onChange, paxN
                 <span className={classNames(
                   'text-[13px] font-bold tabular',
                   elegida ? 'text-white/85'
-                    : llena ? 'text-[#d2322d]'
+                    : llena ? 'text-peligro-500'
                     : justa ? 'text-coral-600'
                     : 'text-tinta-2'
                 )}>

@@ -195,7 +195,7 @@ export default function CerrarDia() {
                       <span className="font-bold text-[15px] text-tinta">{l.nombre}</span>
                       <span className={classNames(
                         'text-sm font-bold tabular',
-                        excede ? 'text-[#d2322d]' : justa ? 'text-coral-600' : 'text-tinta-2'
+                        excede ? 'text-peligro-500' : justa ? 'text-coral-600' : 'text-tinta-2'
                       )}>
                         {l.capacidad ? `${l.pax}/${l.capacidad} pax` : `${l.pax} pax`}
                         {excede && ` · sobrecupo de ${l.pax - l.capacidad}`}
@@ -207,7 +207,7 @@ export default function CerrarDia() {
                         <span
                           className={classNames(
                             'block h-full rounded-full',
-                            excede ? 'bg-[#d2322d]' : justa ? 'bg-coral-500' : 'bg-blue-600'
+                            excede ? 'bg-peligro-500' : justa ? 'bg-coral-500' : 'bg-blue-600'
                           )}
                           style={{ width: `${pct}%` }}
                         />
@@ -220,7 +220,7 @@ export default function CerrarDia() {
           )}
 
           {sobrecupo.length > 0 && (
-            <p className="mt-4 text-sm text-[#d2322d] bg-[#fce9e8] rounded-xl px-3 py-2 font-bold">
+            <p className="mt-4 text-sm text-peligro-500 bg-peligro-50 rounded-xl px-3 py-2 font-bold">
               {plural(sobrecupo.length, 'lancha va', 'lanchas van')} por encima de su capacidad.
               Puedes cerrar igual, pero revísalo con el capitán.
             </p>

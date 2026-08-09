@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import { textos } from '../lib/textosPublicos'
 import { classNames, formatDate } from '../lib/utils'
 import Firma from '../components/publico/Firma'
+import Select from '../components/ui/Select'
 import logoAzul from '../assets/logo-azul.png'
 
 /**
@@ -41,7 +42,7 @@ function formatoHora(hhmm, idioma) {
 function Marco({ children, idioma, onIdioma }) {
   return (
     <div className="min-h-screen bg-fondo">
-      <header className="bg-gradient-to-r from-brand-900 via-[#2b3170] to-[#34418f] pt-[env(safe-area-inset-top)]">
+      <header className="degradado-marca pt-[env(safe-area-inset-top)]">
         <div className="max-w-2xl mx-auto px-5 h-20 flex items-center justify-between gap-3">
           <img src={logoAzul} alt="Hotel San Pedro de Majagua"
             className="h-12 w-auto brightness-0 invert" />
@@ -89,6 +90,16 @@ function Campo({ etiqueta, children }) {
     </label>
   )
 }
+
+/** Los del enum `tipo_documento` (002), abreviados: aquí el ancho es de 6.5rem. */
+const TIPOS_DOCUMENTO = [
+  { value: 'cc', label: 'CC' },
+  { value: 'ce', label: 'CE' },
+  { value: 'pasaporte', label: 'Pass' },
+  { value: 'ti', label: 'TI' },
+  { value: 'rc', label: 'RC' },
+  { value: 'otro', label: 'Otro' },
+]
 
 const claseCampo =
   'w-full min-w-0 rounded-xl border-2 border-linea bg-white px-3.5 py-2.5 min-h-[52px] text-[16px] ' +
@@ -357,12 +368,11 @@ export default function CheckInPublico() {
 
                 <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-3">
                   <Campo etiqueta="Tipo">
-                    <select value={p.tipo_documento} onChange={e => editar(i, 'tipo_documento', e.target.value)}
-                      className={claseCampo}>
-                      <option value="cc">CC</option><option value="ce">CE</option>
-                      <option value="pasaporte">Pass</option><option value="ti">TI</option>
-                      <option value="rc">RC</option><option value="otro">Otro</option>
-                    </select>
+                    <Select
+                      value={p.tipo_documento}
+                      onChange={v => editar(i, 'tipo_documento', v)}
+                      options={TIPOS_DOCUMENTO}
+                    />
                   </Campo>
                   <Campo etiqueta={t.documento}>
                     <input value={p.documento} inputMode="numeric"
@@ -372,24 +382,29 @@ export default function CheckInPublico() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
                   <Campo etiqueta={t.pais}>
-                    <select value={p.pais_id} onChange={e => editar(i, 'pais_id', e.target.value)}
-                      className={claseCampo}>
-                      <option value="">—</option>
-                      {(reserva.paises || []).map(pa => (
-                        <option key={pa.id} value={pa.id}>{pa.nombre}</option>
-                      ))}
-                    </select>
+                    <Select
+                      value={p.pais_id}
+                      onChange={v => editar(i, 'pais_id', v)}
+                      placeholder="—"
+                      options={[
+                        { value: '', label: '—' },
+                        ...(reserva.paises || []).map(pa => ({ value: pa.id, label: pa.nombre })),
+                      ]}
+                    />
                   </Campo>
                   <Campo etiqueta={t.categoria}>
-                    <select value={p.categoria} onChange={e => editar(i, 'categoria', e.target.value)}
-                      className={claseCampo}>
-                      <option value="adulto">{t.adulto}</option>
-                      <option value="nino">{t.nino}</option>
-                      <option value="infante">
-                        {t.infante.replace('{edad}', edadMaxInfante)}
-                      </option>
-                      <option value="cortesia">{t.cortesia}</option>
-                    </select>
+                    {/* Solo edades. La cortesía no es una edad: es por qué
+                        entró esa persona, y eso vive en la reserva. Estaba
+                        aquí hasta la 020, que además la rechaza en la base. */}
+                    <Select
+                      value={p.categoria}
+                      onChange={v => editar(i, 'categoria', v)}
+                      options={[
+                        { value: 'adulto', label: t.adulto },
+                        { value: 'nino', label: t.nino },
+                        { value: 'infante', label: t.infante.replace('{edad}', edadMaxInfante) },
+                      ]}
+                    />
                   </Campo>
                 </div>
 
@@ -398,14 +413,15 @@ export default function CheckInPublico() {
                     prepare, y el mesero lo confirma en la mesa. */}
                 {hayPlatos && p.categoria !== 'infante' && puedeElegirPlato && (
                   <Campo etiqueta={t.plato}>
-                    <select value={p.opcion_plato_id}
-                      onChange={e => editar(i, 'opcion_plato_id', e.target.value)}
-                      className={claseCampo}>
-                      <option value="">{t.elegirPlato}</option>
-                      {opciones.map(o => (
-                        <option key={o.id} value={o.id}>{idioma === 'en' ? o.en : o.es}</option>
-                      ))}
-                    </select>
+                    <Select
+                      value={p.opcion_plato_id}
+                      onChange={v => editar(i, 'opcion_plato_id', v)}
+                      placeholder={t.elegirPlato}
+                      options={[
+                        { value: '', label: t.elegirPlato },
+                        ...opciones.map(o => ({ value: o.id, label: idioma === 'en' ? o.en : o.es })),
+                      ]}
+                    />
                   </Campo>
                 )}
 

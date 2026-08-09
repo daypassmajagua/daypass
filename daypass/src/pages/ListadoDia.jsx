@@ -8,7 +8,7 @@ import {
 import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, Esqueleto } from '../components/patrones'
 import { usePerfil } from '../hooks/usePerfil'
 import { puedeVer } from '../lib/navegacion'
 import {
@@ -271,7 +271,7 @@ export default function ListadoDia() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400 text-sm">Cargando...</div>
+        <Esqueleto filas={5} />
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : filtered.length === 0 ? (

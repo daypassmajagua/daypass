@@ -14,8 +14,8 @@ import useAppStore from '../../store/useAppStore'
 const APARIENCIA = {
   planeando:         { fondo: 'bg-blue-50',   texto: 'text-blue-700',   punto: 'bg-blue-600',   vivo: false },
   tentativo_cerrado: { fondo: 'bg-verde-50',  texto: 'text-verde-600',  punto: 'bg-verde-500',  vivo: false },
-  en_operacion:      { fondo: 'bg-brand-900', texto: 'text-white',      punto: 'bg-[#57e6a9]',  vivo: true  },
-  cerrado:           { fondo: 'bg-[#ececE8]', texto: 'text-tinta-2',    punto: 'bg-[#8d8f9e]',  vivo: false },
+  en_operacion:      { fondo: 'bg-brand-900', texto: 'text-white',      punto: 'bg-verde-vivo',  vivo: true  },
+  cerrado:           { fondo: 'bg-linea', texto: 'text-tinta-2',    punto: 'bg-tinta-3',  vivo: false },
 }
 
 function horaCorta(iso) {

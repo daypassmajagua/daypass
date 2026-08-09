@@ -65,11 +65,11 @@ export default function RevisionCocina({ fecha, cocina, onCambio }) {
   return (
     <div className={classNames(
       'rounded-2xl px-5 py-4 flex flex-wrap items-center gap-x-4 gap-y-3',
-      cuando ? 'bg-white shadow-[0_1px_2px_rgba(22,24,44,.05)]' : 'bg-[#fff4d6]'
+      cuando ? 'bg-white shadow-[0_1px_2px_rgba(22,24,44,.05)]' : 'bg-aviso-50'
     )}>
       {cuando
         ? <Check size={20} className="text-verde-500 shrink-0" strokeWidth={3} />
-        : <ChefHat size={20} className="text-[#6b4d05] shrink-0" />}
+        : <ChefHat size={20} className="text-aviso-700 shrink-0" />}
 
       <div className="min-w-0 flex-1">
         {cuando ? (
@@ -92,10 +92,10 @@ export default function RevisionCocina({ fecha, cocina, onCambio }) {
           </>
         ) : (
           <>
-            <p className="text-[15px] font-bold text-[#6b4d05]">
+            <p className="text-[15px] font-bold text-aviso-700">
               Cocina todavía no tiene este número
             </p>
-            <p className="text-[13px] text-[#6b4d05]/80">
+            <p className="text-[13px] text-aviso-700/80">
               Márcalo al pasárselo. Después, esta pantalla dice cuánto se movió
               desde entonces — que es lo que el mesero necesita saber antes de
               comandar.

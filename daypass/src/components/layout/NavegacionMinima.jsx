@@ -34,8 +34,8 @@ export default function NavegacionMinima({ className = '' }) {
           className={classNames(
             'inline-flex items-center rounded-xl px-4 min-h-[44px] text-[15px] font-bold transition-colors',
             pathname === a
-              ? 'bg-[#101223] text-white'
-              : 'bg-white text-[#3a3d52] ring-2 ring-[#c8c9d4]'
+              ? 'bg-sol-tinta text-white'
+              : 'bg-white text-sol-tinta-2 ring-2 ring-sol-linea'
           )}
         >
           {etiqueta}
