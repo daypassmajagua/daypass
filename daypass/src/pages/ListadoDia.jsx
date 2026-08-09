@@ -9,6 +9,8 @@ import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
 import { EstadoError } from '../components/patrones'
+import { usePerfil } from '../hooks/usePerfil'
+import { puedeVer } from '../lib/navegacion'
 import {
   formatCurrency, formatDate, classNames, plural,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
@@ -81,6 +83,12 @@ export default function ListadoDia() {
   } = useAppStore()
 
   const { registros, loading, error, updateRegistro, deleteRegistro, refetch } = useRegistros(fechaActiva)
+
+  // Lo que un rol no puede usar, no aparece: la isla y gerencia abren esta
+  // pantalla para mirar, y la base les rechaza escribir (018 y 019). Un botón
+  // que siempre responde con un error es peor que no tener el botón.
+  const { rol } = usePerfil()
+  const puedeEditar = puedeVer(rol, '/editar')
 
   // Lo que cambie en el muelle o en la isla aparece aquí sin recargar.
   useRegistrosEnVivo(fechaActiva, refetch)
@@ -204,10 +212,12 @@ export default function ListadoDia() {
               <MessageCircle size={14} />
               Enlaces
             </Button>
-            <Button size="sm" onClick={() => navigate('/nuevo')}>
-              <PlusCircle size={16} />
-              Nueva reserva
-            </Button>
+            {puedeVer(rol, '/nuevo') && (
+              <Button size="sm" onClick={() => navigate('/nuevo')}>
+                <PlusCircle size={16} />
+                Nueva reserva
+              </Button>
+            )}
           </div>
         }
       />
@@ -346,16 +356,24 @@ export default function ListadoDia() {
                             </span>
                           </td>
                           <td className="px-3 py-3">
-                            <Select
-                              size="sm"
-                              value={r.estado}
-                              onChange={v => handleEstadoChange(r.id, v, r)}
-                              options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
-                              className="w-32"
-                            />
+                            {puedeEditar ? (
+                              <Select
+                                size="sm"
+                                value={r.estado}
+                                onChange={v => handleEstadoChange(r.id, v, r)}
+                                options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+                                className="w-32"
+                              />
+                            ) : (
+                              <Badge estado={r.estado} />
+                            )}
                           </td>
                           <td className="px-3 py-3">
-                            {editingFolio[r.id] !== undefined ? (
+                            {!puedeEditar ? (
+                              <span className="text-xs font-mono text-tinta-2">
+                                {r.folio_zeus || '—'}
+                              </span>
+                            ) : editingFolio[r.id] !== undefined ? (
                               <div className="flex items-center gap-1">
                                 <input
                                   type="text"
@@ -392,20 +410,24 @@ export default function ListadoDia() {
                           </td>
                           <td className="px-3 py-3">
                             <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => navigate(`/editar/${r.id}`)}
-                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                title="Editar"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => setDeletingId(r.id)}
-                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                title="Eliminar"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              {puedeEditar && (
+                                <>
+                                  <button
+                                    onClick={() => navigate(`/editar/${r.id}`)}
+                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    title="Editar"
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingId(r.id)}
+                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Eliminar"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -471,26 +493,32 @@ export default function ListadoDia() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Select
-                            value={r.estado}
-                            onChange={v => handleEstadoChange(r.id, v, r)}
-                            options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
-                            className="flex-1"
-                          />
-                          <button
-                            onClick={() => navigate(`/editar/${r.id}`)}
-                            className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-blue-700 bg-blue-50 rounded-xl"
-                            aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => setDeletingId(r.id)}
-                            className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-tinta-2 bg-fondo rounded-xl"
-                            aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          {puedeEditar ? (
+                            <>
+                              <Select
+                                value={r.estado}
+                                onChange={v => handleEstadoChange(r.id, v, r)}
+                                options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+                                className="flex-1"
+                              />
+                              <button
+                                onClick={() => navigate(`/editar/${r.id}`)}
+                                className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-blue-700 bg-blue-50 rounded-xl"
+                                aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                              <button
+                                onClick={() => setDeletingId(r.id)}
+                                className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-tinta-2 bg-fondo rounded-xl"
+                                aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </>
+                          ) : (
+                            <Badge estado={r.estado} />
+                          )}
                         </div>
                       </div>
                     )

@@ -11,6 +11,8 @@ import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { reservaCon } from '../lib/columnas'
+import { usePerfil } from '../hooks/usePerfil'
+import { puedeVer } from '../lib/navegacion'
 
 const PAGE_SIZE = 50
 
@@ -34,6 +36,9 @@ export default function Historial() {
   const [filtroLancha, setFiltroLancha] = useState('')
   const [filtroCanal, setFiltroCanal] = useState('')
   const [error, setError] = useState(null)
+
+  const { rol } = usePerfil()
+  const puedeEditar = puedeVer(rol, '/editar')
 
   useEffect(() => {
     supabase.from('lanchas').select('*').order('nombre').then(({ data }) => setLanchas(data || []))
@@ -209,12 +214,16 @@ export default function Historial() {
                       <td className="px-3 py-3"><Badge estado={r.estado} /></td>
                       <td className="px-3 py-3 text-xs font-mono text-emerald-700">{r.folio_zeus || '—'}</td>
                       <td className="px-3 py-3">
-                        <button
-                          onClick={() => navigate(`/editar/${r.id}`)}
-                          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
-                        >
-                          <Edit2 size={14} />
-                        </button>
+                        {/* Gerencia consulta el historial pero no edita reservas:
+                            el lápiz rebotaría en la guardia de rutas. */}
+                        {puedeEditar && (
+                          <button
+                            onClick={() => navigate(`/editar/${r.id}`)}
+                            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

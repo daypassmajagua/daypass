@@ -3,8 +3,13 @@
 Complementa `plan-v6.md`: aquel dice **qué** se construye, este dice **en qué orden se puede** y
 **qué rompe**. Sin estimaciones de tiempo.
 
-Estado al escribirlo: migraciones 001–014 escritas (la 014 pendiente de correr), producción en
-Vercel, 75 pruebas más humo.
+Estado a 8 de agosto de 2026: **migraciones 001–019** (001–018 corridas y verificadas 9/9; la 019
+pendiente de correr), producción en Vercel, 102 pruebas más humo y roles.
+
+> **La numeración corrió dos puestos.** La `018` se la llevó la auditoría —candados de rol en las
+> RPC, la tabla `registros` sin plata, las vistas sin túnel— y la `019`, el arreglo de la regla 21
+> (la asesora administra sus lanchas, pilotos y empleados). Las fases que aún no tienen migración
+> escrita empiezan en la **`020`**.
 
 ---
 
@@ -171,7 +176,9 @@ Embarque. No toca datos y se revierte con un `git revert`, pero son las pantalla
 
 ### Fase 2 · Roles y guardias
 
-**Migración:** `015` — corrida, más la `016` (dos políticas que sobrevivieron) y la `017` (fuera recepción).
+**Migración:** `015` — corrida, más la `016` (dos políticas que sobrevivieron), la `017` (fuera
+recepción), la `018` (la auditoría: candados de rol en las RPC, `registros` sin plata, vistas sin
+túnel) y la `019` (la asesora administra sus lanchas, pilotos y empleados — regla 21).
 
 **Qué incluye**
 - `perfiles` con los ocho roles (cocina fuera)
@@ -206,7 +213,7 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 
 ### Fase 3 · Personas y organizaciones
 
-**Migración:** `018`
+**Migración:** `020`
 
 **Qué incluye**
 - `personas` con el documento como llave natural, y `pasajeros.persona_id`
@@ -241,7 +248,7 @@ de tratamiento en el check-in y una política de retención.
 
 ### Fase 4 · Tickets de soporte
 
-**Migración:** `019`
+**Migración:** `021`
 
 **Qué incluye**
 - `tickets` con el contexto capturado solo
@@ -270,7 +277,7 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 
 ### Fase 5 · Dinero y control
 
-**Migración:** `020`–`022`
+**Migración:** `022`–`024`
 
 **Qué incluye**
 - **Pagos y cartera**: tipo, valor, estado, soporte; cartera por agencia con antigüedad; tasa de
@@ -314,7 +321,7 @@ tiquetes y tiquetes no depende de metas. Se pueden repartir.
 
 ### Fase 6 · Comunicación *(propuesta: adelantada desde la 7)*
 
-**Migración:** `025` — la última, aunque la fase vaya penúltima por el intercambio
+**Migración:** `027` — la última, aunque la fase vaya penúltima por el intercambio
 
 **Qué incluye**
 - Matriz de notificaciones configurable por usuario y evento, cuatro canales
@@ -349,7 +356,7 @@ importar el primer día que pase.
 
 ### Fase 7 · Operación ampliada *(propuesta: atrasada desde la 6)*
 
-**Migración:** `023`–`024`
+**Migración:** `025`–`026`
 
 **Qué incluye**
 - **Eventos masivos**: el evento por encima de la reserva, con lancha **por pasajero**. Gematours,
@@ -420,13 +427,13 @@ esté partido.
    Fase 1 ──────────┤ patrones · modos · Config          (sin migración)
                     │        ║ puede ir en paralelo con la 0
                     ▼
-   Fase 2 ──────────┤ roles y guardias                      (015)
-                    │  ⚠ requiere antes: los 8 select('*')  → umbral B
+   Fase 2 ──────────┤ roles y guardias        (015–017, +018 y 019 de la auditoría)
+                    │  ⚠ requiere antes: los 8 select('*')  → umbral B ✅
          ┌──────────┼──────────┐
          ▼          ▼          ▼
    Fase 3      Fase 4      Fase 5
    personas    tickets     dinero y tiquetes                → umbral C
-   (016)       (017)       (018–020)
+   (020)       (021)       (022–024)
          │          │          │
          └──────────┴────┬─────┘
                          ▼
