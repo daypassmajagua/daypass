@@ -260,13 +260,30 @@ de tratamiento en el check-in y una política de retención.
 
 ### Fase 4 · Tickets de soporte
 
-**Migración:** `021`
+**Migración:** `021` — escrita, pendiente de correr.
 
 **Qué incluye**
-- `tickets` con el contexto capturado solo
-- Captura de pantalla con `html2canvas`, quitable
-- Tres tipos, más la casilla "me bloqueó la operación"
-- Botón en el shell, también en modo muelle, funcionando sin señal
+- ✅ `tickets` con el contexto capturado solo: ruta, día activo, modo, aparato,
+  si está instalada, si hay señal, cuántos hechos hay en cola y los últimos
+  errores de consola
+- ✅ Captura de pantalla con `html2canvas`, quitable. Carga dinámica: son 47 KB
+  que no viajan en el paquete principal
+- ✅ Tres tipos, más la casilla "me bloqueó la operación" — que ordena la lista
+- ✅ Botón en toda pantalla y en los tres modos, funcionando sin señal (entra a
+  la cola como un embarque)
+- ✅ `/reportes` con los estados, y `atender_ticket()` solo para `super_admin`
+- ✅ `limpiar_capturas_viejas()`: a los 90 días se suelta la imagen y se queda
+  el texto
+
+> **El mesero tiene el botón pero no la pantalla.** Su diseño entero es una
+> sola pantalla, y agregarle una segunda por un canal que usará tres veces al
+> año sería deshacer lo que la hace usable. Puede reportar; lo que no ve es la
+> lista de estados.
+
+> **Sin push todavía.** El plan pide push inmediato al `super_admin` cuando algo
+> bloquea, pero eso es la fase 6 y en iPhone exige que cada persona instale la
+> PWA. El ticket queda marcado como bloqueante y de primero en la lista; el push
+> se engancha después sin tocar nada.
 
 **Depende de** — la fase 2 para el rol de quien reporta y para el `super_admin`. Poco más.
 

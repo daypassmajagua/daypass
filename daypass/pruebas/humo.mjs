@@ -23,9 +23,8 @@ import puppeteer from 'puppeteer-core'
 const BASE = process.argv[2] || process.env.DAYPASS_URL || 'http://localhost:5175'
 
 /**
- * Las siete pantallas y lo que cada una tiene que decir. El texto esperado no
- * es decoración: sin él, una pantalla que renderiza el cascarón vacío pasaría
- * la prueba.
+ * Cada pantalla y lo que tiene que decir. El texto esperado no es decoración:
+ * sin él, una pantalla que renderiza el cascarón vacío pasaría la prueba.
  */
 const RUTAS = [
   ['/',          'Hoy',                 /Hoy|reserva/i],
@@ -36,6 +35,7 @@ const RUTAS = [
   ['/isla',      'Isla',                /cuenta/i],
   ['/cocina',    'Almuerzos',           /Almuerzos/i],
   ['/usuarios',  'Usuarios',            /Quién entra/i],
+  ['/reportes',  'Reportes',            /reporte/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],
 ]
 

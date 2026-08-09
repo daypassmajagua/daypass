@@ -613,6 +613,7 @@ const STORE = {
       vigente_desde: new Date().toISOString(), vigente_hasta: null },
   ],
   firmas: [],
+  tickets: [],
 }
 
 /**
@@ -1163,6 +1164,20 @@ const RPC = {
     return { data: d ? { id: d.id, titulo: d.titulo, contenido: d.contenido, version: d.version } : null, error: null }
   },
 
+  /** Como `atender_ticket` de la 021: solo quien mantiene el sistema. */
+  atender_ticket({ p_ticket_id, p_estado, p_respuesta }) {
+    if (rolActual() !== 'super_admin') {
+      return { data: null, error: { message: 'Los reportes los atiende quien mantiene el sistema' } }
+    }
+    const t = STORE.tickets.find(x => x.id === p_ticket_id)
+    if (!t) return { data: null, error: { message: 'No existe ese reporte' } }
+    t.estado = p_estado
+    if ((p_respuesta || '').trim()) t.respuesta = p_respuesta.trim()
+    t.atendido_por = MOCK_SESSION.user.id
+    t.atendido_at = new Date().toISOString()
+    return { data: t, error: null }
+  },
+
   /** Como `buscar_personas` de la 020: por documento o por nombre, desde 3 letras. */
   buscar_personas({ p_texto, p_limite = 8 }) {
     const texto = (p_texto || '').trim()
@@ -1279,8 +1294,8 @@ class QB {
     this._table = tableName
     this._op = 'select'
     this._filters = []
-    this._orderField = null
-    this._orderAsc = true
+    this._ordenes = []
+    this._limit = null
     this._rangeFrom = null
     this._rangeTo = null
     this._isSingle = false
@@ -1353,9 +1368,20 @@ class QB {
     return this
   }
 
+  /**
+   * Se acumulan, como en PostgREST: el primer `order` manda y los siguientes
+   * desempatan. Antes el segundo pisaba al primero, así que una lista pedida
+   * "lo bloqueante primero, y dentro de eso lo más reciente" salía solo por
+   * fecha —y en la demo se veía bien ordenada, que es lo peor que puede pasar:
+   * el fallo no aparece hasta producción.
+   */
   order(col, opts = {}) {
-    this._orderField = col
-    this._orderAsc = opts.ascending !== false
+    this._ordenes.push({ col, asc: opts.ascending !== false })
+    return this
+  }
+
+  limit(n) {
+    this._limit = n
     return this
   }
 
@@ -1387,6 +1413,14 @@ class QB {
     // puede verlos. Sin esto en la demo no habría forma de comprobar que el
     // mesero no ve plata, que es la promesa central de la fase de roles.
     if (this._table === 'reservas') return derivarReservas()
+    // Un reporte puede llevar una foto de la pantalla con la reserva de
+    // alguien: no lo lee todo el equipo. Es la política de la 021, replicada
+    // aquí para que la demo no muestre de más.
+    if (this._table === 'tickets') {
+      const rol = rolActual()
+      if (['super_admin', 'gerencia', 'directora'].includes(rol)) return STORE.tickets
+      return STORE.tickets.filter(t => t.reportado_por === MOCK_SESSION.user.id)
+    }
     return STORE[this._table] || []
   }
 
@@ -1395,13 +1429,22 @@ class QB {
   }
 
   _applyOrder(rows) {
-    if (!this._orderField) return rows
+    if (!this._ordenes.length) return rows
     return [...rows].sort((a, b) => {
-      const av = a[this._orderField], bv = b[this._orderField]
-      if (av == null) return 1
-      if (bv == null) return -1
-      const cmp = av < bv ? -1 : av > bv ? 1 : 0
-      return this._orderAsc ? cmp : -cmp
+      for (const { col, asc } of this._ordenes) {
+        const av = a[col], bv = b[col]
+        if (av == null && bv == null) continue
+        if (av == null) return 1
+        if (bv == null) return -1
+        // Los booleanos se comparan como número: en PostgreSQL false < true,
+        // así que `ascending: false` pone los `true` de primeros — que es
+        // justo lo que pide una lista donde lo bloqueante va arriba.
+        const x = typeof av === 'boolean' ? Number(av) : av
+        const y = typeof bv === 'boolean' ? Number(bv) : bv
+        const cmp = x < y ? -1 : x > y ? 1 : 0
+        if (cmp !== 0) return asc ? cmp : -cmp
+      }
+      return 0
     })
   }
 
@@ -1501,6 +1544,21 @@ class QB {
           row.persona_id = enlazarPersona(row) || row.persona_id || null
         }
 
+        // El de la 021: quién reporta lo sella el servidor con la sesión, no
+        // lo manda el aparato. Y el estado siempre nace en 'nuevo'.
+        if (this._table === 'tickets') {
+          const yo = STORE.perfiles.find(p => p.user_id === MOCK_SESSION.user.id)
+          Object.assign(row, {
+            reportado_por: MOCK_SESSION.user.id,
+            reportado_por_nombre: yo?.nombre || 'alguien',
+            rol: yo?.rol || null,
+            estado: 'nuevo',
+            respuesta: null,
+            atendido_por: null,
+            atendido_at: null,
+          })
+        }
+
         STORE[this._table].push(row)
         if (this._table === 'registros') {
           row.cambio_tardio = false
@@ -1555,6 +1613,10 @@ class QB {
 
     if (this._rangeFrom !== null) {
       rows = rows.slice(this._rangeFrom, this._rangeTo + 1)
+    }
+
+    if (this._limit !== null) {
+      rows = rows.slice(0, this._limit)
     }
 
     rows = this._joinIfRegistros(rows)

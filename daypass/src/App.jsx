@@ -20,6 +20,12 @@ import Config from './pages/Config'
 import Cocina from './pages/Cocina'
 import Isla from './pages/Isla'
 import Usuarios from './pages/Usuarios'
+import Reportes from './pages/Reportes'
+import { escucharErrores } from './lib/diagnostico'
+
+// Desde el arranque: un error que ocurre antes de que alguien piense en
+// reportarlo es justamente el que hay que poder contar después.
+escucharErrores()
 
 function AppLayout({ children }) {
   // Una sola suscripción al día y a la presencia para toda la app.
@@ -177,6 +183,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Usuarios />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Reportes />
               </AppLayout>
             </ProtectedRoute>
           }

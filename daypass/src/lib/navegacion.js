@@ -33,6 +33,7 @@ export const RUTAS = {
   '/historial': { etiqueta: 'Historial',         icono: 'History' },
   '/informes':  { etiqueta: 'Informes',          icono: 'BarChart2' },
   '/usuarios':  { etiqueta: 'Usuarios',           icono: 'UserCog' },
+  '/reportes':  { etiqueta: 'Reportes',          icono: 'LifeBuoy' },
   '/config':    { etiqueta: 'Configuración',     icono: 'Settings' },
   '/editar':    { etiqueta: 'Editar reserva',    icono: null, oculta: true },
 }
@@ -48,7 +49,8 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/config', '/editar'],
+          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/config', '/editar'],
   },
 
   // Mira el negocio, no lo opera día a día. Entra directo a los números.
@@ -59,33 +61,34 @@ export const POR_ROL = {
   // peor que no tenerlo.
   gerencia: {
     home: '/informes',
-    ver: ['/informes', '/historial', '/dia', '/usuarios'],
+    ver: ['/informes', '/historial', '/dia', '/usuarios', '/reportes'],
   },
 
   directora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/config', '/editar'],
+          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/config', '/editar'],
   },
 
   // Daniela. Es quien más usa la app y quien tiene el día completo.
   asesora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/editar'],
+          '/folios', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
   },
 
   // Vende y puede cubrir turnos de muelle, pero no cierra el día ni toca
   // catálogos.
   asesora_comercial: {
     home: '/',
-    ver: ['/', '/nuevo', '/dia', '/embarque', '/historial', '/editar'],
+    ver: ['/', '/nuevo', '/dia', '/embarque', '/historial', '/reportes', '/editar'],
   },
 
   // La isla. Entra viendo la isla, no un menú.
   admin_isla: {
     home: '/isla',
-    ver: ['/isla', '/cocina', '/dia'],
+    ver: ['/isla', '/cocina', '/dia', '/reportes'],
   },
 
   // No hay `recepcion`. Lo hubo un rato, por la regla 18 —recepción cobra el
@@ -94,6 +97,12 @@ export const POR_ROL = {
   // asigna por error. Migración 017.
 
   // Una pregunta, de pie junto a la mesa: ¿a qué cuenta va esto?
+  //
+  // Sin `/reportes` a propósito, y no por desconfianza: su diseño entero es
+  // **una sola pantalla**, y agregarle una segunda por un canal que usará tres
+  // veces al año sería deshacer lo que la hace usable. El botón de reportar sí
+  // lo tiene —está en todas las pantallas y en los tres modos—, así que puede
+  // contar lo que le pase; lo que no ve es la lista con los estados.
   mesero: {
     home: '/isla',
     ver: ['/isla'],

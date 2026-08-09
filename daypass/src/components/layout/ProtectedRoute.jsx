@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { usePerfil } from '../../hooks/usePerfil'
 import { puedeVer, inicioDe } from '../../lib/navegacion'
+import BotonReportar from '../soporte/BotonReportar'
 import logoAzul from '../../assets/logo-azul.png'
 
 /**
@@ -94,5 +95,14 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to={inicio} replace />
   }
 
-  return children
+  // El botón de reportar va aquí y no en el marco de la oficina: el muelle y
+  // la isla no llevan marco, y son justamente las pantallas donde ocurre el
+  // fallo que más importa contar. Fuera de esta puerta no aparece — la página
+  // del cliente no es sitio para un canal de soporte interno.
+  return (
+    <>
+      {children}
+      <BotonReportar />
+    </>
+  )
 }

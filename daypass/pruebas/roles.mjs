@@ -30,26 +30,26 @@ const ESPERADO = {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
            'Folios', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
-           'Configuración'],
+           'Reportes', 'Configuración'],
     dinero: true,
   },
   asesora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Lanchas y equipo', 'Historial', 'Informes'],
+           'Folios', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
     dinero: true,
   },
   asesora_comercial: {
     inicio: '/',
-    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Historial'],
+    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Historial', 'Reportes'],
     dinero: true,
   },
   gerencia: {
     inicio: '/informes',
-    menu: ['Informes', 'Historial', 'El día', 'Usuarios'],
+    menu: ['Informes', 'Historial', 'El día', 'Usuarios', 'Reportes'],
     dinero: true,
   },
-  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día'], dinero: false },
+  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día', 'Reportes'], dinero: false },
   // El mesero tiene una sola pantalla, así que NO ve barra: un botón que
   // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.
   mesero:     { inicio: '/isla', menu: [],                              dinero: false },
