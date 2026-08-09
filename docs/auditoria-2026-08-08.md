@@ -17,9 +17,17 @@ pegas los resultados.
 > vez de borrar y reinsertar); el front resolvió I2 (la hora de zarpe sale del ajuste), I3
 > (reintento en los canales del muelle, más copia local si no hay señal) e I4 (estado de error
 > en las nueve pantallas que traen datos). Verificado: 102/102 tests, build limpio, eslint 31
-> (bajó uno), humo 9/9. **Pendiente tuyo:** correr la 018, correr
-> `auditoria_integridad.sql` y `estado_de_los_roles.sql` (ahora con 9 comprobaciones), y
-> verificar en el tablero que el registro de cuentas esté cerrado.
+> (bajó uno), humo 9/9.
+>
+> **La 018 corrió en producción el mismo día** y `estado_de_los_roles.sql` respondió **9 de 9
+> en verde**: los tres críticos quedan cerrados y verificados contra `pg_catalog` — C3 incluido,
+> que era el que faltaba por confirmar. Y el conteo de `categoria = 'cortesia'` dio **cero en
+> `pasajeros` y cero en `embarques`**: el solapamiento de la Fase 3 no tiene datos históricos,
+> así que se cierra con un CHECK simple, sin valor huérfano que cargar.
+>
+> **Sigue pendiente tuyo:** los bloques A2–A6 y B1–B6 de `auditoria_integridad.sql` (los de
+> datos: contradictorias, cortesías con folio, tokens eternos, días sin cerrar), y verificar en
+> el tablero que el registro de cuentas esté cerrado.
 
 **Lo que salió limpio, para que el informe sea justo:** la cadena de la puerta pública
 (008→009→010→013→014) mantiene los 5 grants de `anon` correctos y cada redefinición posterior a
