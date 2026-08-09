@@ -22,10 +22,15 @@ cada una desbloquea algo diferente.
 **El umbral A está a una fase de distancia**, y lo único que falta son datos tuyos. El ciclo
 operativo ya está construido y probado.
 
-El umbral B es el que hoy no se puede saltar: **toda política de RLS es
-`authenticated_full_access`**, así que cualquiera con sesión ve precios, folios y totales de todas
-las reservas. `/isla` y `/cocina` se construyeron para el mesero y la isla, y hoy no se les puede
-dar sin entregarles el negocio.
+> **El umbral B ya se cruzó** (8 de agosto de 2026, migraciones `015`–`017`). Toda política de RLS
+> pregunta por el rol; el dinero se enmascara en el servidor con la vista `reservas`. La isla, el
+> mesero y las asesoras ya pueden entrar sin ver los precios del negocio.
+>
+> Quedan **siete** roles, no ocho: `recepcion` se retiró porque todo lo de la isla lo hace
+> `admin_isla` o quien esté de guardia. La coordinadora de alojamiento entra como
+> `asesora_comercial` — las guardias le dan el muelle los días que le toque.
+>
+> **El que hoy manda es el umbral A, y no depende de código sino de tus catálogos reales.**
 
 ---
 
@@ -95,7 +100,7 @@ Una migración por fase, numeradas de corrido desde la `015`.
 
 ### Fase 0 · Arreglos y datos
 
-**Migración:** `014` — escrita, pendiente de correr.
+**Migración:** `014` — corrida.
 
 **Qué incluye**
 - ✅ Infantes almuerzan: `pasajeros.almuerza`, las dos rutas del conteo, línea propia
@@ -166,7 +171,7 @@ Embarque. No toca datos y se revierte con un `git revert`, pero son las pantalla
 
 ### Fase 2 · Roles y guardias
 
-**Migración:** `015`
+**Migración:** `015` — corrida, más la `016` (dos políticas que sobrevivieron) y la `017` (fuera recepción).
 
 **Qué incluye**
 - `perfiles` con los ocho roles (cocina fuera)
@@ -201,7 +206,7 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 
 ### Fase 3 · Personas y organizaciones
 
-**Migración:** `016`
+**Migración:** `018`
 
 **Qué incluye**
 - `personas` con el documento como llave natural, y `pasajeros.persona_id`
@@ -236,7 +241,7 @@ de tratamiento en el check-in y una política de retención.
 
 ### Fase 4 · Tickets de soporte
 
-**Migración:** `017`
+**Migración:** `019`
 
 **Qué incluye**
 - `tickets` con el contexto capturado solo
@@ -265,7 +270,7 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 
 ### Fase 5 · Dinero y control
 
-**Migración:** `018`–`020`
+**Migración:** `020`–`022`
 
 **Qué incluye**
 - **Pagos y cartera**: tipo, valor, estado, soporte; cartera por agencia con antigüedad; tasa de
@@ -309,7 +314,7 @@ tiquetes y tiquetes no depende de metas. Se pueden repartir.
 
 ### Fase 6 · Comunicación *(propuesta: adelantada desde la 7)*
 
-**Migración:** `023` — la última, aunque la fase vaya penúltima por el intercambio
+**Migración:** `025` — la última, aunque la fase vaya penúltima por el intercambio
 
 **Qué incluye**
 - Matriz de notificaciones configurable por usuario y evento, cuatro canales
@@ -344,7 +349,7 @@ importar el primer día que pase.
 
 ### Fase 7 · Operación ampliada *(propuesta: atrasada desde la 6)*
 
-**Migración:** `021`–`022`
+**Migración:** `023`–`024`
 
 **Qué incluye**
 - **Eventos masivos**: el evento por encima de la reserva, con lancha **por pasajero**. Gematours,
