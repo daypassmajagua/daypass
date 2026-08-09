@@ -1,8 +1,10 @@
 # DayPASS — Estado del proyecto
 
-**Corte:** 8 de agosto de 2026 · commit `67f232b` · 36 commits
+**Corte:** 8 de agosto de 2026 · commit `d5cc3fa` · 48 commits
 **Producción:** https://daypass-seven.vercel.app · **Repo:** github.com/daypassmajagua/daypass
-**Base de datos:** Supabase `ubtmixgqwfwvartciqyr` · migraciones **001–014**
+**Base de datos:** Supabase `ubtmixgqwfwvartciqyr` · migraciones **001–016**, todas
+corridas y verificadas contra `pg_proc`, `pg_class` y `pg_policies`
+(`supabase/consultas/estado_de_los_roles.sql`, 7 de 7 en verde)
 
 Este documento es el estado real verificado contra el código y contra la base en
 producción, no un resumen de intenciones. Donde dice "verificado" es porque se
@@ -21,11 +23,11 @@ comprobó, y donde hay un supuesto sin confirmar, lo dice.
 | **C** | Check-in público, firma y tarjetas (`008`) | ✅ Completa **salvo** correo del servidor |
 | **D** | Muelle completo: manifiesto, regreso, QR | ✅ Completa **salvo** envío por correo |
 | **E** | Isla | 🟡 Parcial — ver §4 |
-| **F** | Pagos, tiquetes, metas | ❌ No empezada |
-| **G** | 9 roles con RLS real | ❌ No empezada — **ver §5, es lo más urgente** |
-| **H** | UX de Config e Informes, pulido | ❌ No empezada |
+| **F** | Pagos, tiquetes, metas | ❌ No empezada — **ver §5, es lo que queda para apagar el Excel** |
+| **G** | Roles con RLS real | ✅ Completa (`015`, `016`) — ocho roles, no nueve: cocina salió |
+| **H** | UX de Config e Informes, pulido | 🟡 Config hecha; Informes pendiente |
 
-### Pantallas (16 rutas)
+### Pantallas (17 rutas)
 
 | Ruta | Para quién | Qué hace |
 |---|---|---|
@@ -38,13 +40,16 @@ comprobó, y donde hay un supuesto sin confirmar, lo dice.
 | `/isla` | Mesero | **¿A qué cuenta va?** — folio para cargar en Zeus |
 | `/folios` | Coordinadora | Listado para crear folios en Zeus y cargarlos |
 | `/equipo` | Coordinadora | Lanchas, pilotos, empleados |
-| `/historial`, `/informes`, `/config` | Coordinadora | Sin fase UX todavía |
+| `/historial`, `/informes` | Coordinadora | Informes sin fase UX todavía |
+| `/config` | Coordinadora | Catálogos y constantes de la operación |
+| `/usuarios` | Quien administra | Quién entra y qué ve; cuentas sin rol todavía |
 | `/r/:token` | **Cliente, sin login** | Check-in: nombres, plato, condiciones, firma, pase QR |
 
 ### Números
 
-- **13.931 líneas** de JS/JSX · **23 tablas** · **13 migraciones** (2.836 líneas de SQL)
-- **75 pruebas automáticas** en Vitest, 5 archivos, más humo con Puppeteer (`npm run humo`)
+- **16.066 líneas** de JS/JSX · **26 tablas** · **16 migraciones** (3.810 líneas de SQL)
+- **102 pruebas automáticas** en Vitest, 6 archivos, más dos de navegador con Puppeteer:
+  `npm run humo` (9 pantallas cargan limpias) y `npm run roles` (7 roles ven lo suyo)
 - Modo demo completo (`npm run demo`): mock de ~1.300 líneas que replica triggers, RPC, realtime y presencia
 
 ---
@@ -231,37 +236,104 @@ Funciona sin señal.
 
 ### 4.3 Fase F — Pagos, tiquetes, metas
 
-No empezada. Incluye `010_pagos`, `011_tiquetes`, `012_metas` del plan original
-(**ojo: esos números ya están usados por otras migraciones**; habría que
-renumerar a `014`, `015`, `016`).
+No empezada. El plan original la llamaba `010_pagos`, `011_tiquetes` y
+`012_metas`; **esos tres números ya están usados**, igual que hasta el `016`. Las
+siguientes migraciones arrancan en la **`017`**.
 
 El kardex de tiquetes CorpoTurismo+Parques y el reporte mensual de cortesías
 siguen pendientes.
 
 ### 4.4 Fase H — UX de Config e Informes
 
-`Config.jsx` (386 líneas) e `Informes.jsx` (791 líneas) siguen con el sistema
-visual viejo: **~99 clases `gray-*` entre las dos**, cero tokens del sistema v2, y
-unos 20 colores hex escritos a mano dentro de los gráficos de Recharts.
-`Informes.jsx` es un solo componente de 690 líneas.
+`Config.jsx` ya está: se rehízo con los patrones del sistema, sin una sola clase
+`gray-*`, y sus cuatro tablas casi idénticas quedaron en una sola declaración.
 
-Estimación: Config ~1 sesión, Informes ~1,5–2.
+`Informes.jsx` (792 líneas) sigue con el sistema visual viejo: **56 clases
+`gray-*`**, cero tokens del sistema v2, unos 20 colores hex escritos a mano dentro
+de los gráficos de Recharts, y todo en un solo componente.
 
 ---
 
-## 5 · Lo más urgente que queda: los roles (Fase G)
+## 5 · Los roles, ya cerrados (Fase G) — y lo que queda
 
-**Hoy toda política de RLS es `authenticated_full_access using (auth.role() =
-'authenticated')`. Cualquier persona con sesión puede leer y escribir todo,
-incluido el dinero.** Seis pantallas muestran precios: Reserva, ListadoDia,
-Historial, Informes, Config y TarjetasPlan.
+### 5.1 Lo que había y lo que hay
 
-Consecuencia práctica inmediata: **`/isla` y `/cocina` no se le pueden dar al
-mesero sin entregarle el negocio completo.** Se construyeron para él y hoy solo
-las puede abrir alguien de confianza.
+**Había:** una sola política en las 26 tablas, `authenticated_full_access using
+(auth.role() = 'authenticated')`. Cualquiera con sesión leía y escribía todo,
+incluido el dinero. `/isla` y `/cocina` se habían construido para el mesero y no
+se le podían dar sin entregarle el negocio entero.
 
-Los nueve roles del plan v5 —ahora **ocho**, porque cocina salió— son la Fase G y
-es el bloque más grande que queda. Es lo que yo pondría primero.
+**Hay:** ocho roles —`super_admin`, `gerencia`, `directora`, `asesora`,
+`asesora_comercial`, `admin_isla`, `recepcion`, `mesero`—, guardias por día,
+bitácora append-only y políticas por rol en las 26 tablas. Verificado contra la
+base, no supuesto.
+
+### 5.2 El problema del dinero, y por qué la solución se ve rara
+
+El plan pedía excluir los precios **a nivel de columna**. **No se puede.** En
+PostgreSQL los permisos por columna son `grant`/`revoke` y van **por rol de base
+de datos**; en Supabase todo el que inicia sesión es el mismo rol,
+`authenticated`. Revocar `precio_adulto` se lo quitaría también a Daniela. Y la
+RLS es solo por **filas**: no sabe enmascarar una columna.
+
+La solución que sí se sostiene en el servidor: **una vista que enmascara**. La app
+lee `reservas` en vez de `registros`, y ahí los precios llegan en `null` para quien
+no puede verlos:
+
+```sql
+case when puedo_ver_dinero() then r.precio_adulto end as precio_adulto
+```
+
+No es esconder en el front. Quien consulte la vista por PostgREST con su propia
+sesión recibe `null` igual.
+
+> **Para quien retome esto:** se **lee** de la vista `reservas` y se **escribe** en
+> la tabla `registros`. No es un descuido: la vista tiene columnas calculadas y no
+> acepta que le escriban los precios. Hoy son 7 lecturas contra la vista y 6
+> escrituras contra la tabla, y así debe quedarse.
+
+### 5.3 Dos cosas que salieron mal y conviene no repetir
+
+**La vista contra una columna que no existía.** La `015` proyectaba
+`vendida_por_id` en un bloque anterior al `alter table` que la creaba. Falló con
+`42703` en la primera corrida. Ahora el `alter` va antes.
+
+**Borrar políticas por nombre.** La `015` limpió el modelo viejo recorriendo
+tablas y borrando `authenticated_full_access`, `<tabla>_lectura` y
+`<tabla>_escritura`. Dos políticas no se llamaban así —`authenticated_read` en
+`cambios_estado` (003) y en `documentos_legales` (008)— y sobrevivieron.
+
+Eso importa porque **las políticas permisivas se suman con O**: al lado de
+`using (soy_del_equipo())` seguía `using (auth.role() = 'authenticated')`, y basta
+que una diga que sí. No se notaba, porque todo el que tenía sesión tenía perfil
+activo. Se habría notado el primer día que alguien se desactivara.
+
+La `016` las borra **por lo que dicen y no por cómo se llaman**: cualquier política
+cuya condición mencione `auth.role()`. Y comprueba al final que ninguna tabla con
+RLS se haya quedado sin política de lectura, que sería peor que el problema
+original.
+
+### 5.4 Crear cuentas son dos pasos, en dos sitios
+
+Esto no se puede juntar y conviene saberlo antes de necesitarlo:
+
+| | Dónde | Por qué ahí |
+|---|---|---|
+| Crear la cuenta | Supabase → Authentication → Users | Desde el navegador exigiría la clave de servicio, y esa no puede vivir en el front |
+| Darle el rol | DayPASS → `/usuarios` | Queda claro quién lo hizo, sin abrir Supabase |
+
+Entre los dos pasos, esa persona inicia sesión y no ve nada. Por eso `/usuarios`
+pone arriba y en coral las cuentas que esperan rol: hay alguien del otro lado.
+
+Para el huevo y la gallina —la primera cuenta, o el día que nadie con
+`super_admin` pueda entrar— está `supabase/consultas/dar_super_admin.sql`.
+
+### 5.5 Lo que queda para apagar el Excel: la Fase F
+
+Pagos, tiquetes y metas. El kardex de tiquetes CorpoTurismo + Parques, el reporte
+mensual de cortesías y la alerta predictiva contra las reservas de mañana.
+
+Es lo único que todavía obliga a abrir el Excel.
 
 ---
 
@@ -269,11 +341,12 @@ es el bloque más grande que queda. Es lo que yo pondría primero.
 
 | Qué | Detalle |
 |---|---|
-| **Lint** | 36 problemas (31 errores, 5 avisos), casi todos `react-hooks/set-state-in-effect` en hooks con fetch. Es el patrón idiomático del repo; el compilador de React lo marca. No son fallos de corrección. |
-| **Migraciones que se redefinen** | `reserva_publica` y `guardar_pasajeros_por_token` están vigentes en la **013**; `firmar_por_token` en la **009**. Leer la `008` para entender el comportamiento actual induce a error. |
+| **Lint** | 32 problemas (28 errores, 4 avisos), casi todos `react-hooks/set-state-in-effect` en hooks con fetch. Es el patrón idiomático del repo; el compilador de React lo marca. No son fallos de corrección. |
+| **Migraciones que se redefinen** | La versión vigente de `reserva_publica` y `guardar_pasajeros_por_token` está en la **014**; la de `firmar_por_token` en la **009**; `marcar_token_abierto` y `documento_vigente` siguen como las dejó la **008**. Leer solo la `008` induce a error en tres de las cinco. |
+| **`create or replace` reabre la puerta** | En PostgreSQL redefinir una función **restablece el `execute` para `PUBLIC`**, aunque haya `alter default privileges`. Toda migración que redefina una función tiene que volver a revocar y terminar comprobando cuántas quedan abiertas a `anon`. Deben ser cinco. |
 | **Mojibake** | Quedan 2 líneas con el emoji 🌊 corrupto en `printDoc.js` (cabeceras del tentativo y de folios). Cosmético. **No arreglar con scripts que reescriban el archivo** — así se corrompió la primera vez. |
-| **Supuesto sin validar** | El conteo de cocina asume que los infantes no almuerzan y las cortesías sí. Deducido de la regla de precios, nunca confirmado con Daniela. |
-| **Datos contradictorios** | Hay reservas con `tipo_ingreso = 'pasadía'` **y** `forma_pago = 'cortesía'`. `/isla` las marca como "revisar antes de cobrar" en vez de elegir bando. Si son muchas, es un problema de captura. |
+| **Datos contradictorios** | Hay reservas con `tipo_ingreso = 'pasadia'` **y** `forma_pago = 'cortesia'`. `/isla` las marca como "revisar antes de cobrar" en vez de elegir bando. Falta contarlas (`supabase/consultas/pasadia_con_forma_pago_cortesia.sql`): si son muchas, es un problema de captura, no de datos sueltos. |
+| **Dos ejes que se pisan** | La categoría `cortesia` del pasajero y el tipo de ingreso `cortesia` no son lo mismo: la categoría dice **qué es** la persona en esa reserva, el tipo de ingreso dice **por qué entró**. Hoy se confunden. Anotado para el bloque de personas. |
 
 ---
 
@@ -283,10 +356,20 @@ es el bloque más grande que queda. Es lo que yo pondría primero.
    aceptando ambas: salen visibles y contadas, y el muelle puede nombrarlas antes
    de zarpar. Si la respuesta es que **todas** deben ir nominales, el flujo del
    muelle cambia.
-2. **¿Los infantes almuerzan?** (§6)
+2. ~~**¿Los infantes almuerzan?**~~ **Resuelta (8 ago): sí.** De 0 a 3 años comen,
+   pero **no eligen plato** — un niño de esa edad no decide y sus padres no van a
+   estar escogiendo un plan por él. El check-in no le abre el selector. En el
+   conteo de cocina aparecen como **línea propia**: "41 Gold · 25 Silver · 3
+   infantes", porque cocina necesita saber que son tres porciones más aunque no
+   sean un plato del menú. Migración `014`, con la edad de corte en `ajustes`
+   (`edad_max_infante`) y no escrita a mano en tres pantallas.
+   **Sigue abierto:** qué se les sirve exactamente. Lo confirma la isla.
 3. **¿Cuántas reservas tienen tipo e ingreso contradictorios?** (§6)
 4. **¿A qué hora revisa cocina exactamente?** Hoy se marca a mano, lo cual funciona
    sin saberlo, pero saberlo permitiría avisar si nadie lo marcó.
+5. **¿Los ocho roles cubren a toda la gente?** Faltan dos casos por resolver: quién
+   cubre recepción en la isla, y si la coordinadora de alojamiento entra como
+   `asesora_comercial` o merece rol propio.
 
 ---
 
@@ -295,12 +378,26 @@ es el bloque más grande que queda. Es lo que yo pondría primero.
 ```bash
 cd daypass
 npm run demo      # datos de muestra, sin tocar producción — puerto 5175
-npm test          # 75 pruebas
+npm test          # 102 pruebas
 npm run build
-npx eslint src    # línea base: 34 problemas
+npx eslint src    # línea base: 32 problemas
+npm run humo      # 9 pantallas cargan limpias, escuchando la consola
+npm run roles     # cada uno de los 7 roles ve lo suyo y solo lo suyo
 ```
 
-Las pruebas de humo ya están en el repo: `npm run humo` carga las ocho pantallas
-y escucha la consola. **Han atrapado tres fallos que el build dejó pasar**: un
-`ReferenceError` que dejaba una pantalla en blanco, un icono sin importar que
-habría reventado la barra de navegación, y un documento impreso que salía vacío.
+**Las pruebas de navegador han atrapado cuatro fallos que el build dejó pasar**: un
+`ReferenceError` que dejaba una pantalla en blanco, un documento impreso que salía
+vacío, una ruta que nunca se registró y rebotaba al inicio, y un icono sin
+importar. Ese último no reventaba de milagro —el navegador expone un global `Lock`
+de la Web Locks API y la ruta que lo usaba estaba oculta—; el siguiente icono sin
+importar sí habría tumbado la barra entera.
+
+Contra la base, sin escribir nada:
+
+```
+supabase/consultas/estado_de_los_roles.sql   -- 7 comprobaciones de la RLS y los perfiles
+```
+
+> **Cómo NO se comprueba un permiso:** llamando a la función a ver qué pasa. Así se
+> cerró por error el día operativo del 9 de agosto en producción. Se lee
+> `has_function_privilege('anon', p.oid, 'execute')` sobre `pg_proc`.
