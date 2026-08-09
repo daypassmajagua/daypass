@@ -42,18 +42,44 @@ vista as (
     ) as con_invoker
 ),
 
--- 3. La política vieja: una sola para todo, "cualquiera con sesión puede
---    todo". Mientras quede una, esa tabla sigue abierta de par en par.
+-- 3. El modelo viejo: "cualquiera con sesión puede". Mientras quede una de
+--    esas, la tabla sigue abierta — las políticas permisivas se suman con O,
+--    así que basta que una diga que sí.
+--
+--    Se busca por lo que la política DICE, no por cómo se llama. Buscar por
+--    nombre fue lo que dejó pasar dos en la 015: se llamaban
+--    `authenticated_read` y el borrado iba por `authenticated_full_access`.
 vieja as (
   select
     count(*) as cuantas,
-    coalesce(string_agg(tablename, ', ' order by tablename), '') as donde
+    coalesce(string_agg(tablename || '.' || policyname, ', ' order by tablename), '') as donde
   from pg_policies
   where schemaname = 'public'
-    and policyname in ('authenticated_full_access', 'authenticated_read', 'authenticated_insert')
+    and (coalesce(qual, '') like '%auth.role()%'
+      or coalesce(with_check, '') like '%auth.role()%')
 ),
 
--- 4. Nadie por fuera. Una cuenta sin perfil inicia sesión y no ve nada.
+-- 4. Ninguna tabla con RLS puede quedarse sin política de lectura: sería una
+--    tabla que nadie puede leer, y la pantalla que la usa saldría vacía sin
+--    decir por qué.
+mudas as (
+  select
+    count(*) as cuantas,
+    coalesce(string_agg(c.relname, ', ' order by c.relname), '') as cuales
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relkind = 'r'
+    and c.relrowsecurity
+    and not exists (
+      select 1 from pg_policies p
+       where p.schemaname = 'public'
+         and p.tablename = c.relname
+         and p.cmd in ('ALL', 'SELECT')
+    )
+),
+
+-- 5. Nadie por fuera. Una cuenta sin perfil inicia sesión y no ve nada.
 huerfanas as (
   select
     count(*) as cuantas,
@@ -62,7 +88,7 @@ huerfanas as (
   where not exists (select 1 from perfiles p where p.user_id = u.id)
 ),
 
--- 5. Quién hay y con qué rol.
+-- 6. Quién hay y con qué rol.
 equipo as (
   select
     count(*) filter (where activo) as activos,
@@ -87,17 +113,22 @@ select * from (
               else 'FALTA security_invoker: la vista se salta las políticas' end
     from vista
   union all
-  select 4, 'Políticas viejas de acceso total',
+  select 4, 'Acceso por sesión en vez de por rol',
          cuantas = 0,
-         case when cuantas = 0 then 'ninguna' else cuantas || ' en: ' || donde end
+         case when cuantas = 0 then 'ninguna' else cuantas || ': ' || donde end
     from vieja
   union all
-  select 5, 'Cuentas sin perfil',
+  select 5, 'Tablas con RLS y sin lectura',
+         cuantas = 0,
+         case when cuantas = 0 then 'ninguna' else cuantas || ': ' || cuales end
+    from mudas
+  union all
+  select 6, 'Cuentas sin perfil',
          cuantas = 0,
          case when cuantas = 0 then 'ninguna' else cuantas || ': ' || cuales end
     from huerfanas
   union all
-  select 6, 'Gente en el equipo',
+  select 7, 'Gente en el equipo',
          activos > 0, activos || ' — ' || quienes
     from equipo
 ) t
