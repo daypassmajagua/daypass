@@ -29,7 +29,8 @@
 -- En cuanto exista `perfiles`, un usuario sin perfil deja de ver nada. Si no
 -- se sembraran las cuentas que ya existen, este archivo dejaría a TODO EL
 -- MUNDO por fuera, Daniela incluida. Por eso el bloque 2 las siembra como
--- `directora` —el rol que administra usuarios— y desde la app se corrigen.
+-- `super_admin`: es la cuenta desde la que se crean las demás.
+--
 -- Es deliberado: preferible que alguien tenga de más un día a que nadie pueda
 -- entrar el lunes.
 --
@@ -84,6 +85,9 @@ create trigger perfiles_updated_at before update on perfiles
 --
 -- Se corre ANTES de las políticas a propósito: si algo fallara después, las
 -- cuentas ya tienen perfil y nadie se queda afuera.
+--
+-- Como super_admin: es la cuenta desde la que se crean las demás, y hasta que
+-- existan las otras no hay a quién más darle ese rol.
 -- ════════════════════════════════════════════════════════════
 
 insert into perfiles (user_id, nombre, rol)
@@ -94,7 +98,7 @@ select
     nullif(u.raw_user_meta_data ->> 'nombre', ''),
     split_part(u.email, '@', 1)
   ),
-  'directora'::rol_usuario
+  'super_admin'::rol_usuario
 from auth.users u
 on conflict (user_id) do nothing;
 
@@ -151,6 +155,25 @@ returns text as $$
   );
 $$ language sql stable security definer set search_path = public;
 
+/**
+ * Las cuentas de Supabase que todavía no están en el equipo.
+ *
+ * Crear el usuario y darle un perfil son dos pasos distintos y en dos sitios:
+ * la cuenta se crea en Supabase (Auth → Users), porque hacerlo desde el
+ * navegador exigiría la clave de servicio y esa no puede vivir en el front.
+ * El perfil se asigna aquí.
+ *
+ * Sin esta función no habría forma de ver a quién falta: `auth.users` no es
+ * legible desde la app, y con razón.
+ */
+create or replace function cuentas_sin_perfil()
+returns table (user_id uuid, email text, creada_at timestamptz) as $$
+  select u.id, u.email::text, u.created_at
+    from auth.users u
+   where puedo_administrar()
+     and not exists (select 1 from perfiles p where p.user_id = u.id)
+   order by u.created_at desc;
+$$ language sql stable security definer set search_path = public;
 
 -- ════════════════════════════════════════════════════════════
 -- BLOQUE 4 · Las guardias
@@ -269,7 +292,26 @@ $$ language sql security definer set search_path = public;
 
 
 -- ════════════════════════════════════════════════════════════
--- BLOQUE 6 · La vista que enmascara el dinero
+-- BLOQUE 6 · Quién vendió, como catálogo y no como texto
+--
+-- `vendida_por` es text y guarda 'Camila Pedraza', 'Dirección'… Una persona es
+-- un catálogo finito: la regla 2 no admite texto libre ahí. Se agrega la
+-- referencia y se conserva el texto viejo, porque el pasado no se reescribe
+-- (regla 4) y no hay forma fiable de casar nombres con cuentas.
+--
+-- Va ANTES de la vista porque la vista la proyecta: al revés, la vista se
+-- crea contra una columna que todavía no existe.
+-- ════════════════════════════════════════════════════════════
+
+alter table registros
+  add column if not exists vendida_por_id uuid references perfiles(user_id);
+
+comment on column registros.vendida_por is
+  'Histórico, texto libre. Las reservas nuevas usan vendida_por_id.';
+
+
+-- ════════════════════════════════════════════════════════════
+-- BLOQUE 7 · La vista que enmascara el dinero
 --
 -- La app deja de leer `registros` y lee `reservas`. Para quien no puede ver
 -- plata, los precios llegan en null — decidido en el servidor, no en el
@@ -313,22 +355,6 @@ comment on view reservas is
   'Lo mismo que registros, con los precios en null para quien no puede verlos. '
   'La app lee esto; escribe contra registros. No es esconder en el front: '
   'quien consulte por PostgREST con su propia sesión recibe null igual.';
-
-
--- ════════════════════════════════════════════════════════════
--- BLOQUE 7 · Quién vendió, como catálogo y no como texto
---
--- `vendida_por` es text y guarda 'Camila Pedraza', 'Dirección'… Una persona es
--- un catálogo finito: la regla 2 no admite texto libre ahí. Se agrega la
--- referencia y se conserva el texto viejo, porque el pasado no se reescribe
--- (regla 4) y no hay forma fiable de casar nombres con cuentas.
--- ════════════════════════════════════════════════════════════
-
-alter table registros
-  add column if not exists vendida_por_id uuid references perfiles(user_id);
-
-comment on column registros.vendida_por is
-  'Histórico, texto libre. Las reservas nuevas usan vendida_por_id.';
 
 
 -- ════════════════════════════════════════════════════════════
@@ -504,6 +530,7 @@ grant execute on function tengo_guardia(tipo_guardia, date)     to authenticated
 grant execute on function puedo_operar_isla()                   to authenticated;
 grant execute on function puedo_operar_muelle()                 to authenticated;
 grant execute on function anotar(text, text, text, date, jsonb) to authenticated;
+grant execute on function cuentas_sin_perfil()                   to authenticated;
 
 -- nombre_de_quien_actua se redefinió: create or replace restablece permisos.
 revoke all on function nombre_de_quien_actua() from public, anon;
@@ -518,6 +545,7 @@ revoke all on function tengo_guardia(tipo_guardia, date) from public, anon;
 revoke all on function puedo_operar_isla()               from public, anon;
 revoke all on function puedo_operar_muelle()             from public, anon;
 revoke all on function anotar(text, text, text, date, jsonb) from public, anon;
+revoke all on function cuentas_sin_perfil()                   from public, anon;
 
 
 -- ── Comprobaciones ──

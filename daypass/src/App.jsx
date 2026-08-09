@@ -19,6 +19,7 @@ import Informes from './pages/Informes'
 import Config from './pages/Config'
 import Cocina from './pages/Cocina'
 import Isla from './pages/Isla'
+import Usuarios from './pages/Usuarios'
 
 function AppLayout({ children }) {
   // Una sola suscripción al día y a la presencia para toda la app.
@@ -166,6 +167,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Informes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/usuarios"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Usuarios />
               </AppLayout>
             </ProtectedRoute>
           }

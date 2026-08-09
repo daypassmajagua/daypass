@@ -856,6 +856,25 @@ function anotarCambioEstado(registro, anterior, nuevo, origen, motivo = null) {
 }
 
 const RPC = {
+  /**
+   * Cuentas creadas en Supabase que todavía no tienen perfil.
+   *
+   * En la demo no hay `auth.users`, así que se simula con dos cuentas fijas:
+   * sin ellas la pantalla de usuarios se vería siempre vacía por arriba y no
+   * habría forma de comprobar el caso que de verdad importa —alguien que ya
+   * puede iniciar sesión pero todavía no ve nada—.
+   */
+  cuentas_sin_perfil() {
+    const pendientes = [
+      { user_id: 'mock-user-daniela', email: 'daniela@majagua.com', creada_at: new Date().toISOString() },
+      { user_id: 'mock-user-isla',    email: 'isla@majagua.com',    creada_at: new Date().toISOString() },
+    ]
+    return {
+      data: pendientes.filter(c => !STORE.perfiles.some(p => p.user_id === c.user_id)),
+      error: null,
+    }
+  },
+
   cerrar_tentativo({ p_fecha }) {
     const dia = diaDe(p_fecha)
     if (dia.estado !== 'planeando') {

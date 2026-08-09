@@ -29,7 +29,8 @@ const ESPERADO = {
   directora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Lanchas y equipo', 'Historial', 'Informes', 'Configuración'],
+           'Folios', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
+           'Configuración'],
     dinero: true,
   },
   asesora: {
@@ -45,7 +46,7 @@ const ESPERADO = {
   },
   gerencia: {
     inicio: '/informes',
-    menu: ['Informes', 'Historial', 'El día'],
+    menu: ['Informes', 'Historial', 'El día', 'Usuarios'],
     dinero: true,
   },
   admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día'], dinero: false },
@@ -125,10 +126,20 @@ for (const [rol, esp] of Object.entries(ESPERADO)) {
   await esperar(1600)
   const veDinero = await p.evaluate(() => /\$\s?\d[\d.,]{3,}/.test(document.body.innerText))
 
+  // La pantalla que reparte los roles se escribe a mano en la barra de
+  // direcciones tan fácil como cualquier otra. Quien no la tiene en el menú
+  // tampoco debe quedarse en ella: rebota a su inicio.
+  let coladoEnUsuarios = false
+  if (!esp.menu.includes('Usuarios')) {
+    await p.goto(BASE + '/usuarios', { waitUntil: 'networkidle2' })
+    await esperar(1400)
+    coladoEnUsuarios = await p.evaluate(() => location.pathname === '/usuarios')
+  }
+
   const sobra = visto.menu.filter(m => !esp.menu.includes(m))
   const falta = esp.menu.filter(m => !visto.menu.includes(m))
   const bien = visto.ruta === esp.inicio && !sobra.length && !falta.length
-    && veDinero === esp.dinero && !errores.length
+    && veDinero === esp.dinero && !coladoEnUsuarios && !errores.length
 
   if (!bien) fallas++
   console.log(
@@ -141,6 +152,7 @@ for (const [rol, esp] of Object.entries(ESPERADO)) {
   if (veDinero !== esp.dinero) {
     console.log(`         DINERO en ${donde}: ve=${veDinero}, debería=${esp.dinero}`)
   }
+  if (coladoEnUsuarios) console.log('         se quedó en /usuarios y no debería')
   errores.slice(0, 2).forEach(e => console.log(`         ${e.slice(0, 130)}`))
 
   await p.close()

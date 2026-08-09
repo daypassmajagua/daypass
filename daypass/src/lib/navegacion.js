@@ -32,6 +32,7 @@ export const RUTAS = {
   '/equipo':    { etiqueta: 'Lanchas y equipo',  icono: 'Ship' },
   '/historial': { etiqueta: 'Historial',         icono: 'History' },
   '/informes':  { etiqueta: 'Informes',          icono: 'BarChart2' },
+  '/usuarios':  { etiqueta: 'Usuarios',           icono: 'UserCog' },
   '/config':    { etiqueta: 'Configuración',     icono: 'Settings' },
   '/editar':    { etiqueta: 'Editar reserva',    icono: null, oculta: true },
 }
@@ -47,7 +48,7 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/config', '/editar'],
+          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/config', '/editar'],
   },
 
   // Mira el negocio, no lo opera día a día. Entra directo a los números.
@@ -58,13 +59,13 @@ export const POR_ROL = {
   // peor que no tenerlo.
   gerencia: {
     home: '/informes',
-    ver: ['/informes', '/historial', '/dia'],
+    ver: ['/informes', '/historial', '/dia', '/usuarios'],
   },
 
   directora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/config', '/editar'],
+          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/config', '/editar'],
   },
 
   // Daniela. Es quien más usa la app y quien tiene el día completo.
