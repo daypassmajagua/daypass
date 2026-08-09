@@ -9,6 +9,7 @@ import { comoSeCobra, coincideEnIsla, COBROS } from '../lib/cobroEnIsla'
 import { classNames, fraseFecha, plural } from '../lib/utils'
 import IndicadorSync from '../components/layout/IndicadorSync'
 import NavegacionMinima from '../components/layout/NavegacionMinima'
+import { EstadoError } from '../components/patrones'
 import { reservaCon, CON_LANCHA } from '../lib/columnas'
 
 /**
@@ -101,6 +102,7 @@ export default function Isla() {
   const [tiposIngreso, setTiposIngreso] = useState([])
   const [busqueda, setBusqueda] = useState('')
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
 
   /**
    * Con red del servidor, sin red de la copia local. En la isla la señal va y
@@ -110,6 +112,7 @@ export default function Isla() {
   const cargar = useCallback(async () => {
     let filas = []
     let tipos = []
+    let fallo = null
 
     if (navigator.onLine) {
       const [reg, ti] = await Promise.all([
@@ -118,15 +121,19 @@ export default function Isla() {
           .eq('fecha', fechaActiva),
         supabase.from('tipos_ingreso').select('*'),
       ])
-      if (!reg.error) { filas = reg.data || []; tipos = ti.data || [] }
+      if (reg.error) fallo = reg.error.message
+      else { filas = reg.data || []; tipos = ti.data || [] }
     }
 
     if (!filas.length) {
       const local = await leerDiaLocal(fechaActiva)
       filas = local.registros
       tipos = await leerCatalogoLocal('tipos_ingreso')
+      // La copia local sostiene la pantalla: con filas no hay error que mostrar.
+      if (filas.length) fallo = null
     }
 
+    setError(fallo)
     setRegistros(filas.filter(r => !['cancelada', 'noshow'].includes(r.estado)))
     setTiposIngreso(tipos)
     setCargando(false)
@@ -204,6 +211,8 @@ export default function Isla() {
       <main className="flex-1 px-4 py-4">
         {cargando ? (
           <p className="text-[18px] text-[#3a3d52] py-8">Buscando la lista del día…</p>
+        ) : error ? (
+          <EstadoError error={error} onReintentar={cargar} />
         ) : !lista.length ? (
           <p className="text-[18px] text-[#3a3d52] py-8 text-center">
             {busqueda

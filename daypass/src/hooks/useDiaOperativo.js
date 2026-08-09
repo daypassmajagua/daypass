@@ -104,11 +104,20 @@ export function useRegistrosEnVivo(fecha, alCambiar) {
     return canalConReintento(
       `registros:${fecha}`,
       canal => canal
+        // Realtime respeta la RLS: desde la 018 los eventos de `registros`
+        // solo le llegan a quien puede ver plata — por ese canal viajaba la
+        // fila entera, precios incluidos. A la isla y al mesero los mantienen
+        // al día los otros dos: el plato vive en pasajeros y el muelle escribe
+        // embarques. El callback solo refresca, así que sobra un aviso, no
+        // falta ninguno.
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'registros', filter: `fecha=eq.${fecha}` },
           alCambiar)
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'pasajeros' },
+          alCambiar)
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'embarques' },
           alCambiar),
       alCambiar,
     )

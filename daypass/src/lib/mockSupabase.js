@@ -908,7 +908,12 @@ const RPC = {
     return { data: dia, error: null }
   },
 
-  programar_zarpes({ p_fecha, p_hora = '09:00' }) {
+  programar_zarpes({ p_fecha, p_hora = null }) {
+    // Como el servidor desde la 018: sin hora explícita manda el ajuste de la
+    // hora de zarpe, no un número escrito aquí.
+    const hora = p_hora
+      || STORE.ajustes.find(a => a.clave === 'checkin_cierra_hora')?.valor
+      || '08:30'
     const lanchas = [...new Set(
       STORE.registros
         .filter(r => r.fecha === p_fecha && !['cancelada', 'noshow'].includes(r.estado))
@@ -916,11 +921,11 @@ const RPC = {
     )]
     lanchas.forEach(lancha_id => {
       const ya = STORE.zarpes.some(z =>
-        z.fecha === p_fecha && z.lancha_id === lancha_id && z.sentido === 'ida' && z.hora_programada === p_hora)
+        z.fecha === p_fecha && z.lancha_id === lancha_id && z.sentido === 'ida' && z.hora_programada === hora)
       if (ya) return
       const z = {
         id: genId(), fecha: p_fecha, lancha_id, sentido: 'ida',
-        hora_programada: p_hora, hora_real_salida: null, hora_real_regreso: null,
+        hora_programada: hora, hora_real_salida: null, hora_real_regreso: null,
         capitan: null, tripulacion: null, estado: 'programado',
         cerrado_por: null, cerrado_at: null,
         created_at: new Date().toISOString(), updated_at: new Date().toISOString(),

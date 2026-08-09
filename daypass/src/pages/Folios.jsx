@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Copy, CheckCircle2, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
+import { EstadoError } from '../components/patrones'
 import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
 import DateNav from '../components/ui/DateNav'
 import FranjaDia from '../components/layout/FranjaDia'
@@ -15,7 +16,7 @@ import { supabase } from '../lib/supabase'
 
 export default function Folios() {
   const { fechaActiva, setFechaActiva } = useAppStore()
-  const { registros, loading, updateRegistro, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, error, updateRegistro, refetch } = useRegistros(fechaActiva)
   useRegistrosEnVivo(fechaActiva, refetch)
   const [folios, setFolios] = useState({})
   const [saving, setSaving] = useState({})
@@ -157,6 +158,8 @@ export default function Folios() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-400">Cargando...</div>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-tinta-2">No hay reservas activas para este día</p>

@@ -1,4 +1,4 @@
-import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils.js'
+import { formatDate, plural, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from './utils.js'
 import { calcularConteoCocina } from './conteoCocina.js'
 import { ETIQUETA_DOCUMENTO as ETIQUETA_DOC } from './manifiesto.js'
 
@@ -383,7 +383,7 @@ export function buildFoliosHTML(registros, fecha) {
     return `
       <div class="lancha-header">
         <span>${esc(nombre)}</span>
-        <span class="lancha-pax">${pax} personas · ${regs.length} registro(s)</span>
+        <span class="lancha-pax">${pax} personas · ${plural(regs.length, 'reserva', 'reservas')}</span>
       </div>
       <div class="table-wrap">
         <table>
@@ -427,7 +427,7 @@ export function buildFoliosHTML(registros, fecha) {
     </div>
     <div class="stat">
       <span class="stat-value">${activos.length}</span>
-      <span class="stat-label">Registros</span>
+      <span class="stat-label">Reservas</span>
     </div>
     <div class="stat">
       <span class="stat-value">${Object.keys(lanchaMap).length}</span>

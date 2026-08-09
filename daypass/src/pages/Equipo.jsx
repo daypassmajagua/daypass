@@ -9,6 +9,7 @@ import Input from '../components/ui/Input'
 import Modal from '../components/ui/Modal'
 import Select from '../components/ui/Select'
 import PageHeader from '../components/layout/PageHeader'
+import { EstadoError } from '../components/patrones'
 
 /**
  * Lanchas y equipo: la herramienta de trabajo de la coordinadora.
@@ -53,6 +54,7 @@ export default function Equipo() {
   const [empleados, setEmpleados] = useState([])
   const [paises, setPaises] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
   const [editando, setEditando] = useState(null)   // { tabla, fila }
 
   const recargar = useCallback(async () => {
@@ -62,6 +64,8 @@ export default function Equipo() {
       supabase.from('empleados').select('*, paises (id, nombre)').order('nombre'),
       supabase.from('paises').select('*').order('nombre'),
     ])
+    const fallo = l.error || p.error || e.error || pa.error
+    setError(fallo ? fallo.message : null)
     setLanchas(l.data || []); setPilotos(p.data || [])
     setEmpleados(e.data || []); setPaises(pa.data || [])
     setCargando(false)
@@ -92,6 +96,10 @@ export default function Equipo() {
 
   if (cargando) {
     return <p className="max-w-4xl mx-auto px-4 py-10 text-tinta-2">Cargando el equipo…</p>
+  }
+
+  if (error) {
+    return <EstadoError error={error} onReintentar={recargar} className="max-w-4xl mx-auto" />
   }
 
   return (

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { db } from '../lib/offline/db'
 import { encolar, alCambiarLaCola } from '../lib/offline/cola'
+import { canalConReintento } from '../lib/offline/canalConReintento'
 import { leerDiaLocal, leerCatalogoLocal } from '../lib/offline/precarga'
 import { plazasSinNombre } from '../lib/plazas'
 import { reservaCon, CON_LANCHA, CON_PLAN } from '../lib/columnas'
@@ -65,31 +66,54 @@ function dispositivo() {
 export function useZarpesDelDia(fecha) {
   const [zarpes, setZarpes] = useState([])
   const [cargando, setCargando] = useState(true)
+  const [error, setError] = useState(null)
 
   const recargar = useCallback(async () => {
     if (!fecha) return
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from('zarpes')
       .select('*, lanchas (id, nombre, codigo, capacidad)')
       .eq('fecha', fecha)
       .order('hora_programada', { ascending: true })
-    setZarpes(data || [])
+
+    if (err) {
+      // Sin señal, la copia local sostiene el muelle. El error solo se muestra
+      // si tampoco hay nada descargado: ahí sí no hay con qué operar — y antes
+      // esta pantalla mentía con "no hay zarpes programados".
+      const local = await leerDiaLocal(fecha).catch(() => null)
+      if (local?.zarpes?.length) {
+        setZarpes([...local.zarpes].sort((a, b) =>
+          String(a.hora_programada || '').localeCompare(String(b.hora_programada || ''))))
+        setError(null)
+      } else {
+        setError(err.message)
+      }
+    } else {
+      setZarpes(data || [])
+      setError(null)
+    }
     setCargando(false)
   }, [fecha])
 
   useEffect(() => { recargar() }, [recargar])
 
+  // Con reintento: si el canal se cae en el muelle —donde eso pasa a diario—,
+  // se rehace solo y de paso recarga lo que llegó mientras tanto.
   useEffect(() => {
     if (!fecha) return
-    const canal = supabase
-      .channel(`zarpes:${fecha}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'zarpes' }, recargar)
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
+    return canalConReintento(
+      `zarpes:${fecha}`,
+      canal => canal.on('postgres_changes',
+        { event: '*', schema: 'public', table: 'zarpes' }, recargar),
+      recargar,
+    )
   }, [fecha, recargar])
 
-  const programar = useCallback(async (hora = '09:00') => {
-    const { error } = await supabase.rpc('programar_zarpes', { p_fecha: fecha, p_hora: hora })
+  const programar = useCallback(async (hora = null) => {
+    // Sin hora explícita el parámetro no viaja: la decide el servidor con el
+    // ajuste de la hora de zarpe (018). Mandar null aquí la pisaría.
+    const params = hora ? { p_fecha: fecha, p_hora: hora } : { p_fecha: fecha }
+    const { error } = await supabase.rpc('programar_zarpes', params)
     await recargar()
     return { error }
   }, [fecha, recargar])
@@ -114,7 +138,7 @@ export function useZarpesDelDia(fecha) {
   const hayIdaCerrada = zarpes.some(z => z.sentido === 'ida' && ['zarpado', 'regresado'].includes(z.estado))
   const hayRegreso = zarpes.some(z => z.sentido === 'regreso')
 
-  return { zarpes, cargando, recargar, programar, programarRegreso, hayIdaCerrada, hayRegreso }
+  return { zarpes, cargando, error, recargar, programar, programarRegreso, hayIdaCerrada, hayRegreso }
 }
 
 /**
@@ -307,14 +331,16 @@ export function useEmbarque(zarpe) {
   // Si la cola cambia (se encoló algo o se drenó), la lista se repinta.
   useEffect(() => alCambiarLaCola(cargar), [cargar])
 
-  // Lo que marque otro dispositivo aparece aquí.
+  // Lo que marque otro dispositivo aparece aquí. Con reintento: el muelle es
+  // justo donde el canal se cae, y sin él cada iPad se queda ciego del otro.
   useEffect(() => {
     if (!zarpe?.id) return
-    const canal = supabase
-      .channel(`embarque:${zarpe.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'embarques' }, cargar)
-      .subscribe()
-    return () => { supabase.removeChannel(canal) }
+    return canalConReintento(
+      `embarque:${zarpe.id}`,
+      canal => canal.on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'embarques' }, cargar),
+      cargar,
+    )
   }, [zarpe?.id, cargar])
 
   const porClave = useMemo(() => {

@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- ¿Quedó bien la 015?
+-- ¿Quedó bien la seguridad? (015 a 018)
 --
 -- Solo lectura. Todo sale de los catálogos del sistema: `pg_proc`, `pg_class`,
 -- `pg_policies`. **Ninguna comprobación llama a una función para ver qué pasa**
@@ -28,9 +28,10 @@ puerta as (
     and has_function_privilege('anon', p.oid, 'execute')
 ),
 
--- 2. La vista que enmascara el dinero. `security_invoker` es lo que hace que
---    la RLS de `registros` siga aplicando por filas; sin eso la vista correría
---    como su dueño y se saltaría las políticas.
+-- 2. La vista que enmascara el dinero. Desde la 018 corre como su DUEÑA
+--    (la tabla cruda ya solo la lee quien ve plata) y trae el filtro de
+--    equipo adentro: `where soy_del_equipo()`. Si todavía fuera
+--    security_invoker, la isla se quedaría sin filas.
 vista as (
   select
     to_regclass('public.reservas') is not null as existe,
@@ -39,7 +40,34 @@ vista as (
         where c.relname = 'reservas' and c.relnamespace = 'public'::regnamespace
           and c.reloptions @> array['security_invoker=true']),
       false
-    ) as con_invoker
+    ) as con_invoker,
+    coalesce(
+      (select true from pg_views v
+        where v.schemaname = 'public' and v.viewname = 'reservas'
+          and v.definition like '%soy_del_equipo%'),
+      false
+    ) as filtra_equipo,
+    -- estado_embarques es lo contrario: TIENE que ser security_invoker, porque
+    -- las vistas no tienen RLS y como dueña se salta la de embarques.
+    coalesce(
+      (select true from pg_class c
+        where c.relname = 'estado_embarques' and c.relnamespace = 'public'::regnamespace
+          and c.reloptions @> array['security_invoker=true']),
+      false
+    ) as embarques_invoker
+),
+
+-- 2b. Ninguna vista puede ser legible por anon: Supabase concede select sobre
+--     lo nuevo de public por defecto, y por ahí se fueron los nombres y
+--     documentos de estado_embarques hasta la 018.
+vistas_anon as (
+  select
+    count(*) as cuantas,
+    coalesce(string_agg(c.relname, ', ' order by c.relname), '') as cuales
+  from pg_class c
+  where c.relnamespace = 'public'::regnamespace
+    and c.relkind = 'v'
+    and has_table_privilege('anon', c.oid, 'select')
 ),
 
 -- 3. El modelo viejo: "cualquiera con sesión puede". Mientras quede una de
@@ -107,11 +135,24 @@ select * from (
          existe, case when existe then 'sí' else 'NO — la app no puede leer' end
     from vista
   union all
-  select 3, 'La vista respeta la RLS por filas',
-         con_invoker,
-         case when con_invoker then 'security_invoker = true'
-              else 'FALTA security_invoker: la vista se salta las políticas' end
+  select 3, 'reservas corre como dueña y filtra al equipo',
+         (not con_invoker) and filtra_equipo,
+         case
+           when con_invoker then 'sigue security_invoker: falta correr la 018'
+           when not filtra_equipo then 'SIN filtro soy_del_equipo(): la vista muestra todo a cualquiera con select'
+           else 'como dueña, con soy_del_equipo() adentro' end
     from vista
+  union all
+  select 8, 'estado_embarques respeta la RLS de embarques',
+         embarques_invoker,
+         case when embarques_invoker then 'security_invoker = true'
+              else 'FALTA security_invoker: corre como dueña y se salta la RLS (018)' end
+    from vista
+  union all
+  select 9, 'Vistas legibles por anon',
+         cuantas = 0,
+         case when cuantas = 0 then 'ninguna' else cuantas || ': ' || cuales end
+    from vistas_anon
   union all
   select 4, 'Acceso por sesión en vez de por rol',
          cuantas = 0,

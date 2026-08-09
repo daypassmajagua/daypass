@@ -6,6 +6,7 @@ import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import { EstadoError } from '../components/patrones'
 import {
   BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -79,18 +80,20 @@ export default function Informes() {
   // Catálogos para los dropdowns de filtro (extraídos de los datos cargados)
   const [cats, setCats] = useState({ canales: [], lanchas: [], planes: [], asesoras: [] })
   const [pasajeros, setPasajeros] = useState([])
+  const [error, setError] = useState(null)
 
   useEffect(() => { fetchData() }, [fechaDesde, fechaHasta])
 
   async function fetchData() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error: err } = await supabase
       .from('reservas')
       .select(reservaCon({ nivel: 'dinero', relaciones: ['lanchas (id, nombre)', 'planes (id, nombre, categoria)', CON_CANAL, CON_PAIS] }))
       .gte('fecha', fechaDesde)
       .lte('fecha', fechaHasta)
       .order('fecha', { ascending: true })
     const rows = data || []
+    setError(err?.message || null)
     setRegistros(rows)
 
     // Origen: el país de cada pasajero con nombre propio manda sobre el de la
@@ -495,6 +498,8 @@ export default function Informes() {
 
       {loading ? (
         <div className="flex items-center justify-center py-24 text-gray-400">Cargando...</div>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={fetchData} />
       ) : filtrados.length === 0 ? (
         <Card className="p-16 text-center">
           <BarChart2 size={40} className="mx-auto text-gray-300 mb-3" />

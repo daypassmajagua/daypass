@@ -8,6 +8,7 @@ import {
 import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
+import { EstadoError } from '../components/patrones'
 import {
   formatCurrency, formatDate, classNames, plural,
   ESTADO_LABELS, FORMA_PAGO_LABELS, IMPUESTOS_LABELS
@@ -79,7 +80,7 @@ export default function ListadoDia() {
     filtroCanal, setFiltroCanal,
   } = useAppStore()
 
-  const { registros, loading, updateRegistro, deleteRegistro, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, error, updateRegistro, deleteRegistro, refetch } = useRegistros(fechaActiva)
 
   // Lo que cambie en el muelle o en la isla aparece aquí sin recargar.
   useRegistrosEnVivo(fechaActiva, refetch)
@@ -261,6 +262,8 @@ export default function ListadoDia() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-400 text-sm">Cargando...</div>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={refetch} />
       ) : filtered.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-tinta-2">Todavía no hay reservas para este día</p>

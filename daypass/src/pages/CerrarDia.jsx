@@ -8,6 +8,7 @@ import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
+import { EstadoError } from '../components/patrones'
 import { usePendientes } from '../hooks/usePendientes'
 import { useDiaOperativo, cerrarTentativo } from '../hooks/useDiaOperativo'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
@@ -35,7 +36,7 @@ import PageHeader from '../components/layout/PageHeader'
 export default function CerrarDia() {
   const navigate = useNavigate()
   const { fechaActiva } = useAppStore()
-  const { registros, loading, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, error, refetch } = useRegistros(fechaActiva)
   const { dia, enPlaneacion } = useDiaOperativo(fechaActiva)
 
   const [lanchas, setLanchas] = useState([])
@@ -140,6 +141,10 @@ export default function CerrarDia() {
 
   if (loading) {
     return <p className="max-w-3xl mx-auto px-4 py-10 text-tinta-2">Preparando el cierre…</p>
+  }
+
+  if (error) {
+    return <EstadoError error={error} onReintentar={refetch} className="max-w-3xl mx-auto" />
   }
 
   return (

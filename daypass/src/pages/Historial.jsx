@@ -6,6 +6,7 @@ import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
+import { EstadoError } from '../components/patrones'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -32,6 +33,7 @@ export default function Historial() {
   const [canales, setCanales] = useState([])
   const [filtroLancha, setFiltroLancha] = useState('')
   const [filtroCanal, setFiltroCanal] = useState('')
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     supabase.from('lanchas').select('*').order('nombre').then(({ data }) => setLanchas(data || []))
@@ -59,8 +61,11 @@ export default function Historial() {
     if (filtroLancha) query = query.eq('lancha_id', filtroLancha)
     if (filtroCanal) query = query.eq('canal_id', filtroCanal)
 
-    const { data, count, error } = await query
-    if (!error) {
+    const { data, count, error: err } = await query
+    if (err) {
+      setError(err.message)
+    } else {
+      setError(null)
       setRegistros(data || [])
       setTotal(count || 0)
     }
@@ -158,6 +163,8 @@ export default function Historial() {
 
       {loading ? (
         <div className="text-center py-12 text-gray-400">Cargando...</div>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={fetchRegistros} />
       ) : registros.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-tinta-2">Ninguna reserva coincide con estos filtros</p>

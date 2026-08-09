@@ -117,6 +117,11 @@ nadie en el turno, aparece como pendiente.
 - Para saber qué puede ejecutar un rol se lee `has_function_privilege('anon', p.oid, 'execute')`
   sobre `pg_proc`. **Nunca se llama a la función a ver qué pasa** — así se cerró por error el día
   operativo del 9 de agosto en producción.
+- **Las vistas no tienen RLS.** Sin `security_invoker` corren como su dueño —que se salta las
+  políticas de las tablas de abajo— y Supabase concede `select` sobre lo nuevo de `public` a
+  `anon` por defecto: así quedó `estado_embarques` legible sin sesión hasta la 018. Toda vista
+  nueva nace con `security_invoker = true` y `revoke ... from anon`; solo corre como dueña si
+  enmascarar lo exige (como `reservas`), y entonces el filtro de equipo va dentro de la vista.
 - **Nunca ejecutes migraciones ni escrituras contra producción.** Las corre el dueño.
 
 ---
@@ -130,7 +135,7 @@ nadie en el turno, aparece como pendiente.
   pedir.** Hay 23 tablas y decisiones que cambiaron en el camino.
 - Cada cambio de esquema va en migración nueva y numerada. Las migraciones se escriben aquí y las
   corre el dueño en Supabase.
-- Al terminar: `npm test`, `npm run build`, `npx eslint src` (línea base: 32 problemas), y probar
+- Al terminar: `npm test`, `npm run build`, `npx eslint src` (línea base: 31 problemas), y probar
   en `npm run demo`.
 - Un commit por bloque, con mensaje que diga qué bloque es.
 
@@ -143,5 +148,5 @@ npm run dev      # contra Supabase real (.env)
 npm run demo     # datos de muestra en memoria — puerto 5175
 npm run build
 npm test         # Vitest
-npx eslint src   # línea base: 32 problemas conocidos
+npx eslint src   # línea base: 31 problemas conocidos
 ```

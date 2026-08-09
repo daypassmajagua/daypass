@@ -4,6 +4,7 @@ import { Lock, PlusCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
+import { EstadoError } from '../components/patrones'
 import { usePendientes } from '../hooks/usePendientes'
 import { useDiaOperativo, useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { aFechaLocal, fraseFecha, hoyLocal } from '../lib/utils'
@@ -23,7 +24,7 @@ import SelectorDia from '../components/hoy/SelectorDia'
 export default function Hoy() {
   const navigate = useNavigate()
   const { fechaActiva, setFechaActiva } = useAppStore()
-  const { registros, loading, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, error, refetch } = useRegistros(fechaActiva)
   const { dia, enPlaneacion } = useDiaOperativo(fechaActiva)
 
   useRegistrosEnVivo(fechaActiva, refetch)
@@ -83,6 +84,8 @@ export default function Hoy() {
 
       {loading ? (
         <p className="text-tinta-2 py-10">Cargando el día...</p>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={refetch} />
       ) : (
         <>
           {/* Zona 1 — el día en una frase */}

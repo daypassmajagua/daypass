@@ -14,6 +14,7 @@ import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 import LectorQR from '../components/zarpe/LectorQR'
 import IndicadorSync from '../components/layout/IndicadorSync'
+import { EstadoError } from '../components/patrones'
 
 /**
  * El muelle.
@@ -27,11 +28,15 @@ const VENTANA_DESHACER = 8000
 
 // ─── Selección de zarpe ────────────────────────────────────────────────────────
 
-function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, hayIdaCerrada, hayRegreso }) {
+function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, error, hayIdaCerrada, hayRegreso }) {
   const [programando, setProgramando] = useState(false)
   const [preparando, setPreparando] = useState(null)
 
   if (cargando) return <p className="text-[18px] text-[#3a3d52] p-6">Buscando los zarpes del día…</p>
+
+  // Antes de decir "no hay zarpes": si la consulta falló y tampoco hay copia
+  // local, decirlo. "No hay" y "no pude cargar" llevan a decisiones opuestas.
+  if (error) return <EstadoError error={error} onReintentar={onRecargar} />
 
   if (!zarpes.length) {
     return (
@@ -274,7 +279,7 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
 export default function Embarque() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
   const {
-    zarpes, cargando, programar, programarRegreso, hayIdaCerrada, hayRegreso,
+    zarpes, cargando, error, programar, programarRegreso, hayIdaCerrada, hayRegreso,
     recargar: recargarZarpes,
   } = useZarpesDelDia(fechaActiva)
   const [zarpeId, setZarpeId] = useState(null)
@@ -370,7 +375,7 @@ export default function Embarque() {
           onProgramar={programar} onProgramarRegreso={programarRegreso}
           onRecargar={recargarZarpes}
           hayIdaCerrada={hayIdaCerrada} hayRegreso={hayRegreso}
-          fecha={fechaActiva} cargando={cargando} />
+          fecha={fechaActiva} cargando={cargando} error={error} />
       </div>
     )
   }

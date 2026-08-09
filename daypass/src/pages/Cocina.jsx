@@ -3,6 +3,7 @@ import { ChefHat, Printer, TriangleAlert, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
+import { EstadoError } from '../components/patrones'
 import { useRegistrosEnVivo } from '../hooks/useDiaOperativo'
 import { calcularConteoCocina } from '../lib/conteoCocina'
 import { openPrintWindow, buildCocinaHTML } from '../lib/printDoc'
@@ -65,7 +66,7 @@ function Linea({ nombre, detalle, cantidad, tono = 'normal' }) {
 
 export default function Cocina() {
   const { fechaActiva, setFechaActiva } = useAppStore()
-  const { registros, loading, refetch } = useRegistros(fechaActiva)
+  const { registros, loading, error, refetch } = useRegistros(fechaActiva)
 
   const [pasajeros, setPasajeros] = useState([])
   const [opcionesPlato, setOpcionesPlato] = useState([])
@@ -145,6 +146,8 @@ export default function Cocina() {
 
       {loading ? (
         <p className="text-tinta-2 py-10">Cargando el conteo…</p>
+      ) : error ? (
+        <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-tinta-2 text-[17px]">No hay pasadía este día.</p>

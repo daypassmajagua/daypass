@@ -51,7 +51,7 @@ export default function IndicadorSync({ muelle = false }) {
           tono === 'ambar' && (muelle ? 'bg-coral-50 text-coral-700 ring-coral-500' : 'bg-coral-50 text-coral-700'),
           tono === 'gris'  && (muelle ? 'bg-white text-[#3a3d52] ring-[#c8c9d4]' : 'bg-fondo text-tinta-2')
         )}
-        title="Ver el estado de la sincronización"
+        title="Ver el estado de la conexión"
       >
         {!enLinea
           ? <WifiOff size={muelle ? 20 : 15} />
