@@ -50,7 +50,6 @@ const ESPERADO = {
     dinero: true,
   },
   admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día'], dinero: false },
-  recepcion:  { inicio: '/isla', menu: ['Isla', 'El día'],              dinero: false },
   // El mesero tiene una sola pantalla, así que NO ve barra: un botón que
   // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.
   mesero:     { inicio: '/isla', menu: [],                              dinero: false },

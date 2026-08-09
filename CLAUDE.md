@@ -88,9 +88,11 @@ sencillo posible para todo el mundo.
 
 ## Quién es quién
 
-**Ocho roles:** `super_admin` (AISA, el proveedor) · `gerencia` · `directora` · `asesora`
-(Daniela, líder del pasadía) · `asesora_comercial` · `admin_isla` · `recepcion` · `mesero`.
-**Cocina no tiene perfil** — reciben las comandas en Zeus.
+**Siete roles:** `super_admin` (AISA, el proveedor) · `gerencia` · `directora` · `asesora`
+(Daniela, líder del pasadía) · `asesora_comercial` · `admin_isla` · `mesero`.
+**Cocina no tiene perfil** — reciben las comandas en Zeus. **Recepción tampoco**: se
+retiró el 8 de agosto de 2026, porque todo lo de la isla lo hace `admin_isla` o quien
+esté de guardia (migración 017).
 
 **Turnos, no personas fijas.** Al muelle no va siempre Daniela: puede ir cualquier asesora
 comercial o la coordinadora de alojamiento, y puede ser una persona la que embarca en la mañana y

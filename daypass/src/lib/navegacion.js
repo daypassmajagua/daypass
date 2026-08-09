@@ -88,12 +88,10 @@ export const POR_ROL = {
     ver: ['/isla', '/cocina', '/dia'],
   },
 
-  // Cobra el tiquete de las cortesías (regla 18), así que necesita ver quién
-  // viene de cortesía. Sin precios: la vista `reservas` se los quita.
-  recepcion: {
-    home: '/isla',
-    ver: ['/isla', '/dia'],
-  },
+  // No hay `recepcion`. Lo hubo un rato, por la regla 18 —recepción cobra el
+  // tiquete de las cortesías—, pero en la práctica eso lo hace la isla: quien
+  // esté de guardia o `admin_isla`. Un rol que nadie usa es un rol que se
+  // asigna por error. Migración 017.
 
   // Una pregunta, de pie junto a la mesa: ¿a qué cuenta va esto?
   mesero: {
@@ -138,6 +136,8 @@ export const ETIQUETA_ROL = {
   asesora: 'Coordinadora de pasadía',
   asesora_comercial: 'Asesora comercial',
   admin_isla: 'Isla',
-  recepcion: 'Recepción',
   mesero: 'Mesero',
+  // Se conserva la etiqueta por si algún perfil viejo todavía la dice: sin
+  // esto, la pantalla de Usuarios mostraría el valor crudo de la base.
+  recepcion: 'Recepción (ya no se usa)',
 }
