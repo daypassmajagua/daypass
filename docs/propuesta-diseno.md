@@ -50,17 +50,23 @@ Todo el §3.1 (AHORA y `ContadorVivo`), el §3.2 (los retoques de Hoy), el §4 c
 muelle y el escaneo), el §5 (animación en CSS) y el §8 (qué se toma de las referencias). Nada de
 lo nuevo los toca.
 
-### Una frontera que hay que decidir antes de construir
+### Una frontera que quedó cerrada: el folio no es un perfil
 
-**El perfil de un folio pide «sus consumos», y los consumos no viven en DayPASS.** La comanda se
-digita en Zeus y esa frontera está declarada desde el principio del proyecto: cocina no tiene
-perfil aquí porque su trabajo pasa allá. Un perfil de folio que promete consumos y muestra una
-lista vacía sería peor que no tenerlo.
+Había propuesto un cuarto perfil para el folio, con sus consumos. **Los consumos no se van a
+vincular a la plataforma**, así que salen del alcance por completo — no como un pendiente, sino
+como una decisión.
 
-Tres salidas, y yo elijo la tercera: (a) integrar Zeus de solo lectura —trabajo real, otra fase—;
-(b) mostrar el folio sin consumos y no prometerlos; (c) **mostrar el folio con lo que DayPASS sí
-sabe —a qué reserva pertenece, quiénes están dentro, qué se pagó— y decir en una línea que los
-consumos están en Zeus.** La tercera no miente y deja la puerta abierta a la primera.
+Y sin consumos, la pregunta honesta es qué queda: a qué reserva pertenece y quiénes están dentro.
+Eso **ya es la reserva**. Un perfil de folio sería la misma pantalla con otro título.
+
+Así que el folio no tiene perfil. **El folio es un puntero, no un objeto**: un número que le dice
+a la isla a qué cuenta cargarle el almuerzo a esta gente. Su trabajo entero es ese, y ya lo hace
+la pantalla de isla, que existe para responder *¿a qué cuenta va esto?*.
+
+Lo que sí conserva es **ser buscable**: quien tenga un folio en la mano lo escribe y cae en su
+reserva. Buscar por folio es una forma de encontrar una reserva, no de abrir un folio.
+
+Son cuatro perfiles menos uno: **persona, agencia y reserva**.
 
 ### Un dato de contexto que conviene corregir
 
@@ -140,7 +146,7 @@ dos más, y ninguno se puede componer con lo que hay:
 | Nuevo | Qué es | Dónde |
 |---|---|---|
 | `ContadorVivo` | el número que cambia solo (§3.1) | isla · muelle · franja · Hoy de gerencia |
-| `LineaDeTiempo` | `{ eventos:[{cuando,tipo,texto,quien,motivo,destacado}], agruparPor: 'dia'·'mes'·'anio', desde }` (§11.1) | los cuatro perfiles |
+| `LineaDeTiempo` | `{ eventos:[{cuando,tipo,texto,quien,motivo,destacado}], agruparPor: 'dia'·'mes'·'anio', desde }` (§11.1) | los tres perfiles |
 | `Buscador` | `{ grupos:[{id,titulo,buscar(texto),fila}], abierto, onCerrar }` (§10) | el encabezado, en toda la app de oficina |
 
 `LineaDeTiempo` recibe eventos **ya normalizados** y no sabe de dónde salieron. Es lo que permite
@@ -350,7 +356,7 @@ globalmente y se queda así.
    vuelve a cambiar de sitio.
 4. **La búsqueda global** (§10) — sin ella el menú corto queda a medias.
 5. **Los perfiles y `LineaDeTiempo`** (§11) — primero reserva y persona, que son los dos que se
-   abren; agencia y folio después.
+   abren todos los días; agencia después.
 6. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 7. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
@@ -484,10 +490,13 @@ sería devolverles el marco de oficina que se les quitó a propósito.
 | Grupo | Qué se escribe | Qué se ve en el resultado |
 |---|---|---|
 | **Personas** | nombre o documento | nombre · documento · cuántas veces vino |
-| **Reservas** | titular, grupo, folio o fecha | titular · fecha · estado · pax |
+| **Reservas** | titular, grupo, **folio** o fecha | titular · fecha · estado · pax · folio |
 | **Agencias y organizaciones** | nombre o NIT | nombre · tipo · saldo si debe |
-| **Folios** | número | folio · reserva · fecha |
 | **Lanchas y empleados** | nombre | nombre · si está activo |
+
+**El folio no es un grupo aparte: es una forma de encontrar una reserva.** Quien lo tiene en la
+mano lo escribe y cae en la reserva, que es lo que quería. Un grupo «Folios» con resultados que
+abren la misma pantalla que el grupo «Reservas» sería el mismo destino ofrecido dos veces.
 
 **Cómo se comporta.** Desde tres caracteres, con 250 ms de respiro entre teclas. Cada grupo
 consulta por su lado y en paralelo: así uno lento no detiene a los demás, y cada uno respeta su
@@ -504,13 +513,14 @@ de ser una comodidad y se vuelve la forma de moverse.
 
 ## 11 · Los perfiles: una historia, no una ficha
 
-Cuatro perfiles, con una regla común: **arriba va el estado y lo que falta; abajo, la historia.**
+Tres perfiles —persona, agencia y reserva— con una regla común: **arriba va el estado y lo que
+falta; abajo, la historia.**
 Quien abre un perfil casi nunca quiere leerlo entero — quiere saber en qué va, y solo baja cuando
 algo no cuadra.
 
 ### 11.1 · La línea de tiempo, en detalle
 
-Es el patrón nuevo `LineaDeTiempo` y gobierna los cuatro perfiles.
+Es el patrón nuevo `LineaDeTiempo` y gobierna los tres perfiles.
 
 **Qué se ve primero.** No el primer evento: **el estado actual como encabezado**, en una frase.
 *«En la isla desde las 8:34»*. Debajo, si falta algo, un `TarjetaPendiente` en coral. Y solo
@@ -578,9 +588,10 @@ sistema. Un vacío explicado es información; uno silencioso es un defecto.
 2. **El enlace abierto no tiene cuándo.** `marcar_token_abierto` cambia el estado del token pero
    no guarda la hora. Saber que el cliente abrió su enlace a las 9 de la noche es justo el dato
    que dice si vale la pena llamarlo.
-3. **Los consumos no están** (§0). Viven en Zeus.
+Los consumos no aparecen en esta lista porque **no entran**: se decidió no vincularlos (§0). La
+línea de tiempo de una reserva termina en el regreso, no en la cuenta.
 
-### 11.3 · Los cuatro perfiles
+### 11.3 · Los tres perfiles
 
 **Persona.** Encabezado: nombre, documento, contacto tocable, y las etiquetas —recurrente,
 viaja con niños, del exterior—. Después, en un bloque aparte y antes de la historia: **restricción
@@ -596,8 +607,8 @@ recurrente en una conversación con datos. Al final, convenios y tarifas vigente
 **Reserva.** El perfil que más se va a abrir. Estado arriba, lo que falta, y la línea de tiempo
 completa.
 
-**Folio.** A qué reserva pertenece, quiénes están dentro, qué se pagó — y una línea que diga que
-los consumos están en Zeus (§0).
+**El folio no tiene perfil** (§0): es un puntero a la cuenta de Zeus, y su trabajo —decirle a la
+isla a qué cuenta cargar— ya lo hace la pantalla de isla. Se busca, y lleva a su reserva.
 
 ### 11.4 · Por capas, sin rediseñar después
 
@@ -607,5 +618,4 @@ construido** (migraciones 020 y 025): `personas`, `organizaciones`, `vinculos`, 
 
 Lo que llega después se enchufa sin rediseñar porque `LineaDeTiempo` recibe **una lista de eventos
 ya normalizada** —`{ cuando, tipo, texto, quien, motivo, destacado }`— y no sabe de dónde salieron.
-Agregar el folio con hora, el enlace abierto o los consumos de Zeus es agregar una fuente, no
-tocar la pantalla.
+Agregar el folio con hora o el enlace abierto es agregar una fuente, no tocar la pantalla.
