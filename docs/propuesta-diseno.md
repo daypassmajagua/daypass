@@ -3,6 +3,72 @@
 Para discutir antes de construir nada. Cada decisión viene con su razón operativa; las tres de
 las que estoy menos seguro están al final, con lo que descarté y por qué.
 
+**Segunda versión** (10 de agosto), después de tres cosas nuevas: la arquitectura de navegación
+por sustantivos, la búsqueda global como forma principal de moverse, y los perfiles con su
+historia. Lo que cambió está abajo; lo que no aparece en esa lista sigue vigente tal cual.
+
+---
+
+## 0 · Qué cambió respecto a la primera versión
+
+De las tres novedades, **la de navegación invalida cosas que ya había decidido** y una de ellas
+la había defendido con ganas. Lo digo sin rodeos:
+
+### Queda obsoleto
+
+**El §9 entero — «cinco visibles y una puerta».** Había propuesto una barra con cuatro o cinco
+entradas y un botón *Todo* que abría un panel en tres columnas (Operación · Negocio · Ajustes).
+**Se cae completo.** Tu estructura es mejor por una razón que no había visto: yo agrupaba por
+*cuándo se usa*, que es un criterio del software; tú agrupas por *qué es*, que es un criterio del
+negocio. «Lanchas y pilotos» se entiende sin explicación; «Ajustes» hay que abrirlo para saber qué
+tiene. Un panel de tres columnas sigue siendo un menú de dieciséis cosas, solo que plegado.
+
+**`/panorama` como ruta y entrada de menú propia.** La defendí como el hallazgo del documento y
+ya no existe como tal. En un menú de sustantivos, «Panorama» no es un sustantivo del negocio: es
+el nombre que le pone el software a una pantalla. **Lo que sobrevive es el contenido**, y se
+convierte en lo que «Hoy» muestra para gerencia y la directora. Un solo sustantivo, tres formas
+según quién entra — que además es más coherente con el `home` por rol que ya existe.
+
+**«Un solo patrón nuevo, `ContadorVivo`».** Ahora son **tres**: se suman `LineaDeTiempo` (§11) y
+`Buscador` (§10). Los perfiles y la búsqueda no se componen con lo que hay.
+
+**Tres pantallas que construí esta semana pierden su entrada de menú.** No se borran —el trabajo
+sigue sirviendo— pero cambian de sitio:
+
+| Pantalla | A dónde va |
+|---|---|
+| `/clientes` | Deja de ser una lista con buscador: **es el perfil de persona**, y se llega buscando (§10–11) |
+| `/metas` | Adentro de **Informes** — son rendimiento, no una sección aparte |
+| `/reportes` | Adentro de **⚙ Configuración**, que es donde vive lo ocasional |
+| `/historial` | Absorbido por **Reservas**: es la misma lista con otro rango de fechas |
+| `/cocina` | Adentro de **Isla**: la isla tiene dos preguntas, a qué cuenta va esto y cuántos platos |
+| `/equipo`, `/usuarios`, `/config` | **⚙ Configuración**, en sus secciones |
+
+### Se mantiene sin cambio
+
+Todo el §3.1 (AHORA y `ContadorVivo`), el §3.2 (los retoques de Hoy), el §4 completo (el modo
+muelle y el escaneo), el §5 (animación en CSS) y el §8 (qué se toma de las referencias). Nada de
+lo nuevo los toca.
+
+### Una frontera que hay que decidir antes de construir
+
+**El perfil de un folio pide «sus consumos», y los consumos no viven en DayPASS.** La comanda se
+digita en Zeus y esa frontera está declarada desde el principio del proyecto: cocina no tiene
+perfil aquí porque su trabajo pasa allá. Un perfil de folio que promete consumos y muestra una
+lista vacía sería peor que no tenerlo.
+
+Tres salidas, y yo elijo la tercera: (a) integrar Zeus de solo lectura —trabajo real, otra fase—;
+(b) mostrar el folio sin consumos y no prometerlos; (c) **mostrar el folio con lo que DayPASS sí
+sabe —a qué reserva pertenece, quiénes están dentro, qué se pagó— y decir en una línea que los
+consumos están en Zeus.** La tercera no miente y deja la puerta abierta a la primera.
+
+### Un dato de contexto que conviene corregir
+
+Pides el menú de **ocho roles**. Son ocho valores en el enum pero **siete asignables**:
+`recepcion` está retirado desde la migración 017 y la base rechaza asignarlo. Y sobre `mesero`
+sigue abierta tu decisión de retirarlo (está en `docs/plan-diseno.md` §2.1), así que abajo va con
+su menú y con la nota de qué pasa si se va.
+
 ---
 
 ## 1 · Mi lectura del problema
@@ -29,7 +95,8 @@ pantallas. Eso no se rehace: se termina de conectar.
 3. **El dato AHORA no existe.** Nadie sabe cuántas personas hay en la isla en este momento.
 4. **Dos de los diez patrones tienen cero usos** (`BloqueDato`, `InsigniaEstado`) y las cuatro
    tablas viejas de oficina (ListadoDia, Historial, Folios, Informes) no usan ninguno.
-5. **Ni `/panorama` ni `/estilo` existen**, aunque el sistema de diseño los nombra.
+5. **No existe la vista del periodo ni `/estilo`**, aunque el sistema de diseño las nombra. (La
+   del periodo pasa a ser lo que «Hoy» muestra para gerencia y la directora — §3.3.)
 
 **Cuatro cosas que el encargo no vio y cambian decisiones:**
 
@@ -48,7 +115,7 @@ pantallas. Eso no se rehace: se termina de conectar.
 
 ---
 
-## 2 · Los diez patrones, con su API real
+## 2 · Los patrones: diez que existen y tres nuevos
 
 Ya existen. Esto es su contrato (de las firmas actuales) y su estado de adopción:
 
@@ -65,9 +132,19 @@ Ya existen. Esto es su contrato (de las firmas actuales) y su estado de adopció
 | `Esqueleto` | `{ filas }` | las 13 pantallas |
 | `EstadoError` | `{ error, onReintentar }` | las 13 pantallas |
 
-**El trabajo no es crearlos: es que las pantallas viejas los adopten** (§7, paso 8). Propongo
-**un patrón nuevo, el único**: `ContadorVivo` — el número que cambia solo (§3.1). No existe nada
-parecido y lo van a usar isla, muelle, franja y panorama.
+**El trabajo no es crearlos: es que las pantallas viejas los adopten.**
+
+**Tres patrones nuevos** — eran uno en la primera versión; la búsqueda y los perfiles trajeron
+dos más, y ninguno se puede componer con lo que hay:
+
+| Nuevo | Qué es | Dónde |
+|---|---|---|
+| `ContadorVivo` | el número que cambia solo (§3.1) | isla · muelle · franja · Hoy de gerencia |
+| `LineaDeTiempo` | `{ eventos:[{cuando,tipo,texto,quien,motivo,destacado}], agruparPor: 'dia'·'mes'·'anio', desde }` (§11.1) | los cuatro perfiles |
+| `Buscador` | `{ grupos:[{id,titulo,buscar(texto),fila}], abierto, onCerrar }` (§10) | el encabezado, en toda la app de oficina |
+
+`LineaDeTiempo` recibe eventos **ya normalizados** y no sabe de dónde salieron. Es lo que permite
+construirla hoy con lo que existe y enchufarle fuentes después sin rediseñarla.
 
 ---
 
@@ -95,7 +172,7 @@ viejo que parece fresco es una mentira.
 - Con `prefers-reduced-motion`: solo el destello, sin desplazamiento.
 
 Dónde vive: encabezado de `/isla` (el dato principal de esa pantalla), la franja del día en
-oficina cuando el día está en operación, y `/panorama`. En el muelle el AHORA ya existe —el
+oficina cuando el día está en operación, y el «Hoy» de gerencia. En el muelle el AHORA ya existe —el
 contador embarcados/esperados y el "faltan N" del regreso— y se queda; solo gana el tic.
 
 ### 3.2 · HOY — la asesora
@@ -115,9 +192,13 @@ accionables, la lista. Tres retoques con ojos nuevos:
 
 ### 3.3 · EL PERIODO — directora y gerencia
 
-**Ruta nueva `/panorama`, home de las dos.** El sistema de diseño ya la nombraba; nunca se
-construyó y ambas caen hoy en Informes: 800 líneas y ocho filtros para responder *"¿vamos bien?"*.
-Pensada para el celular primero — la directora la abre tres veces al día en la mano, no en un
+> **Cambió en la segunda versión.** Era una ruta nueva, `/panorama`, con su entrada de menú. En un
+> menú de sustantivos del negocio eso no cabe: «Panorama» es el nombre que le pone el software a
+> una pantalla, no algo que exista en la operación. **El contenido sobrevive entero y se convierte
+> en lo que «Hoy» muestra para gerencia y la directora.** Un solo sustantivo con tres formas según
+> quién entra, que además es lo que el `home` por rol ya hacía.
+
+Pensado para el celular primero — la directora lo abre tres veces al día en la mano, no en un
 monitor.
 
 De arriba a abajo:
@@ -138,10 +219,11 @@ De arriba a abajo:
    coral solo si hay).
 3. **Pendientes de negocio** como `TarjetaPendiente`, solo si existen: *"quedan 30 tiquetes y
    mañana van 87"*, *"2 reservas de agencia sin nombres y zarpan mañana"*.
-4. **Tres enlaces profundos**: Informes · Metas · Cartera. El panorama responde; el análisis vive
+4. **Dos enlaces profundos**: Informes y Cartera — los dos sustantivos que sí están en su menú.
+   (Metas dejó de ser un tercero: vive dentro de Informes.) Este «Hoy» responde; el análisis vive
    donde ya vivía.
 
-Una cosa por pantalla: la de panorama es *"¿tengo que llamar a alguien hoy?"*. Si los cuatro
+Una cosa por pantalla: la de este «Hoy» es *"¿tengo que llamar a alguien hoy?"*. Si los cuatro
 bloques están quietos, la respuesta es no, y eso se ve en dos segundos.
 
 ---
@@ -236,32 +318,50 @@ globalmente y se queda así.
    vista SQL —canónica y siempre fresca— porque el número se necesita donde no hay señal. El
    riesgo es el drift con una copia vieja; la mitigación es que el número declara su edad y se
    recalcula al drenar la cola. Si el drift resulta inaceptable en la práctica, la vista SQL se
-   agrega después como fuente para oficina/panorama sin tocar la isla.
+   agrega después como fuente para la oficina sin tocar la isla.
 
-3. **`/panorama` como ruta nueva y home de directora y gerencia.** Descarté enriquecer Informes:
-   800 líneas que además suman mal la plata, y un home tiene que abrir liviano en un celular. El
-   riesgo es mantener una pantalla más; la mitigación es que se compone solo de patrones
-   existentes (FranjaDia + BloqueDato + TarjetaPendiente) — y si los patrones no alcanzan para
-   armarla, eso también me habrá dicho algo que necesito saber del sistema.
+3. **La búsqueda como forma principal de moverse — en un celular.** `Ctrl+K` es un patrón de
+   computador y de gente que usa la app ocho horas; funciona para Daniela. Pero la directora abre
+   esto en el celular tres veces al día, y ahí no hay atajo: hay una barra ocupando el encabezado
+   permanentemente, en la pantalla más pequeña y para alguien que entra a mirar, no a buscar.
+   Descarté esconderla tras un icono —un buscador que hay que encontrar deja de ser la forma de
+   moverse— y descarté no ponerla en táctil —entonces el menú corto se queda sin su otra mitad—.
+   Lo que no sé es si en un celular la barra estorba más de lo que sirve. **Se resuelve mirando,
+   no discutiendo**: entra en el repaso en teléfono real que ya está pendiente.
+
+> **Qué salió de esta lista.** `/panorama` estaba aquí en la primera versión y ya no: dejó de ser
+> una duda porque dejó de ser una elección. Al absorberse en «Hoy» no hay pantalla nueva que
+> justificar ni ruta que mantener.
 
 ---
 
 ## 7 · Orden de construcción (después del visto bueno)
 
-1. **La capa de respuesta** — sonidos WebAudio + las 4 animaciones + `ContadorVivo`. Pequeña y
-   desbloquea todo lo demás.
-2. **El lector QR continuo** con los cuatro veredictos.
-3. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
-4. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
+> **El orden cambió.** La navegación pasó del puesto 7 al 2, y arrastró con ella a la búsqueda y
+> los perfiles. La razón: **cinco de los pasos que venían después mueven pantallas de sitio**, y
+> hacerlo antes de reorganizar el menú significa moverlas dos veces. Reordenar primero también
+> deja ver enseguida si la estructura nueva aguanta.
+
+1. ✅ **La capa de respuesta** — sonidos WebAudio + las 4 animaciones + `ContadorVivo`. *(hecho)*
+2. **El lector QR continuo** con los cuatro veredictos. Va aquí porque estrena la capa anterior y
+   no depende de nada de lo demás.
+3. **La navegación nueva** (§9) — siete sustantivos, Configuración con secciones, y los siete
+   menús por rol. Es el paso que reacomoda las pantallas que ya existen; después de esto nada
+   vuelve a cambiar de sitio.
+4. **La búsqueda global** (§10) — sin ella el menú corto queda a medias.
+5. **Los perfiles y `LineaDeTiempo`** (§11) — primero reserva y persona, que son los dos que se
+   abren; agencia y folio después.
+6. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
+7. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
-5. **`/panorama`** con los patrones.
-6. **Hoy retocado** — acción en la franja, orden de pendientes, dinero por modo.
-7. **La barra a cinco entradas** (§9) — el panel «Todo» agrupado por frecuencia, la píldora del
-   activo, y la búsqueda global. Va aquí y no antes porque `/panorama` cambia a dónde entran la
-   directora y gerencia, y no tiene sentido reorganizar el menú dos veces.
-8. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
-9. **Las tablas viejas adoptan los patrones** — ListadoDia, Historial, Folios con `ListaDelDia` e
-   `InsigniaEstado`; Informes se parte y **se corrige `total_calculado` → `valor_a_cobrar()`**.
+8. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
+9. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
+10. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
+    `ListaDelDia` e `InsigniaEstado`; Informes se parte, absorbe Metas y **se corrige
+    `total_calculado` → `valor_a_cobrar()`**.
+
+Cada paso con la verificación de siempre: pruebas en verde, humo y roles completos, eslint
+estable.
 
 ---
 
@@ -296,52 +396,216 @@ De un tablero de analítica de call center (PulseMind), revisado el 10 de agosto
 
 ---
 
-## 9 · La barra superior, y el problema que esconde
+## 9 · La navegación: sustantivos del negocio
 
-Revisando un segundo tablero (una app de fitness) apareció lo que de verdad hay que arreglar, y
-no es el estilo de la barra: **es cuántas entradas tiene.**
+El menú de la directora tiene **dieciséis entradas** —lo confirma la prueba de roles— y por eso
+solo cabe desde 1536 px. Pero el número era el síntoma. El problema es qué lista: hoy mezcla
+sustantivos del negocio («Folios», «Cartera») con funciones del software («Configuración»,
+«Usuarios», «Reportes»), y las pone al mismo nivel.
 
-Su barra lleva **seis**. La nuestra, para la directora, lleva **dieciséis** — lo confirma la
-prueba de roles: *directora → 16 secciones*. Por eso el menú completo solo cabe desde 1536 px y
-por debajo se esconde en un cajón táctil. En seis sesiones agregamos Cartera, Clientes, Metas y
-Reportes, y el menú creció una entrada por cada una, en línea recta.
+### El menú, y una sola puerta abajo
 
-**No es un problema de barra: es de arquitectura de información.**
+```
+Hoy · Reservas · Embarque · Isla · Folios · Cartera · Informes
+─────────────────────────────────────────────────────────────
+⚙ Configuración
+```
 
-### La decisión: cinco visibles, una puerta
+**Siete sustantivos y un engranaje.** El engranaje va separado —abajo, solo, con línea de por
+medio— porque no es un octavo destino: es otra clase de sitio. Lo diario arriba; lo ocasional,
+adentro.
 
-La barra lleva **el día**: `Hoy · El día · Nueva reserva · Embarque` (o `Isla`, según el modo del
-aparato). Un botón **Todo** abre un panel con lo demás agrupado en tres columnas —**Operación ·
-Negocio · Ajustes**— por *cuándo se usa*, no por *qué es*.
+Dentro de Configuración, en secciones:
 
-El criterio que lo gobierna: **lo que se toca todos los días está a un toque; lo que se toca cada
-mes está a dos.** Hoy Configuración y Nueva reserva pesan igual en la barra, y una se usa cuarenta
-veces al día y la otra cuatro veces al año.
+`Lanchas y pilotos` · `Empleados` · `Agencias y organizaciones` · `Planes, platos y tarifas` ·
+`Temporadas` · `Turnos y guardias` · `Destinatarios y mensajes` · `Usuarios` ·
+`Ajustes de la operación` · `Actividad`
 
-Esto **no toca `navegacion.js` como fuente de verdad** — cada rol sigue viendo solo lo suyo. Lo
-que se agrega es una capa de frecuencia sobre esa lista: qué sube a la barra y qué vive detrás de
-la puerta.
+**La salvedad de Daniela manda sobre la ubicación.** Lanchas, pilotos y empleados viven en
+Configuración porque se tocan de vez en cuando, **no porque sean de otro**. Son suyos, con acceso
+pleno y sin pedirle permiso a nadie — es la regla 21 y la migración 019 ya la hace cumplir en la
+base. Estar guardado no es estar restringido, y la pantalla tiene que dejarlo claro: en su
+Configuración esas tres secciones van de primeras.
 
-### Lo que se toma de esa referencia
+### El menú exacto de cada rol
 
-- **La píldora sólida del activo.** El suyo es un bloque de color; el nuestro es blanco al 20 %
-  sobre navy, más tímido de lo que debería. Saber dónde estás no debería costar una segunda
-  mirada.
-- **El grupo de la derecha: buscar · avisos · avatar.** Reserva el sitio de las notificaciones,
-  que llegan en la Fase 6.
-- **Búsqueda global**, que hoy no existe. Para encontrar una reserva hay que ir a Historial y
-  filtrar; Daniela con el teléfono en la oreja necesita escribir «Herrera» desde donde esté. Es
-  función nueva, no adorno, y entra al orden de construcción.
+Siete asignables. `recepcion` está retirado (017) y no aparece.
 
-### Lo que no
+| Rol | Menú | ⚙ Configuración |
+|---|---|---|
+| **super_admin** (AISA) | Hoy · Reservas · Embarque · Isla · Folios · Cartera · Informes | todas las secciones |
+| **directora** | Hoy · Reservas · Embarque · Isla · Folios · Cartera · Informes | todas |
+| **asesora** (Daniela) | Hoy · Reservas · Embarque · Isla · Folios · Cartera · Informes | Lanchas y pilotos · Empleados · Agencias · Turnos y guardias · Ajustes de la operación · Actividad |
+| **gerencia** | Hoy · Cartera · Informes | Planes y tarifas · Temporadas · Turnos y guardias · Usuarios · Actividad |
+| **asesora_comercial** | Hoy · Reservas · Embarque | Agencias |
+| **admin_isla** | Hoy · Isla | — |
+| **mesero** | Isla | — |
 
-- **El saludo y el banner promocional.** Ocupan el tercio superior sin decir nada. En una
-  herramienta de trabajo ese es el espacio más caro de la pantalla.
-- **Las tarjetas en pasteles decorativos.** Nuestros colores tienen significado fijo: si una
-  tarjeta es lavanda porque sí, el día que algo esté pendiente el coral ya no grita.
-- **Las minigráficas bajo cada indicador.** Una curva de siete días bajo «personas hoy» no cambia
-  ninguna decisión a las 7 de la noche.
-- **La barra clara.** La nuestra sigue oscura: separa el marco del contenido y hace evidente que
-  en modo muelle **no hay barra**. Esa ausencia tiene que sentirse como decisión, no como pérdida.
+Las razones de los recortes, que es lo que importa:
 
-Cada paso con la verificación de siempre: 162+ pruebas, humo 13/13, roles 6/6, eslint estable.
+- **Gerencia no ve Reservas, Embarque, Isla ni Folios.** Mira el negocio; no lo opera. Darle la
+  operación diaria sería llenarle la pantalla de cosas que no va a tocar — y su «Hoy» ya trae el
+  resumen del día. Sí ve tarifas y temporadas: ahí se decide la plata.
+- **La asesora comercial no ve Folios ni Cartera.** Vende y puede cubrir muelle. Cobrar y
+  facturar no es suyo. Sí ve Agencias en Configuración: al vender aparece la agencia que aún no
+  existe, y mandarla a pedir que se la creen es exactamente el paso que este producto viene a
+  quitar.
+- **La isla no ve «Reservas».** Su pregunta es *quién está* y *cuántos platos*, no *qué se
+  vendió*. Su «Hoy» le dice cuántos vienen y a qué hora.
+- **El mesero sigue con una sola pantalla.** Si se retira (tu decisión pendiente), quien atiende
+  mesas pasa a `admin_isla` y gana «Hoy» — dos entradas en vez de ninguna. Sigo pensando que
+  conviene que su `home` siga siendo `/isla` sin barra, para no perder lo que hace usable esa
+  pantalla.
+
+### Lo que esto le hace a `navegacion.js`
+
+Sigue siendo la fuente única de verdad, pero cambia de forma: de una lista plana de rutas a
+**dos listas — el menú y las secciones de Configuración**. Y `RUTAS` pierde entradas, porque
+Historial, Clientes, Metas, Reportes, Cocina, Equipo y Usuarios dejan de ser destinos de primer
+nivel.
+
+De Shopify se toma **la estructura, no el color**: el sistema visual v2 se mantiene tal cual —
+barra oscura, paleta de tokens, la píldora sólida del activo que ya había propuesto.
+
+---
+
+## 10 · La búsqueda: escribir en vez de navegar
+
+Con siete sustantivos arriba, **la búsqueda deja de ser un accesorio y pasa a ser la otra mitad de
+la navegación**. Un menú corto solo funciona si lo que no está en el menú se alcanza escribiendo.
+
+**Dónde vive.** `Ctrl+K` en computador, y en el encabezado permanente en táctil —donde no hay
+teclado que memorizar—. En el muelle y la isla **no aparece**: esas pantallas tienen su propia
+búsqueda por nombre sobre la copia local, que funciona sin señal, y meterles una barra global
+sería devolverles el marco de oficina que se les quitó a propósito.
+
+**Qué encuentra**, agrupado por tipo y en este orden:
+
+| Grupo | Qué se escribe | Qué se ve en el resultado |
+|---|---|---|
+| **Personas** | nombre o documento | nombre · documento · cuántas veces vino |
+| **Reservas** | titular, grupo, folio o fecha | titular · fecha · estado · pax |
+| **Agencias y organizaciones** | nombre o NIT | nombre · tipo · saldo si debe |
+| **Folios** | número | folio · reserva · fecha |
+| **Lanchas y empleados** | nombre | nombre · si está activo |
+
+**Cómo se comporta.** Desde tres caracteres, con 250 ms de respiro entre teclas. Cada grupo
+consulta por su lado y en paralelo: así uno lento no detiene a los demás, y cada uno respeta su
+propia RLS sin que haya que inventar una consulta gigante que las mezcle. `Enter` abre el primer
+resultado; las flechas recorren; `Esc` cierra sin dejar rastro.
+
+**Lo que ya existe:** `buscar_personas()` (migración 020) hace exactamente esto para personas,
+con el documento normalizado. Los otros cuatro grupos son funciones nuevas del mismo molde.
+
+**Y el resultado no es un enlace a una lista filtrada: abre el perfil.** Ahí es donde esto deja
+de ser una comodidad y se vuelve la forma de moverse.
+
+---
+
+## 11 · Los perfiles: una historia, no una ficha
+
+Cuatro perfiles, con una regla común: **arriba va el estado y lo que falta; abajo, la historia.**
+Quien abre un perfil casi nunca quiere leerlo entero — quiere saber en qué va, y solo baja cuando
+algo no cuadra.
+
+### 11.1 · La línea de tiempo, en detalle
+
+Es el patrón nuevo `LineaDeTiempo` y gobierna los cuatro perfiles.
+
+**Qué se ve primero.** No el primer evento: **el estado actual como encabezado**, en una frase.
+*«En la isla desde las 8:34»*. Debajo, si falta algo, un `TarjetaPendiente` en coral. Y solo
+entonces empiezan los eventos.
+
+Una línea de tiempo que arranca por «Reserva creada el 3 de agosto» obliga a leer doce filas para
+llegar a lo único que se preguntó al abrirla.
+
+**En qué orden.** **Lo más reciente arriba.** La pregunta que trae a alguien a un perfil es casi
+siempre *qué pasó ahora* o *por qué está así*, y la respuesta está al final de la historia, no al
+principio.
+
+**Cómo se agrupa lo viejo.**
+
+- **Una reserva** cabe entera: son diez o veinte eventos. Se agrupan **por día**, con la fecha
+  como encabezado y los eventos del día debajo. Sin plegar nada: plegar veinte filas es esconder
+  lo que no estorba.
+- **Una persona** con cuatro años son cien visitas. Se agrupan **por año**, con el año en curso
+  abierto y los anteriores plegados, cada uno con su resumen en el encabezado: *«2025 — 7 visitas
+  · $4.2 M»*. Se abre el año que interese.
+- **Una agencia** igual, pero por mes dentro del año.
+
+**Qué se destaca, y qué no.** Solo dos cosas rompen el gris de la lista:
+
+1. **Lo que alguien hizo a mano** — un cambio de estado manual, una cortesía autorizada, un pago
+   anulado. Son las excepciones auditadas de la regla 3, y son justamente por las que alguien
+   abre un perfil a preguntar. Van con el motivo que se escribió, en línea.
+2. **Lo que pasó después del cierre** — el `cambio_tardio`, en coral. La cocina y la isla ya
+   habían trabajado con la versión anterior.
+
+Todo lo demás —creada, nombres, firma, embarque, regreso— es la historia normal y se ve como
+historia normal. **Si todo se destaca, nada se destaca**, que es la regla 3 del sistema visual
+aplicada a una lista.
+
+**Cada evento dice quién.** Hora · qué pasó · quién lo hizo. Es la regla 24 y la migración 024
+acaba de hacerla real.
+
+**Y aquí hay una consecuencia incómoda que hay que diseñar, no esconder.** La firma de autoría
+existe **desde la 024 en adelante**. Todo lo anterior tiene autor nulo, y no se puede inventar.
+La línea de tiempo lo dice con una separación explícita —*«De aquí para atrás no se guardaba
+quién»*— en vez de mostrar decenas de eventos con el autor en blanco, que parecería un error del
+sistema. Un vacío explicado es información; uno silencioso es un defecto.
+
+### 11.2 · De dónde sale cada evento, y qué falta
+
+**Ya existe hoy** (la capa 1, construible sin esperar nada):
+
+| Evento | Fuente |
+|---|---|
+| Creada | `registros.created_at` + `generada_por` |
+| Nombres cargados | `pasajeros.created_at` |
+| Check-in | `registros.check_in_at` |
+| Firma | `firmas.firmado_at` + `firmante_nombre` |
+| Cambio de estado | `cambios_estado` — con `motivo` y `origen` |
+| Embarque y desembarque | `embarques.ocurrido_at` + `registrado_por` |
+| Pago y anulación | `pagos` (023) + `bitacora` |
+| Cambio tras el cierre | `registros.cambio_tardio_at` + motivo |
+| Acciones sensibles | `bitacora` (024) |
+
+**Tres huecos que encontré al diseñar esto**, y ninguno es grave pero conviene saberlos:
+
+1. **El folio no tiene cuándo.** `registros.folio_zeus` es un texto: se sabe que tiene folio, no
+   cuándo se puso ni quién. Se arregla anotándolo en la bitácora cuando cambia — tres líneas en
+   una migración futura, del mismo molde que las de la 024.
+2. **El enlace abierto no tiene cuándo.** `marcar_token_abierto` cambia el estado del token pero
+   no guarda la hora. Saber que el cliente abrió su enlace a las 9 de la noche es justo el dato
+   que dice si vale la pena llamarlo.
+3. **Los consumos no están** (§0). Viven en Zeus.
+
+### 11.3 · Los cuatro perfiles
+
+**Persona.** Encabezado: nombre, documento, contacto tocable, y las etiquetas —recurrente,
+viaja con niños, del exterior—. Después, en un bloque aparte y antes de la historia: **restricción
+alimentaria y plato habitual**, porque es lo que alguien de la isla viene a buscar y no puede
+estar al final. Luego las visitas por año: fecha · plan · agencia · valor. Y los vínculos.
+
+**Agencia u organización.** Encabezado: nombre, tipo, contactos, y **si debe, cuánto y desde
+cuándo** — en coral si pasa de 90 días. Después: pax y reservas por mes, ticket promedio, mix de
+planes, tasa de no-show y **cumplimiento del pre-registro** —qué porcentaje de sus reservas llegó
+con los nombres cargados antes del zarpe—. Esa última es la métrica que convierte una queja
+recurrente en una conversación con datos. Al final, convenios y tarifas vigentes con su historia.
+
+**Reserva.** El perfil que más se va a abrir. Estado arriba, lo que falta, y la línea de tiempo
+completa.
+
+**Folio.** A qué reserva pertenece, quiénes están dentro, qué se pagó — y una línea que diga que
+los consumos están en Zeus (§0).
+
+### 11.4 · Por capas, sin rediseñar después
+
+El modelo completo de personas y organizaciones llega en el bloque 3 del plan v6 — que **ya está
+construido** (migraciones 020 y 025): `personas`, `organizaciones`, `vinculos`, `etiquetas`,
+`ficha_persona()`. Así que la capa 1 no es un remedo: es casi todo.
+
+Lo que llega después se enchufa sin rediseñar porque `LineaDeTiempo` recibe **una lista de eventos
+ya normalizada** —`{ cuando, tipo, texto, quien, motivo, destacado }`— y no sabe de dónde salieron.
+Agregar el folio con hora, el enlace abierto o los consumos de Zeus es agregar una fuente, no
+tocar la pantalla.
