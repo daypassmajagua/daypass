@@ -60,9 +60,56 @@ function SinPermiso({ onSalir }) {
   )
 }
 
+/**
+ * No se pudo saber si esta persona tiene acceso — que **no** es lo mismo que
+ * no tenerlo. Antes este caso no existía y la app se quedaba cargando para
+ * siempre; decirle a alguien "no estás en el equipo" porque se cayó la red
+ * habría sido peor todavía.
+ */
+function NoSePudo({ mensaje, onReintentar, onSalir }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-fondo px-6">
+      <div className="max-w-md text-center flex flex-col items-center gap-3">
+        <img src={logoAzul} alt="" className="h-16 w-auto opacity-60 mb-1" />
+        <p className="text-[19px] font-bold text-tinta text-balance">
+          No pudimos comprobar tu acceso
+        </p>
+        <p className="text-[15px] text-tinta-2 text-balance">
+          Puede ser la red. Vuelve a intentarlo; si sigue igual, avísale a quien
+          maneja el sistema.
+        </p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={onReintentar}
+            className="rounded-xl bg-blue-600 text-white font-bold px-5 min-h-[44px]"
+          >
+            Volver a intentar
+          </button>
+          <button
+            onClick={onSalir}
+            className="rounded-xl bg-fondo text-tinta-2 font-bold px-5 min-h-[44px]"
+          >
+            Salir
+          </button>
+        </div>
+        {mensaje && (
+          <details className="mt-2 max-w-md w-full text-left">
+            <summary className="text-[13px] text-tinta-2 cursor-pointer select-none">
+              Detalle técnico
+            </summary>
+            <p className="mt-1.5 text-[13px] text-tinta-2 font-mono break-words bg-white rounded-lg px-3 py-2">
+              {mensaje}
+            </p>
+          </details>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ProtectedRoute({ children }) {
   const [sesion, setSesion] = useState(undefined)
-  const { perfil, cargando, rol, sinPermiso } = usePerfil()
+  const { perfil, cargando, rol, sinPermiso, fallo, recargar } = usePerfil()
   const { pathname } = useLocation()
 
   useEffect(() => {
@@ -74,6 +121,18 @@ export default function ProtectedRoute({ children }) {
 
   if (sesion === undefined) return <Cargando mensaje="Cargando…" />
   if (!sesion) return <Navigate to="/login" replace />
+
+  // Va ANTES del cargando: con un fallo ya no se está esperando nada, y dejar
+  // el logo girando sería mentir sobre lo que está pasando.
+  if (fallo) {
+    return (
+      <NoSePudo
+        mensaje={fallo}
+        onReintentar={recargar}
+        onSalir={() => supabase.auth.signOut()}
+      />
+    )
+  }
 
   if (cargando) return <Cargando mensaje="Viendo qué te toca hoy…" />
 
