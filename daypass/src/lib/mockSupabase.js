@@ -1705,6 +1705,18 @@ class QB {
           row.persona_id = enlazarPersona(row) || row.persona_id || null
         }
 
+        // El sello de la 024: quién, en toda tabla, puesto por el servidor.
+        // Se ignora lo que mande el cliente — si el autor se pudiera mandar,
+        // no sería una firma.
+        if (!['bitacora', 'cambios_estado', 'embarques', 'firmas', 'tickets'].includes(this._table)) {
+          row.creado_por = MOCK_SESSION.user.id
+          row.actualizado_por = MOCK_SESSION.user.id
+        }
+        if (this._table === 'registros') {
+          row.generada_por = MOCK_SESSION.user.id
+          delete row.creado_por          // la reserva usa `generada_por`, no dos columnas
+        }
+
         // El de la 021: quién reporta lo sella el servidor con la sesión, no
         // lo manda el aparato. Y el estado siempre nace en 'nuevo'.
         if (this._table === 'tickets') {
@@ -1742,6 +1754,15 @@ class QB {
         const antes = { ...row }
         this._marcarSiEsTardio(row, this._updatePayload)
         Object.assign(row, this._updatePayload, { updated_at: new Date().toISOString() })
+
+        // El sello de la 024, también al modificar: quién la tocó de último.
+        // Se pone después del payload a propósito — pisa lo que mande el
+        // cliente, igual que el trigger.
+        if (!['bitacora', 'cambios_estado', 'embarques', 'firmas'].includes(this._table)) {
+          row.actualizado_por = MOCK_SESSION.user.id
+          if ('creado_por' in antes) row.creado_por = antes.creado_por   // el pasado no se reescribe
+        }
+
         if (this._table === 'registros' && row.estado !== antes.estado) {
           anotarCambioEstado(row, antes.estado, row.estado, 'manual')
         }

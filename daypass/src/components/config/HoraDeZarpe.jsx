@@ -44,19 +44,20 @@ export default function HoraDeZarpe() {
 
   async function guardar() {
     setGuardando(true)
-    const { data: sesion } = await supabase.auth.getSession()
-    const quien = sesion?.session?.user?.id || null
     const cuando = new Date().toISOString()
 
+    // Quién ya no viaja desde aquí: lo sella el servidor con la sesión
+    // (migración 024). Un autor que manda el navegador no es una firma — es un
+    // campo más que cualquiera puede escribir con lo que quiera desde la API.
     const escrituras = [
       supabase.from('ajustes')
-        .update({ valor: hora, actualizado_at: cuando, actualizado_por: quien })
+        .update({ valor: hora, actualizado_at: cuando })
         .eq('clave', 'checkin_cierra_hora'),
       supabase.from('ajustes')
-        .update({ valor: String(dias), actualizado_at: cuando, actualizado_por: quien })
+        .update({ valor: String(dias), actualizado_at: cuando })
         .eq('clave', 'checkin_abre_dias'),
       supabase.from('ajustes')
-        .update({ valor: cocina, actualizado_at: cuando, actualizado_por: quien })
+        .update({ valor: cocina, actualizado_at: cuando })
         .eq('clave', 'cocina_cierra_hora'),
     ]
     const errores = (await Promise.all(escrituras)).map(r => r.error).filter(Boolean)

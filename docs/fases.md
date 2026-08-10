@@ -362,8 +362,24 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 > **No es contabilidad.** La factura y el folio viven en Zeus; esto es el libro de control de la
 > operación, para que Daniela pueda cobrar sin abrir el Excel. Si no cuadra con Zeus, manda Zeus.
 > Un pago no se borra: se anula con motivo y con nombre.
-- ⬜ **Cortesías, metas y liquidación** (`024`): reporte mensual de cortesías, metas por año y
-  responsable, comisiones por agencia
+- 🟡 **Cortesías, metas y liquidación** (`024` escrita, parcial): el reporte mensual de cortesías
+  con quién autorizó y el costo del servicio ya está. **Faltan metas y comisiones.**
+
+> **La `024` creció más allá de las cortesías, y con razón.** Al ir a registrar quién autoriza una
+> cortesía apareció que la regla 24 —*«creado_por y actualizado_por en toda tabla»*— se estaba
+> cumpliendo a medias: **de 30 tablas, 6 guardaban quién creó la fila y 3 quién la modificó**.
+> Faltaba en las tarifas, en los catálogos, en los zarpes, y `registros` no tenía
+> `actualizado_por` — quién tocó una reserva de último era información perdida.
+>
+> Peor que la ausencia: `ajustes` sí guardaba el autor, pero **lo mandaba el navegador**. Un autor
+> que viaja desde el aparato no es una firma. Ahora lo sella un trigger con `auth.uid()` y se
+> ignora lo que mande el cliente, en 29 tablas. Donde queda null es la puerta pública, y eso es
+> la verdad: lo escribió el cliente, no el equipo.
+>
+> La bitácora cubría tres acciones; ahora también las tarifas, los ajustes, los cierres del día,
+> el cierre de zarpe y los movimientos de inventario. Y la lee la coordinadora, no solo la
+> dirección: cerrar días y mover inventario sin poder ver el propio rastro era un candado sin
+> puerta.
 
 > **La corrección que justifica sola el kardex.** El plan pedía *"consumo derivado del embarque"*,
 > y hacerlo así habría copiado el error de la planilla: la regla 11 dice que **alojamiento sí
