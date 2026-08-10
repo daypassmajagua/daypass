@@ -37,6 +37,7 @@ const RUTAS = [
   ['/usuarios',  'Usuarios',            /Quién entra/i],
   ['/reportes',  'Reportes',            /reporte/i],
   ['/cartera',   'Cartera',             /cobrar|Cartera/i],
+  ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],
 ]
 

@@ -29,24 +29,24 @@ const ESPERADO = {
   directora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
+           'Folios', 'Cartera', 'Clientes', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
            'Reportes', 'Configuración'],
     dinero: true,
   },
   asesora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
+           'Folios', 'Cartera', 'Clientes', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
     dinero: true,
   },
   asesora_comercial: {
     inicio: '/',
-    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Historial', 'Reportes'],
+    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Clientes', 'Historial', 'Reportes'],
     dinero: true,
   },
   gerencia: {
     inicio: '/informes',
-    menu: ['Informes', 'Cartera', 'Historial', 'El día', 'Usuarios', 'Reportes'],
+    menu: ['Informes', 'Cartera', 'Clientes', 'Historial', 'El día', 'Usuarios', 'Reportes'],
     dinero: true,
   },
   admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día', 'Reportes'], dinero: false },

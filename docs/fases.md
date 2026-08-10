@@ -256,6 +256,18 @@ comparten las políticas de RLS y pelearían por los mismos archivos.
 - ✅ Precarga por documento **en la reserva**
 - ✅ El solapamiento de `cortesia` cerrado con CHECK en `pasajeros` y `embarques`
 
+> **La ficha del cliente llegó en la `025`, y con ella dos huecos de la `020`.**
+> El modelo estaba, pero vacío por dentro: **`registros.persona_id` no lo llenaba nadie** —el
+> trigger de enlace iba solo sobre `pasajeros`, así que el titular de la reserva nunca quedaba
+> enlazado— y **`personas.telefono`/`email` estaban siempre en null**, porque el contacto se pide
+> en la reserva y nadie lo subía a la ficha. Un CRM sin cómo llamar a la gente no es un CRM.
+> Ahora el titular se enlaza, el contacto sube, y existe `/clientes`: buscador, visitas, última
+> vez, cuánto ha dejado, con qué plan suele venir y etiquetas calculadas.
+>
+> Las etiquetas calculadas se derivan **al vuelo** y no se guardan: mantener una tabla al día
+> necesita quien la recalcule, y eso llega con los segmentos de marketing (Fase 8). Una etiqueta
+> guardada envejece sin que nadie se entere.
+
 > **La precarga NO va en el check-in público, y es a propósito.** Dejar que
 > cualquiera con un enlace escriba un documento y vea a quién pertenece sería
 > regalar la base de datos entera. `buscar_personas` exige sesión del equipo.

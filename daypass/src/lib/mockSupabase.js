@@ -625,6 +625,9 @@ const STORE = {
   ],
 }
 
+// Las fichas de los clientes salen de las reservas de muestra, como en la base.
+enlazarTitularesDeMuestra()
+
 /**
  * 48 caracteres hex, igual que el `encode(gen_random_bytes(24),'hex')` de la
  * migración. Nunca deriva del id de la reserva: un token no debe revelar a
@@ -810,6 +813,27 @@ function diaDe(fecha) {
 /** Los roles que pueden ver plata. Igual que `puedo_ver_dinero()` en la 015. */
 const VEN_DINERO = ['super_admin', 'gerencia', 'directora', 'asesora', 'asesora_comercial']
 
+/**
+ * El enlace del titular de la 025, aplicado a los datos de muestra.
+ *
+ * Sin esto la pantalla de Clientes salía vacía en la demo aunque hubiera
+ * veinte reservas con cédula — que es exactamente el hueco que la 025 vino a
+ * tapar en producción.
+ */
+function enlazarTitularesDeMuestra() {
+  STORE.registros.forEach(r => {
+    if (r.persona_id || !(r.identificacion || '').trim()) return
+    r.persona_id = enlazarPersona({
+      nombre: r.nombre_pasajero,
+      documento: r.identificacion,
+      tipo_documento: 'cc',
+      pais_id: r.pais_id,
+      telefono: r.telefono,
+      email: r.email,
+    })
+  })
+}
+
 /** El documento sin puntos, espacios ni guiones. Igual que `documento_norm`. */
 export function normalizarDocumento(doc) {
   return (doc || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
@@ -838,7 +862,11 @@ function enlazarPersona(pax) {
     tipo_documento: pax.tipo_documento || null,
     documento: (pax.documento || '').trim(),
     pais_id: pax.pais_id || null,
-    telefono: null, email: null, notas: null,
+    // El contacto sube desde la reserva (025): una ficha sin cómo llamar a la
+    // gente no sirve de nada.
+    telefono: pax.telefono || null,
+    email: pax.email || null,
+    notas: null,
     created_at: new Date().toISOString(),
   }
   STORE.personas.push(nueva)
@@ -929,6 +957,24 @@ function derivarCartera() {
       fila.mas_viejo = Math.max(fila.mas_viejo, s.dias)
     })
   return [...porOrg.values()].sort((a, b) => b.total - a.total)
+}
+
+/** La vista `clientes_ficha` de la 025: la persona con sus visitas. */
+function visitasDe(personaId) {
+  const dias = new Set()
+  STORE.registros
+    .filter(r => !['cancelada', 'noshow'].includes(r.estado))
+    .filter(r => r.persona_id === personaId
+      || STORE.pasajeros.some(p => p.registro_id === r.id && p.persona_id === personaId))
+    .forEach(r => dias.add(r.fecha))
+  return [...dias].sort()
+}
+
+function derivarClientesFicha() {
+  return STORE.personas.map(p => {
+    const dias = visitasDe(p.id)
+    return { ...p, visitas: dias.length, ultima: dias[dias.length - 1] || null }
+  })
 }
 
 function derivarEstadoEmbarques() {
@@ -1309,6 +1355,64 @@ const RPC = {
     }
   },
 
+  /** Como `ficha_persona` de la 025. */
+  ficha_persona({ p_persona_id }) {
+    const p = STORE.personas.find(x => x.id === p_persona_id)
+    if (!p) return { data: null, error: { message: 'No existe esa persona' } }
+
+    const suyas = STORE.registros.filter(r =>
+      !['cancelada', 'noshow'].includes(r.estado) &&
+      (r.persona_id === p.id ||
+       STORE.pasajeros.some(pa => pa.registro_id === r.id && pa.persona_id === p.id)))
+
+    const historial = suyas
+      .map(r => ({
+        fecha: r.fecha,
+        registro_id: r.id,
+        plan: STORE.planes.find(pl => pl.id === r.plan_id)?.nombre || null,
+        titular: r.persona_id === p.id,
+      }))
+      .sort((a, b) => b.fecha.localeCompare(a.fecha))
+
+    const dias = [...new Set(suyas.map(r => r.fecha))].sort()
+    const propias = suyas.filter(r => r.persona_id === p.id)
+    const gastado = propias.reduce((s, r) => {
+      const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
+      return s + valorACobrar(r, ti)
+    }, 0)
+
+    // Las mismas etiquetas que calcula la 025, al vuelo.
+    const etiquetas = []
+    if (dias.length >= 3) etiquetas.push('viene seguido')
+    const ultima = dias[dias.length - 1]
+    if (ultima) {
+      const hace = diasDeDeuda(ultima, hoyLocal())
+      if (hace > 365) etiquetas.push('no vuelve hace más de un año')
+    }
+    if (propias.some(r => STORE.pasajeros.some(pa =>
+        pa.registro_id === r.id && ['nino', 'infante'].includes(pa.categoria)))) {
+      etiquetas.push('viaja con niños')
+    }
+    const pais = STORE.paises.find(x => x.id === p.pais_id)
+    if (pais && pais.codigo !== 'CO') etiquetas.push('del exterior')
+
+    return {
+      data: {
+        persona: p,
+        visitas: dias.length,
+        primera: dias[0] || null,
+        ultima: ultima || null,
+        gastado: VEN_DINERO.includes(rolActual()) ? gastado : null,
+        plan_usual: historial.find(h => h.plan)?.plan || null,
+        etiquetas_calculadas: etiquetas,
+        etiquetas_puestas: [],
+        organizaciones: [],
+        historial,
+      },
+      error: null,
+    }
+  },
+
   /** Como `anular_pago` de la 023: un pago no se borra, se anula con motivo. */
   anular_pago({ p_pago_id, p_motivo }) {
     if (!(p_motivo || '').trim()) {
@@ -1572,6 +1676,7 @@ class QB {
     // mesero no ve plata, que es la promesa central de la fase de roles.
     if (this._table === 'reservas') return derivarReservas()
     // Las vistas de dinero de la 023: se derivan, no se guardan.
+    if (this._table === 'clientes_ficha') return derivarClientesFicha()
     if (this._table === 'saldos_reserva') return derivarSaldos()
     if (this._table === 'cartera_por_organizacion') return derivarCartera()
     // Un reporte puede llevar una foto de la pantalla con la reserva de

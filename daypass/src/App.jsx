@@ -22,6 +22,7 @@ import Isla from './pages/Isla'
 import Usuarios from './pages/Usuarios'
 import Reportes from './pages/Reportes'
 import Cartera from './pages/Cartera'
+import Clientes from './pages/Clientes'
 import { escucharErrores } from './lib/diagnostico'
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
@@ -194,6 +195,16 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Cartera />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clientes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Clientes />
               </AppLayout>
             </ProtectedRoute>
           }
