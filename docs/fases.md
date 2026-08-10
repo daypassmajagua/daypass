@@ -112,7 +112,15 @@ Una migración por fase, numeradas de corrido desde la `015`.
 - ✅ `edad_max_infante` a `ajustes`
 - ✅ Pruebas de humo al repo (`npm run humo`)
 - ⬜ **Catálogos reales**: lanchas con capacidad y prioridad, pilotos, agencias, planes con precios,
-  empleados
+  empleados, temporadas del año. **Todos se cargan desde la app** —Configuración y Lanchas y
+  equipo—, no hacen falta migraciones ni SQL.
+
+> **Un bloqueo que nadie había visto, y ya está arreglado (`027`).** `registros.canal_id` es
+> **NOT NULL** y `canales` no tenía semilla en ninguna migración ni pantalla en ninguna parte:
+> contra una base recién montada **la primera reserva era imposible**. `paises` estaba igual, y la
+> lista nominal de la Capitanía exige nacionalidad. En la demo no se veía porque el mock los trae
+> puestos — justo la clase de diferencia entre demo y producción que hay que cazar antes del
+> piloto. La `027` los siembra y los dos quedan administrables desde Configuración.
 - ⬜ **Resend + Edge Functions**: manifiesto, recordatorio de las 6 p.m., agradecimiento
 - ⬜ Revisar las reservas con tipo e ingreso contradictorios (consulta escrita, falta correrla)
 
@@ -374,8 +382,18 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 > **No es contabilidad.** La factura y el folio viven en Zeus; esto es el libro de control de la
 > operación, para que Daniela pueda cobrar sin abrir el Excel. Si no cuadra con Zeus, manda Zeus.
 > Un pago no se borra: se anula con motivo y con nombre.
-- 🟡 **Cortesías, metas y liquidación** (`024` escrita, parcial): el reporte mensual de cortesías
-  con quién autorizó y el costo del servicio ya está. **Faltan metas y comisiones.**
+- ✅ **Cortesías, metas y liquidación** (`024` + `026`): el reporte mensual de cortesías con quién
+  autorizó y el costo del servicio; metas por año, trimestre o mes, con responsable; comisiones
+  versionadas por organización y su liquidación. **Las pone gerencia** (decisión del dueño) y las
+  ve la coordinación.
+
+> **La meta de la coordinación cuenta lo que venden las demás** (regla 20), y eso va en el dato
+> —`incluye_equipo`— y no en el criterio de quien lea el informe. Si se dejara al criterio, cada
+> mes se calcularía distinto.
+
+> **Las comisiones se versionan.** Un porcentaje que cambia en marzo no puede reescribir lo que se
+> liquidó en febrero: la liquidación usa el vigente **el día del pasadía**. Y se comisiona sobre
+> `valor_a_cobrar()`, no sobre la tarifa — a una cortesía no se le comisiona nada.
 
 > **La `024` creció más allá de las cortesías, y con razón.** Al ir a registrar quién autoriza una
 > cortesía apareció que la regla 24 —*«creado_por y actualizado_por en toda tabla»*— se estaba

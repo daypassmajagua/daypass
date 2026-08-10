@@ -122,6 +122,39 @@ const CATALOGOS = {
       datos: a.email ? [{ etiqueta: 'Correo', valor: a.email }] : [],
     }),
   },
+
+  // Los dos que no se podían administrar desde ninguna parte hasta la 027, y
+  // uno de ellos bloqueaba la primera reserva: `registros.canal_id` es NOT
+  // NULL, así que sin canales no se puede vender nada.
+  canales: {
+    etiqueta: 'Canales',
+    singular: 'canal',
+    articulo: 'Nuevo',
+    crearPrimero: 'Crear el primer canal',
+    tabla: 'canales',
+    orden: 'nombre',
+    campoActivo: null,   // no tiene bandera de activo: son cinco y no cambian
+    vacio: {
+      titulo: 'No hay canales de venta',
+      detalle: 'Sin al menos uno no se puede crear una reserva: toda reserva entra por algún lado.',
+    },
+    fila: c => ({ titulo: c.nombre, detalle: c.codigo, datos: [] }),
+  },
+
+  paises: {
+    etiqueta: 'Países',
+    singular: 'país',
+    articulo: 'Nuevo',
+    crearPrimero: 'Agregar el primer país',
+    tabla: 'paises',
+    orden: 'nombre',
+    campoActivo: null,
+    vacio: {
+      titulo: 'No hay países',
+      detalle: 'La Capitanía exige la nacionalidad de cada persona en la lista nominal.',
+    },
+    fila: p => ({ titulo: p.nombre, detalle: p.codigo, datos: [] }),
+  },
 }
 
 const CLAVES = Object.keys(CATALOGOS)
