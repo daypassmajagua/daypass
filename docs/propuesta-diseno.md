@@ -63,8 +63,21 @@ Así que el folio no tiene perfil. **El folio es un puntero, no un objeto**: un 
 a la isla a qué cuenta cargarle el almuerzo a esta gente. Su trabajo entero es ese, y ya lo hace
 la pantalla de isla, que existe para responder *¿a qué cuenta va esto?*.
 
-Lo que sí conserva es **ser buscable**: quien tenga un folio en la mano lo escribe y cae en su
-reserva. Buscar por folio es una forma de encontrar una reserva, no de abrir un folio.
+Lo que sí conserva son dos cosas, y la segunda tiene consecuencias:
+
+1. **Ser buscable.** Quien tenga un folio en la mano lo escribe y cae en su reserva. Buscar por
+   folio es una forma de encontrar una reserva, no de abrir un folio.
+2. **Quedar registrado en la actividad** de la persona, el grupo y la agencia. No como pantalla:
+   **como hecho en la historia**. El día que alguien pregunte por esa cuenta, el número está donde
+   se va a buscar — en la visita de esa persona, no en un sitio aparte que haya que recordar.
+
+> **Y esto vuelve obligatorio un arreglo que había marcado como opcional.** `registros.folio_zeus`
+> es un texto suelto: se sabe **que** hay folio, no **cuándo** se puso ni **quién** lo puso
+> (§11.2, hueco 1). Mientras el folio era solo un dato de pantalla, eso se aguantaba. Si tiene que
+> ser un evento con fecha y autor en tres historias distintas, hay que anotarlo — tres líneas del
+> mismo molde de la 024, que ya anota tarifas, ajustes y cierres. **Sin eso, el evento del folio
+> aparecería sin hora y sin nombre justo en el producto donde acabamos de sellar la autoría de
+> todo.**
 
 Son cuatro perfiles menos uno: **persona, agencia y reserva**.
 
@@ -579,12 +592,14 @@ sistema. Un vacío explicado es información; uno silencioso es un defecto.
 | Pago y anulación | `pagos` (023) + `bitacora` |
 | Cambio tras el cierre | `registros.cambio_tardio_at` + motivo |
 | Acciones sensibles | `bitacora` (024) |
+| **Folio asignado** | `registros.folio_zeus` — **el número sí; la hora y el autor, cuando se anote** |
 
 **Tres huecos que encontré al diseñar esto**, y ninguno es grave pero conviene saberlos:
 
-1. **El folio no tiene cuándo.** `registros.folio_zeus` es un texto: se sabe que tiene folio, no
-   cuándo se puso ni quién. Se arregla anotándolo en la bitácora cuando cambia — tres líneas en
-   una migración futura, del mismo molde que las de la 024.
+1. **El folio no tiene cuándo ni quién.** `registros.folio_zeus` es un texto suelto. **Deja de ser
+   opcional** (§0): si el folio tiene que aparecer como evento en la historia de la persona, el
+   grupo y la agencia, necesita fecha y autor. Se arregla anotándolo en la bitácora cuando cambia
+   —tres líneas del mismo molde de la 024— y es lo único de esta propuesta que exige migración.
 2. **El enlace abierto no tiene cuándo.** `marcar_token_abierto` cambia el estado del token pero
    no guarda la hora. Saber que el cliente abrió su enlace a las 9 de la noche es justo el dato
    que dice si vale la pena llamarlo.
@@ -596,13 +611,19 @@ línea de tiempo de una reserva termina en el regreso, no en la cuenta.
 **Persona.** Encabezado: nombre, documento, contacto tocable, y las etiquetas —recurrente,
 viaja con niños, del exterior—. Después, en un bloque aparte y antes de la historia: **restricción
 alimentaria y plato habitual**, porque es lo que alguien de la isla viene a buscar y no puede
-estar al final. Luego las visitas por año: fecha · plan · agencia · valor. Y los vínculos.
+estar al final. Luego las visitas por año: **fecha · plan · agencia · folio · valor**. Y los
+vínculos.
+
+El folio va en la fila de la visita —no en una sección aparte— porque así es como se busca: nadie
+pregunta «¿cuáles folios tuvo esta señora?», preguntan «la vez que vino en julio, ¿a qué cuenta
+fue?».
 
 **Agencia u organización.** Encabezado: nombre, tipo, contactos, y **si debe, cuánto y desde
 cuándo** — en coral si pasa de 90 días. Después: pax y reservas por mes, ticket promedio, mix de
 planes, tasa de no-show y **cumplimiento del pre-registro** —qué porcentaje de sus reservas llegó
 con los nombres cargados antes del zarpe—. Esa última es la métrica que convierte una queja
-recurrente en una conversación con datos. Al final, convenios y tarifas vigentes con su historia.
+recurrente en una conversación con datos. Sus reservas listadas llevan su folio, igual que en el
+perfil de persona. Al final, convenios y tarifas vigentes con su historia.
 
 **Reserva.** El perfil que más se va a abrir. Estado arriba, lo que falta, y la línea de tiempo
 completa.
