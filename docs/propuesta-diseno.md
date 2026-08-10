@@ -124,10 +124,18 @@ De arriba a abajo:
 
 1. **La franja del día** — también a ellas les importa a qué hora salió la lancha, quién está en
    turno y cuántos hay en la isla ahora. Misma franja, sin rediseño.
-2. **Cuatro `BloqueDato`** (el patrón que nadie usa, estrenado donde nació para estar):
-   **Hoy** (pax, contra el promedio) · **El periodo** (ingresos con `valor_a_cobrar()`, nunca
-   `total_calculado`) · **La meta** (% con su barra, verde solo si ya se cumplió) · **Cartera
-   vencida** (>90 días; coral solo si hay).
+2. **Un `BloqueDato` dominante y tres de apoyo** — no cuatro iguales.
+
+   > **Corregido después de mirar una referencia.** Había propuesto los cuatro del mismo tamaño,
+   > que es el error del tablero de call center que revisamos: sus cuatro indicadores pesan igual
+   > y por eso ninguno es la respuesta. Contradecía lo que este mismo documento defiende —*una
+   > cosa por pantalla*—. `BloqueDato` ya trae `tamano: md·lg`, así que la jerarquía es
+   > composición, no API nueva.
+
+   **La meta** en `lg`, a todo el ancho: para gerencia la pregunta es una sola y es esa. Verde
+   solo si ya se cumplió. Debajo, en `md`: **Hoy** (pax contra el promedio) · **El periodo**
+   (ingresos con `valor_a_cobrar()`, nunca `total_calculado`) · **Cartera vencida** (>90 días;
+   coral solo si hay).
 3. **Pendientes de negocio** como `TarjetaPendiente`, solo si existen: *"quedan 30 tiquetes y
    mañana van 87"*, *"2 reservas de agencia sin nombres y zarpan mañana"*.
 4. **Tres enlaces profundos**: Informes · Metas · Cartera. El panorama responde; el análisis vive
@@ -251,5 +259,36 @@ globalmente y se queda así.
 7. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
 8. **Las tablas viejas adoptan los patrones** — ListadoDia, Historial, Folios con `ListaDelDia` e
    `InsigniaEstado`; Informes se parte y **se corrige `total_calculado` → `valor_a_cobrar()`**.
+
+---
+
+## 8 · Referencias: qué se toma y qué no
+
+De un tablero de analítica de call center (PulseMind), revisado el 10 de agosto.
+
+**Se toma:**
+
+- **Un solo acento, usado una vez por vista.** Ahí el azul aparece en tres sitios y todo lo demás
+  renuncia al color. Es la prueba de que la regla de colores fijos funciona: cuando solo una cosa
+  tiene color, esa cosa *es* la respuesta.
+- **La gráfica apagada con una sola barra encendida.** Lo más transferible de la referencia, y va
+  a Informes: hoy pintamos diez series con diez colores y ninguna manda. Una en color, el resto
+  en gris de línea.
+- **La ficha de comparación al lado del número**, no dentro de la misma línea. Confirma el prop
+  `comparacion` de `BloqueDato`.
+- **La proporción número/etiqueta de 5 a 1.** Veníamos en 2 a 1 y por eso los tableros se leen
+  como tablas. El número es el contenido; la etiqueta es mueble.
+
+**No se toma, y conviene dejar escrito por qué:**
+
+- **Es un diseño de monitor.** Gris claro sobre blanco, filetes de un píxel, etiquetas de 12 px:
+  todo eso muere a 60 cm bajo el sol. La referencia no tiene nada que decirle al muelle.
+- **Tipografía delgada en tamaño grande.** Preciosa en Retina, invisible a pleno sol. Manrope 700
+  no es preferencia estética: es condición de trabajo.
+- **El panel lateral permanente.** Es la firma del panel de administración genérico —el fracaso
+  declarado— y contradice los tres modos: el muelle y la isla no tienen navegación ninguna.
+- **El saludo del encabezado.** Cero información por píxel. Daniela no necesita que la saluden.
+- **Los grises.** Ese diseño está construido sobre `gray-*`; nosotros acabamos de sacar 155 del
+  código y nuestro `tinta-2` es más cálido y oscuro a propósito.
 
 Cada paso con la verificación de siempre: 162+ pruebas, humo 13/13, roles 6/6, eslint estable.
