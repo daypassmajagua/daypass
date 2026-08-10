@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { supabase } from '../lib/supabase'
 import { ROL_POR_DEFECTO } from '../lib/navegacion'
+import { alCambiarVerComo, leerVerComo, PUEDE_VER_COMO } from '../lib/verComo'
 
 /**
  * Quién soy y qué puedo ver.
@@ -56,10 +57,23 @@ export function usePerfil() {
     return () => subscription.unsubscribe()
   }, [cargar])
 
+  // Una mirada, no un permiso: cambia lo que se muestra, nunca lo que el
+  // servidor responde. Ver `lib/verComo.js`.
+  const mirandoComo = useSyncExternalStore(alCambiarVerComo, leerVerComo, () => null)
+  const rolReal = perfil?.rol || null
+  const puedeMirar = PUEDE_VER_COMO.includes(rolReal)
+  const rol = puedeMirar && mirandoComo ? mirandoComo : rolReal
+
   return {
     perfil,
     cargando: perfil === undefined,
-    rol: perfil?.rol || null,
+    /** El rol con el que se pinta la app. Puede ser el que se está mirando. */
+    rol,
+    /** El de verdad, el de la sesión. Es el que manda en el servidor. */
+    rolReal,
+    /** No null solo mientras se está mirando como otra persona. */
+    mirandoComo: puedeMirar ? mirandoComo : null,
+    puedeMirar,
     /** Sin perfil y con la tabla ya creada: la persona existe pero no está en el equipo. */
     sinPermiso: perfil === null && hayTablaPerfiles,
     recargar: cargar,

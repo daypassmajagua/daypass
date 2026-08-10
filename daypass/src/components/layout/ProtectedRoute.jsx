@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { usePerfil } from '../../hooks/usePerfil'
 import { puedeVer, inicioDe } from '../../lib/navegacion'
 import BotonReportar from '../soporte/BotonReportar'
+import BarraVerComo from './BarraVerComo'
 import logoAzul from '../../assets/logo-azul.png'
 
 /**
@@ -95,12 +96,14 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to={inicio} replace />
   }
 
-  // El botón de reportar va aquí y no en el marco de la oficina: el muelle y
-  // la isla no llevan marco, y son justamente las pantallas donde ocurre el
-  // fallo que más importa contar. Fuera de esta puerta no aparece — la página
-  // del cliente no es sitio para un canal de soporte interno.
+  // La barra de "ver como" y el botón de reportar van aquí y no en el marco de
+  // la oficina: el muelle y la isla no llevan marco, y son justamente las
+  // pantallas que hay que poder mirar con otro rol y donde ocurre el fallo que
+  // más importa contar. Fuera de esta puerta no aparecen — la página del
+  // cliente no es sitio para herramientas internas.
   return (
     <>
+      <BarraVerComo />
       {children}
       <BotonReportar />
     </>

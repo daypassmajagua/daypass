@@ -11,6 +11,7 @@ import Modal from '../components/ui/Modal'
 import DatePicker from '../components/ui/DatePicker'
 import PageHeader from '../components/layout/PageHeader'
 import HoraDeZarpe from '../components/config/HoraDeZarpe'
+import ModoDelAparato from '../components/config/ModoDelAparato'
 import { ListaDelDia, ConfirmarAccion, SeccionFormulario } from '../components/patrones'
 
 /**
@@ -266,6 +267,10 @@ export default function Config() {
       {/* Arriba de los catálogos: no es una lista, es una sola decisión que
           cambia lo que el cliente puede hacer desde su celular. */}
       <HoraDeZarpe />
+
+      <div className="mb-5">
+        <ModoDelAparato />
+      </div>
 
       {/* Los catálogos. No es un filtro —no se puede "limpiar"— así que no usa
           FiltroBarra: sería forzar un patrón donde no encaja. */}

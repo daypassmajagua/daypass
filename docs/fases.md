@@ -145,7 +145,21 @@ funciona depende de que exista.
 
 **Qué incluye**
 - ✅ Los ocho patrones en `components/patrones/`, más `Esqueleto` y `EstadoError`
-- ✅ `ProveedorModo` con los tres modos, marcados por dispositivo
+- ✅ `ProveedorModo` con los tres modos, marcados por dispositivo, **y el
+  selector para cambiarlos** en Configuración, con la confirmación al salir del
+  modo muelle
+
+> **Corrección: esta fase se dio por cerrada antes de tiempo.** El proveedor de
+> modos estaba puesto desde el principio y marcaba `data-modo` en la raíz, pero
+> **nada lo leía y nada podía cambiarlo**: quedaba en oficina para siempre. Un
+> proveedor sin selector y sin CSS que responda no es "los tres modos", es el
+> andamiaje de los tres modos. Ahora el modo cambia el tamaño base de la app y
+> se elige desde Configuración.
+>
+> Lo que sigue faltando y hay que decirlo: Embarque e Isla se dimensionaron a
+> mano —`text-[18px]`, `min-h-[64px]`— antes de que el modo existiera, así que
+> **no responden al modo**; siempre se ven como muelle. Pasarlas a unidades
+> relativas es trabajo pendiente y no trivial.
 - ✅ Los tres estados obligatorios: **cargando con esqueleto, no con texto**;
   vacío que invita a actuar; error que distingue "no hay" de "no pude cargar"
 - ✅ `Config.jsx` rehecha con los patrones

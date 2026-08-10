@@ -205,6 +205,25 @@ input[type="number"] {
 }
 
 /**
+ * El modo del aparato cambia el tamaño de todo.
+ *
+ * `ProveedorModo` marca `data-modo` en la raíz desde el primer día, pero hasta
+ * ahora **nada lo leía**: el proveedor estaba puesto y no hacía nada visible.
+ * Esto es lo que hace que el modo se note.
+ *
+ *   oficina  16px   sentada, con tiempo
+ *   muelle   18px   de pie, una mano, a pleno sol
+ *   isla     20px   de paso, mirando de lejos
+ *
+ * Escala el `rem`, así que crece todo lo que se midió en unidades relativas y
+ * los espacios de Tailwind, que son `rem`. Lo que quedó escrito en píxeles
+ * —`text-[16px]`— no se mueve, y eso es deuda real: Embarque e Isla se
+ * dimensionaron a mano antes de que el modo existiera.
+ */
+:root[data-modo="muelle"] { font-size: 18px; }
+:root[data-modo="isla"]   { font-size: 20px; }
+
+/**
  * El degradado de la marca: la barra de la oficina y el encabezado de la
  * página del cliente.
  *
