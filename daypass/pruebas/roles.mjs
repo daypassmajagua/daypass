@@ -29,14 +29,14 @@ const ESPERADO = {
   directora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Clientes', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
+           'Folios', 'Cartera', 'Clientes', 'Metas', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
            'Reportes', 'Configuración'],
     dinero: true,
   },
   asesora: {
     inicio: '/',
     menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Clientes', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
+           'Folios', 'Cartera', 'Clientes', 'Metas', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
     dinero: true,
   },
   asesora_comercial: {
@@ -46,7 +46,7 @@ const ESPERADO = {
   },
   gerencia: {
     inicio: '/informes',
-    menu: ['Informes', 'Cartera', 'Clientes', 'Historial', 'El día', 'Usuarios', 'Reportes'],
+    menu: ['Informes', 'Metas', 'Cartera', 'Clientes', 'Historial', 'El día', 'Usuarios', 'Reportes'],
     dinero: true,
   },
   admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día', 'Reportes'], dinero: false },

@@ -31,6 +31,7 @@ export const RUTAS = {
   '/folios':    { etiqueta: 'Folios',            icono: 'ClipboardList' },
   '/cartera':   { etiqueta: 'Cartera',           icono: 'Wallet' },
   '/clientes':  { etiqueta: 'Clientes',          icono: 'Users' },
+  '/metas':     { etiqueta: 'Metas',             icono: 'Target' },
   '/equipo':    { etiqueta: 'Lanchas y equipo',  icono: 'Ship' },
   '/historial': { etiqueta: 'Historial',         icono: 'History' },
   '/informes':  { etiqueta: 'Informes',          icono: 'BarChart2' },
@@ -51,7 +52,7 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
           '/config', '/editar'],
   },
 
@@ -63,13 +64,13 @@ export const POR_ROL = {
   // peor que no tenerlo.
   gerencia: {
     home: '/informes',
-    ver: ['/informes', '/cartera', '/clientes', '/historial', '/dia', '/usuarios', '/reportes'],
+    ver: ['/informes', '/metas', '/cartera', '/clientes', '/historial', '/dia', '/usuarios', '/reportes'],
   },
 
   directora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
           '/config', '/editar'],
   },
 
@@ -77,7 +78,7 @@ export const POR_ROL = {
   asesora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
+          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
   },
 
   // Vende y puede cubrir turnos de muelle, pero no cierra el día ni toca

@@ -1,5 +1,6 @@
 import { hoyLocal, aFechaLocal } from './utils.js'
 import { valorACobrar, pagadoDe, diasDeDeuda, tramoDe } from './cartera.js'
+import { rangoDeMeta } from './metas.js'
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
@@ -616,6 +617,21 @@ const STORE = {
   firmas: [],
   tickets: [],
   pagos: [],
+  comisiones: [],
+  // Una meta del mes en curso: sin ella la pantalla sale vacía en la demo y no
+  // se puede mostrar el avance, que es lo único que hace útil una meta.
+  metas: [
+    {
+      id: 'meta-1',
+      anio: Number(hoyLocal().slice(0, 4)),
+      periodo: 'mes',
+      numero: Number(hoyLocal().slice(5, 7)),
+      unidad: 'ingresos',
+      valor: 60_000_000,
+      responsable_id: null,
+      incluye_equipo: true,
+    },
+  ],
   tiquetes_lotes: [],
   // Un saldo de muestra: sin él la alerta del cierre no se puede ver en la
   // demo, y es justamente la pantalla que hay que poder mostrarle al hotel.
@@ -957,6 +973,38 @@ function derivarCartera() {
       fila.mas_viejo = Math.max(fila.mas_viejo, s.dias)
     })
   return [...porOrg.values()].sort((a, b) => b.total - a.total)
+}
+
+/**
+ * La vista `avance_metas` de la 026.
+ *
+ * El avance se calcula con `valorACobrar`, igual que la cartera: una meta que
+ * contara `total_calculado` sumaría las cortesías y diría que se vendió más de
+ * lo que se vendió.
+ */
+function derivarAvanceMetas() {
+  if (!VEN_DINERO.includes(rolActual()) && rolActual() !== 'asesora') return []
+  return STORE.metas.map(m => {
+    const { desde, hasta } = rangoDeMeta(m.anio, m.periodo, m.numero)
+    const cuentan = STORE.registros.filter(r =>
+      r.fecha >= desde && r.fecha <= hasta &&
+      !['cancelada', 'noshow'].includes(r.estado) &&
+      (!m.responsable_id || m.incluye_equipo || r.vendida_por_id === m.responsable_id))
+
+    const logrado = m.unidad === 'ingresos'
+      ? cuentan.reduce((s, r) => {
+          const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
+          return s + valorACobrar(r, ti)
+        }, 0)
+      : cuentan.reduce((s, r) => s + r.adultos + r.ninos, 0)
+
+    return {
+      ...m,
+      responsable: STORE.perfiles.find(p => p.user_id === m.responsable_id)?.nombre
+        || 'Todo el pasadía',
+      desde, hasta, logrado,
+    }
+  })
 }
 
 /** La vista `clientes_ficha` de la 025: la persona con sus visitas. */
@@ -1355,6 +1403,41 @@ const RPC = {
     }
   },
 
+  /** Como `liquidacion_comisiones` de la 026: el porcentaje del día del pasadía. */
+  liquidacion_comisiones({ p_desde, p_hasta }) {
+    const vigente = (orgId, fecha) => {
+      const c = STORE.comisiones
+        .filter(x => x.organizacion_id === orgId && x.desde <= fecha && (!x.hasta || x.hasta >= fecha))
+        .sort((a, b) => b.desde.localeCompare(a.desde))[0]
+      return c ? Number(c.porcentaje) : 0
+    }
+
+    const porOrg = new Map()
+    STORE.registros
+      .filter(r => r.agencia_id && r.fecha >= p_desde && r.fecha <= p_hasta
+        && !['cancelada', 'noshow'].includes(r.estado))
+      .forEach(r => {
+        const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
+        const base = valorACobrar(r, ti)
+        if (!porOrg.has(r.agencia_id)) {
+          porOrg.set(r.agencia_id, {
+            organizacion_id: r.agencia_id,
+            organizacion: STORE.organizaciones.find(o => o.id === r.agencia_id)?.nombre || 'Sin agencia',
+            reservas: 0, base: 0, porcentaje: vigente(r.agencia_id, p_hasta), comision: 0,
+          })
+        }
+        const fila = porOrg.get(r.agencia_id)
+        fila.reservas += 1
+        fila.base += base
+        fila.comision += base * vigente(r.agencia_id, r.fecha) / 100
+      })
+
+    return {
+      data: [...porOrg.values()].filter(f => f.base > 0).sort((a, b) => b.comision - a.comision),
+      error: null,
+    }
+  },
+
   /** Como `ficha_persona` de la 025. */
   ficha_persona({ p_persona_id }) {
     const p = STORE.personas.find(x => x.id === p_persona_id)
@@ -1631,6 +1714,17 @@ class QB {
   }
 
   /**
+   * `is('col', null)` es como se pregunta por nulo en PostgREST — `eq` no
+   * sirve, porque en SQL nada es igual a null. Lo usa la lista de comisiones
+   * para traer solo las vigentes (`hasta is null`).
+   */
+  is(col, val) {
+    if (val === null) this._filters.push(r => r[col] === null || r[col] === undefined)
+    else this._filters.push(r => r[col] === val)
+    return this
+  }
+
+  /**
    * Se acumulan, como en PostgREST: el primer `order` manda y los siguientes
    * desempatan. Antes el segundo pisaba al primero, así que una lista pedida
    * "lo bloqueante primero, y dentro de eso lo más reciente" salía solo por
@@ -1677,6 +1771,7 @@ class QB {
     if (this._table === 'reservas') return derivarReservas()
     // Las vistas de dinero de la 023: se derivan, no se guardan.
     if (this._table === 'clientes_ficha') return derivarClientesFicha()
+    if (this._table === 'avance_metas') return derivarAvanceMetas()
     if (this._table === 'saldos_reserva') return derivarSaldos()
     if (this._table === 'cartera_por_organizacion') return derivarCartera()
     // Un reporte puede llevar una foto de la pantalla con la reserva de
