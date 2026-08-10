@@ -256,8 +256,11 @@ globalmente y se queda así.
    pantallas del día a día).
 5. **`/panorama`** con los patrones.
 6. **Hoy retocado** — acción en la franja, orden de pendientes, dinero por modo.
-7. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
-8. **Las tablas viejas adoptan los patrones** — ListadoDia, Historial, Folios con `ListaDelDia` e
+7. **La barra a cinco entradas** (§9) — el panel «Todo» agrupado por frecuencia, la píldora del
+   activo, y la búsqueda global. Va aquí y no antes porque `/panorama` cambia a dónde entran la
+   directora y gerencia, y no tiene sentido reorganizar el menú dos veces.
+8. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
+9. **Las tablas viejas adoptan los patrones** — ListadoDia, Historial, Folios con `ListaDelDia` e
    `InsigniaEstado`; Informes se parte y **se corrige `total_calculado` → `valor_a_cobrar()`**.
 
 ---
@@ -290,5 +293,55 @@ De un tablero de analítica de call center (PulseMind), revisado el 10 de agosto
 - **El saludo del encabezado.** Cero información por píxel. Daniela no necesita que la saluden.
 - **Los grises.** Ese diseño está construido sobre `gray-*`; nosotros acabamos de sacar 155 del
   código y nuestro `tinta-2` es más cálido y oscuro a propósito.
+
+---
+
+## 9 · La barra superior, y el problema que esconde
+
+Revisando un segundo tablero (una app de fitness) apareció lo que de verdad hay que arreglar, y
+no es el estilo de la barra: **es cuántas entradas tiene.**
+
+Su barra lleva **seis**. La nuestra, para la directora, lleva **dieciséis** — lo confirma la
+prueba de roles: *directora → 16 secciones*. Por eso el menú completo solo cabe desde 1536 px y
+por debajo se esconde en un cajón táctil. En seis sesiones agregamos Cartera, Clientes, Metas y
+Reportes, y el menú creció una entrada por cada una, en línea recta.
+
+**No es un problema de barra: es de arquitectura de información.**
+
+### La decisión: cinco visibles, una puerta
+
+La barra lleva **el día**: `Hoy · El día · Nueva reserva · Embarque` (o `Isla`, según el modo del
+aparato). Un botón **Todo** abre un panel con lo demás agrupado en tres columnas —**Operación ·
+Negocio · Ajustes**— por *cuándo se usa*, no por *qué es*.
+
+El criterio que lo gobierna: **lo que se toca todos los días está a un toque; lo que se toca cada
+mes está a dos.** Hoy Configuración y Nueva reserva pesan igual en la barra, y una se usa cuarenta
+veces al día y la otra cuatro veces al año.
+
+Esto **no toca `navegacion.js` como fuente de verdad** — cada rol sigue viendo solo lo suyo. Lo
+que se agrega es una capa de frecuencia sobre esa lista: qué sube a la barra y qué vive detrás de
+la puerta.
+
+### Lo que se toma de esa referencia
+
+- **La píldora sólida del activo.** El suyo es un bloque de color; el nuestro es blanco al 20 %
+  sobre navy, más tímido de lo que debería. Saber dónde estás no debería costar una segunda
+  mirada.
+- **El grupo de la derecha: buscar · avisos · avatar.** Reserva el sitio de las notificaciones,
+  que llegan en la Fase 6.
+- **Búsqueda global**, que hoy no existe. Para encontrar una reserva hay que ir a Historial y
+  filtrar; Daniela con el teléfono en la oreja necesita escribir «Herrera» desde donde esté. Es
+  función nueva, no adorno, y entra al orden de construcción.
+
+### Lo que no
+
+- **El saludo y el banner promocional.** Ocupan el tercio superior sin decir nada. En una
+  herramienta de trabajo ese es el espacio más caro de la pantalla.
+- **Las tarjetas en pasteles decorativos.** Nuestros colores tienen significado fijo: si una
+  tarjeta es lavanda porque sí, el día que algo esté pendiente el coral ya no grita.
+- **Las minigráficas bajo cada indicador.** Una curva de siete días bajo «personas hoy» no cambia
+  ninguna decisión a las 7 de la noche.
+- **La barra clara.** La nuestra sigue oscura: separa el marco del contenido y hace evidente que
+  en modo muelle **no hay barra**. Esa ausencia tiene que sentirse como decisión, no como pérdida.
 
 Cada paso con la verificación de siempre: 162+ pruebas, humo 13/13, roles 6/6, eslint estable.
