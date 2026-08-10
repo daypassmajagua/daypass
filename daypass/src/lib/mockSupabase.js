@@ -1,4 +1,5 @@
 import { hoyLocal, aFechaLocal } from './utils.js'
+import { valorACobrar, pagadoDe, diasDeDeuda, tramoDe } from './cartera.js'
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
@@ -614,6 +615,7 @@ const STORE = {
   ],
   firmas: [],
   tickets: [],
+  pagos: [],
   tiquetes_lotes: [],
   // Un saldo de muestra: sin él la alerta del cierre no se puede ver en la
   // demo, y es justamente la pantalla que hay que poder mostrarle al hotel.
@@ -868,6 +870,65 @@ function derivarReservas() {
     // la vista lo devuelve en null y aquí tiene que pasar lo mismo.
     _sinDinero: true,
   }))
+}
+
+/**
+ * Las vistas `saldos_reserva` y `cartera_por_organizacion` de la 023.
+ *
+ * El cálculo va por `valorACobrar`, el mismo módulo que usa la app: si alguien
+ * lo cambia, la demo cambia con él. Sumar `total_calculado` aquí habría hecho
+ * que la demo mostrara cartera donde no la hay —cortesías, alojamiento— y esa
+ * es justamente la equivocación contra la que existe esa función.
+ */
+function derivarSaldos() {
+  if (!VEN_DINERO.includes(rolActual())) return []
+  const hoy = hoyLocal()
+  return STORE.registros.map(r => {
+    const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
+    const pagos = STORE.pagos.filter(p => p.registro_id === r.id)
+    const aCobrar = valorACobrar(r, ti)
+    const pagado = pagadoDe(pagos)
+    return {
+      registro_id: r.id,
+      fecha: r.fecha,
+      estado: r.estado,
+      nombre_pasajero: r.nombre_pasajero,
+      nombre_grupo: r.nombre_grupo,
+      agencia_id: r.agencia_id,
+      agencia_nombre: r.agencia_nombre,
+      forma_pago: r.forma_pago,
+      a_cobrar: aCobrar,
+      pagado,
+      saldo: aCobrar - pagado,
+      dias: diasDeDeuda(r.fecha, hoy),
+    }
+  })
+}
+
+function derivarCartera() {
+  const hoy = hoyLocal()
+  const porOrg = new Map()
+  derivarSaldos()
+    .filter(s => s.saldo > 0 && s.fecha <= hoy)
+    .forEach(s => {
+      const org = STORE.organizaciones.find(o => o.id === s.agencia_id)
+      const clave = s.agencia_id || s.agencia_nombre || 'sin-organizacion'
+      if (!porOrg.has(clave)) {
+        porOrg.set(clave, {
+          organizacion_id: s.agencia_id || 'sin-organizacion',
+          organizacion: org?.nombre || s.agencia_nombre || 'Sin agencia',
+          reservas: 0, total: 0,
+          al_dia: 0, de_31_a_60: 0, de_61_a_90: 0, mas_de_90: 0,
+          mas_viejo: 0,
+        })
+      }
+      const fila = porOrg.get(clave)
+      fila.reservas += 1
+      fila.total += s.saldo
+      fila[tramoDe(s.dias)] += s.saldo
+      fila.mas_viejo = Math.max(fila.mas_viejo, s.dias)
+    })
+  return [...porOrg.values()].sort((a, b) => b.total - a.total)
 }
 
 function derivarEstadoEmbarques() {
@@ -1248,6 +1309,19 @@ const RPC = {
     }
   },
 
+  /** Como `anular_pago` de la 023: un pago no se borra, se anula con motivo. */
+  anular_pago({ p_pago_id, p_motivo }) {
+    if (!(p_motivo || '').trim()) {
+      return { data: null, error: { message: 'Anular un pago necesita motivo' } }
+    }
+    const pg = STORE.pagos.find(p => p.id === p_pago_id && p.estado !== 'anulado')
+    if (!pg) return { data: null, error: { message: 'Ese pago no existe o ya estaba anulado' } }
+    pg.estado = 'anulado'
+    pg.anulado_motivo = p_motivo.trim()
+    pg.anulado_at = new Date().toISOString()
+    return { data: pg, error: null }
+  },
+
   /** Como `atender_ticket` de la 021: solo quien mantiene el sistema. */
   atender_ticket({ p_ticket_id, p_estado, p_respuesta }) {
     if (rolActual() !== 'super_admin') {
@@ -1497,6 +1571,9 @@ class QB {
     // puede verlos. Sin esto en la demo no habría forma de comprobar que el
     // mesero no ve plata, que es la promesa central de la fase de roles.
     if (this._table === 'reservas') return derivarReservas()
+    // Las vistas de dinero de la 023: se derivan, no se guardan.
+    if (this._table === 'saldos_reserva') return derivarSaldos()
+    if (this._table === 'cartera_por_organizacion') return derivarCartera()
     // Un reporte puede llevar una foto de la pantalla con la reserva de
     // alguien: no lo lee todo el equipo. Es la política de la 021, replicada
     // aquí para que la demo no muestre de más.

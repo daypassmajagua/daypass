@@ -29,6 +29,7 @@ export const RUTAS = {
   '/isla':      { etiqueta: 'Isla',              icono: 'Palmtree' },
   '/cocina':    { etiqueta: 'Almuerzos',         icono: 'ChefHat' },
   '/folios':    { etiqueta: 'Folios',            icono: 'ClipboardList' },
+  '/cartera':   { etiqueta: 'Cartera',           icono: 'Wallet' },
   '/equipo':    { etiqueta: 'Lanchas y equipo',  icono: 'Ship' },
   '/historial': { etiqueta: 'Historial',         icono: 'History' },
   '/informes':  { etiqueta: 'Informes',          icono: 'BarChart2' },
@@ -49,7 +50,7 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/folios', '/cartera', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
           '/config', '/editar'],
   },
 
@@ -61,13 +62,13 @@ export const POR_ROL = {
   // peor que no tenerlo.
   gerencia: {
     home: '/informes',
-    ver: ['/informes', '/historial', '/dia', '/usuarios', '/reportes'],
+    ver: ['/informes', '/cartera', '/historial', '/dia', '/usuarios', '/reportes'],
   },
 
   directora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
+          '/folios', '/cartera', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
           '/config', '/editar'],
   },
 
@@ -75,7 +76,7 @@ export const POR_ROL = {
   asesora: {
     home: '/',
     ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
+          '/folios', '/cartera', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
   },
 
   // Vende y puede cubrir turnos de muelle, pero no cierra el día ni toca

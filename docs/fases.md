@@ -347,8 +347,21 @@ nadie anota es un fallo que se pierde. **Yo la subiría justo después del umbra
 - ✅ **Tiquetes** (`022`): kardex combinado zarpe + parque, saldo inicial digitado una vez,
   compras por lote con proveedor y soporte, consumo recalculable por día, `registros.tiquete_responsable`
   (hotel · agencia · cliente · empresa), y la alerta predictiva en el cierre del día
-- ⬜ **Pagos y cartera** (`023`): tipo, valor, estado, soporte; cartera por agencia con
-  antigüedad; tasa de no-show por agencia
+- ✅ **Pagos y cartera** (`023`, escrita): `pagos` con medio, estado y soporte; cartera por
+  organización con los cuatro tramos; tasa de no-show; pantalla `/cartera` con el detalle por
+  reserva y el registro del pago
+
+> **Lo que se cobra no es la tarifa, y esa es la trampa del bloque.**
+> `total_calculado` es columna generada —`adultos*precio + ninos*precio + lancha`— y hay tres
+> casos en que no es lo que se cobra: las cortesías, alojamiento y empleados **no generan
+> ingreso** (regla 11); al proveedor se le cobra `valor_cupo` si `cobra_cupo`, y si no, nada.
+> Sumar esa columna habría inventado cartera y sacado a cobrarle a quien no debe. Todo pasa por
+> `valor_a_cobrar()`, que tiene su gemelo probado en `lib/cartera.js`. Y como la columna es
+> `generated always`, no se podía extender: la función era la única salida.
+
+> **No es contabilidad.** La factura y el folio viven en Zeus; esto es el libro de control de la
+> operación, para que Daniela pueda cobrar sin abrir el Excel. Si no cuadra con Zeus, manda Zeus.
+> Un pago no se borra: se anula con motivo y con nombre.
 - ⬜ **Cortesías, metas y liquidación** (`024`): reporte mensual de cortesías, metas por año y
   responsable, comisiones por agencia
 

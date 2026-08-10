@@ -19,6 +19,7 @@ import {
   Lock,
   UserCog,
   LifeBuoy,
+  Wallet,
 } from 'lucide-react'
 import { useState } from 'react'
 import { classNames } from '../../lib/utils'
@@ -37,7 +38,7 @@ import { menuDe, ETIQUETA_ROL } from '../../lib/navegacion'
  */
 const ICONOS = {
   LayoutDashboard, PlusCircle, List, Lock, Anchor, Palmtree, ChefHat,
-  ClipboardList, Ship, History, BarChart2, Settings, UserCog, LifeBuoy,
+  ClipboardList, Ship, History, BarChart2, Settings, UserCog, LifeBuoy, Wallet,
 }
 
 export default function Navbar() {
