@@ -147,7 +147,9 @@ export const ETIQUETA_ROL = {
   directora: 'Directora',
   asesora: 'Coordinadora de pasadía',
   asesora_comercial: 'Asesora comercial',
-  admin_isla: 'Isla',
+  // Decía solo «Isla», y nadie lo reconocía en una lista de roles: parecía un
+  // lugar y no un cargo.
+  admin_isla: 'Administrador de isla',
   mesero: 'Mesero',
   // Se conserva la etiqueta por si algún perfil viejo todavía la dice: sin
   // esto, la pantalla de Usuarios mostraría el valor crudo de la base.

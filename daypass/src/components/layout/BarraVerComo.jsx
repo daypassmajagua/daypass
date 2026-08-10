@@ -17,9 +17,16 @@ export default function BarraVerComo() {
   const { rolReal, mirandoComo, puedeMirar } = usePerfil()
   if (!puedeMirar) return null
 
-  const opciones = ROLES
-    .filter(r => r !== rolReal)
-    .map(r => ({ value: r, label: ETIQUETA_ROL[r] || r }))
+  // El propio rol va en la lista, marcado. Antes se filtraba —«para qué
+  // ofrecerte lo que ya eres»— y el resultado fue que un super_admin no
+  // encontraba «Administrador del sistema» por ninguna parte y parecía que
+  // faltaba. Elegirlo es la forma obvia de volver a lo suyo.
+  const opciones = ROLES.map(r => ({
+    value: r,
+    label: r === rolReal ? `${ETIQUETA_ROL[r] || r} (tú)` : (ETIQUETA_ROL[r] || r),
+  }))
+
+  const elegir = r => verComo(r === rolReal ? null : r)
 
   if (!mirandoComo) {
     // Sin mirada activa: un control discreto, no una barra. Esto se usa de vez
@@ -30,12 +37,11 @@ export default function BarraVerComo() {
         <span className="text-[13px] text-tinta-2">Ver la app como</span>
         <Select
           size="sm"
-          value=""
-          onChange={verComo}
-          placeholder="— Elegir rol —"
+          value={rolReal}
+          onChange={elegir}
           options={opciones}
           align="right"
-          className="w-52"
+          className="w-60"
         />
       </div>
     )
@@ -51,13 +57,26 @@ export default function BarraVerComo() {
         Solo cambia el menú y a dónde entras. Los permisos siguen siendo los
         tuyos, así que el dinero se sigue viendo.
       </p>
-      <button
-        onClick={() => verComo(null)}
-        className="ml-auto flex items-center gap-1.5 text-[14px] font-bold rounded-lg px-3 min-h-[36px] hover:bg-black/10"
-      >
-        <X size={16} />
-        Volver a lo mío
-      </button>
+
+      <div className="ml-auto flex items-center gap-2">
+        {/* La lista sigue a la mano: se compara un rol con otro sin tener que
+            salir y volver a entrar cada vez. */}
+        <Select
+          size="sm"
+          value={mirandoComo}
+          onChange={elegir}
+          options={opciones}
+          align="right"
+          className="w-52"
+        />
+        <button
+          onClick={() => verComo(null)}
+          className="flex items-center gap-1.5 text-[14px] font-bold rounded-lg px-3 min-h-[36px] hover:bg-black/10"
+        >
+          <X size={16} />
+          Volver a lo mío
+        </button>
+      </div>
     </div>
   )
 }
