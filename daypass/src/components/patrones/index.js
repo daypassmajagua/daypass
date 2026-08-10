@@ -34,3 +34,8 @@ export { default as InsigniaEstado } from './InsigniaEstado'
 // Los tres estados obligatorios de toda pantalla que traiga datos.
 export { default as Esqueleto, Barra } from './Esqueleto'
 export { default as EstadoError } from './EstadoError'
+
+// El único patrón que no salió de una pantalla existente: no había nada
+// parecido porque no había ningún dato que cambiara solo. Lo estrena «en la
+// isla ahora» y lo van a usar la franja del día y el panorama.
+export { default as ContadorVivo } from './ContadorVivo'

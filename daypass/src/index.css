@@ -224,6 +224,62 @@ input[type="number"] {
 :root[data-modo="isla"]   { font-size: 20px; }
 
 /**
+ * Las cuatro animaciones del sistema. Ni una más.
+ *
+ * Cada una resuelve algo concreto: confirmar, decir de dónde vino un cambio, o
+ * guiar la atención. Ninguna existe para adornar.
+ *
+ * **En CSS y no con una librería** porque el iPad del muelle vuelve a bajar el
+ * paquete completo cada vez que la app se actualiza, y eso pasa en la señal de
+ * La Bodeguita. Treinta kilobytes de motor de animación para esto sería
+ * cobrarle a la persona que embarca el gusto de quien programa.
+ *
+ * **La regla que gobierna todo:** el estado cambia primero y la animación va
+ * detrás. Nunca al revés. Una confirmación que espera a su animación es una
+ * confirmación lenta, y en el muelle eso se paga en segundos por lancha.
+ *
+ * `prefers-reduced-motion` las apaga todas —la regla global de más abajo lo
+ * hace—. Lo que no se apaga es la información: los avisos que dependen de que
+ * algo cambie de color usan clases de estado, no keyframes, justo para que
+ * sigan diciendo lo suyo sin moverse.
+ */
+
+/* Algo acaba de llegar por Realtime: se posa y se desvanece. */
+@keyframes destello {
+  from { background-color: var(--color-brand-50); }
+  to   { background-color: transparent; }
+}
+.destello { animation: destello 800ms ease-out; }
+
+/* El dígito viejo se va hacia arriba; el nuevo entra desde abajo. Es el gesto
+   del contador mecánico, que la gente ya lee como "esto cuenta en vivo". */
+@keyframes tic-sale {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-0.25em); }
+}
+@keyframes tic-entra {
+  from { opacity: 0; transform: translateY(0.25em); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tic-sale  { animation: tic-sale 140ms ease-in forwards; }
+.tic-entra { animation: tic-entra 140ms ease-out; }
+
+/* El eco de un toque en el muelle. Va DESPUÉS del cambio de color, nunca
+   antes: es la confirmación de que el dedo llegó, no el preludio del cambio. */
+@keyframes eco {
+  from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-verde-500) 55%, transparent); }
+  to   { box-shadow: 0 0 0 14px transparent; }
+}
+.eco { animation: eco 300ms ease-out; }
+
+/* Lo que entra en pantalla: modales y tarjetas. Corto, para que no se sienta. */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.aparecer { animation: aparecer 160ms ease-out; }
+
+/**
  * El degradado de la marca: la barra de la oficina y el encabezado de la
  * página del cliente.
  *
