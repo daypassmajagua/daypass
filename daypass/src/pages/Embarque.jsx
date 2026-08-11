@@ -9,6 +9,8 @@ import { useZarpesDelDia, useEmbarque, useDatosManifiesto, claveDe } from '../ho
 import { armarManifiesto } from '../lib/manifiesto'
 import { sePuedeNombrar } from '../lib/plazas'
 import { resolverToken } from '../lib/offline/precarga'
+import { tocar } from '../lib/sonido'
+import { veredictoDePase } from '../lib/veredictoPase'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import Select from '../components/ui/Select'
@@ -337,22 +339,30 @@ export default function Embarque() {
    * El QR dice quién es, no cuántos vinieron, y en un grupo de 24 la que sabe
    * cuántos subieron es ella.
    */
+  /**
+   * Un pase leído. **Devuelve el veredicto en vez de mostrarlo**: el lector se
+   * queda abierto y lo pinta adentro, para que la fila siga avanzando sin
+   * abrir y cerrar la cámara por cada persona.
+   *
+   * No embarca a nadie, y eso es por regla: el QR dice **quién es**, no
+   * **cuántos suben**. En un grupo de veinticuatro, la que sabe cuántos
+   * llegaron es la persona del muelle. Lo que hace es dejar el grupo filtrado
+   * y resaltado, listo para el toque.
+   */
   async function alLeerPase(texto) {
-    setLectorAbierto(false)
     const registroId = await resolverToken(texto)
-    if (!registroId) {
-      toast.error('Ese pase no es de hoy. Búscalo por el nombre.')
-      return
+    const grupo = registroId ? grupos.find(g => g.registro.id === registroId) : null
+
+    // Si es de esta lancha, se filtra y se resalta igual: el lector sigue
+    // abierto, y cuando se cierre el grupo ya está en pantalla esperando el
+    // toque. Las reglas del veredicto viven en `lib/veredictoPase` y tienen
+    // sus propias pruebas.
+    if (grupo) {
+      setBusqueda('')
+      setGrupoResaltado(registroId)
     }
-    const grupo = grupos.find(g => g.registro.id === registroId)
-    if (!grupo) {
-      toast.error('Ese pase no es de esta lancha.')
-      return
-    }
-    const quien = grupo.registro.nombre_grupo || grupo.registro.nombre_pasajero
-    setBusqueda('')
-    setGrupoResaltado(registroId)
-    toast.success(`${quien} — ${grupo.embarcados} de ${grupo.filas.length} ya ${esRegreso ? 'bajaron' : 'a bordo'}`)
+
+    return veredictoDePase({ registroId, grupo, esRegreso })
   }
 
   function imprimirManifiesto() {
@@ -422,6 +432,10 @@ export default function Embarque() {
     }
     if (listo) return   // ya estaba: un toque no lo tumba después de la ventana
 
+    // El tic suena AQUÍ, con el cambio de estado y no después de que responda
+    // el servidor. Es el tercer canal de confirmación —color, contador,
+    // sonido— para cuando ni siquiera se puede mirar la pantalla.
+    tocar('tic')
     setRecientes(prev => ({ ...prev, [clave]: Date.now() }))
     // Pasada la ventana, la fila deja de ofrecer deshacer por sí sola.
     setTimeout(() => {
@@ -788,7 +802,11 @@ export default function Embarque() {
       )}
 
       {lectorAbierto && (
-        <LectorQR onLeer={alLeerPase} onCerrar={() => setLectorAbierto(false)} />
+        <LectorQR
+          onLeer={alLeerPase}
+          onCerrar={() => setLectorAbierto(false)}
+          onBuscarPorNombre={() => { setLectorAbierto(false); setBusqueda('') }}
+        />
       )}
 
       {walkInAbierto && (
