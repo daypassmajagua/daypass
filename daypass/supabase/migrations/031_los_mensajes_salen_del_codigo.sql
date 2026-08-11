@@ -57,21 +57,40 @@ on conflict (clave) do nothing;
 --
 -- El de invitación se manda al crear la reserva y lleva al check-in. El del
 -- pase se manda después del cierre, cuando ya no hay check-in que hacer.
+--
+-- ── Comillas de dólar, y no `E'…\n'` ───────────────────────────────────────
+--
+-- La primera versión de esta migración encadenaba varios `E'…'` en líneas
+-- seguidas y **no compilaba**: PostgreSQL sí concatena dos literales separados
+-- por un salto de línea, pero solo el primero puede llevar el prefijo `E`; el
+-- segundo se lee como un identificador suelto y revienta.
+--
+-- Con las comillas de dólar los saltos de línea son saltos de línea de verdad,
+-- no barras escapadas. El mensaje se lee aquí igual que le llega al cliente,
+-- que es justo lo que uno quiere poder revisar antes de correr esto.
 -- ════════════════════════════════════════════════════════════
 
 insert into ajustes (clave, valor, descripcion) values
   ('mensaje_invitacion',
-   E'¡Hola {nombre}! 🌊\n\n'
-   E'Tu Day Tour en el Hotel San Pedro de Majagua es el {fecha}.\n\n'
-   E'Antes de venir necesitamos el nombre y el documento de cada persona: la Capitanía de Puerto lo exige para poder zarpar. Ahí mismo eliges el almuerzo y confirmas tu asistencia:\n{enlace}\n\n'
-   E'Al terminar recibes tu pase para el muelle. ¡Nos vemos en las Islas del Rosario!',
+$msg$¡Hola {nombre}! 🌊
+
+Tu Day Tour en el Hotel San Pedro de Majagua es el {fecha}.
+
+Antes de venir necesitamos el nombre y el documento de cada persona: la Capitanía de Puerto lo exige para poder zarpar. Ahí mismo eliges el almuerzo y confirmas tu asistencia:
+{enlace}
+
+Al terminar recibes tu pase para el muelle. ¡Nos vemos en las Islas del Rosario!$msg$,
    'El WhatsApp que se manda al crear la reserva. Marcas: {nombre} {fecha} {enlace}'),
 
   ('mensaje_pase',
-   E'¡Hola {nombre}! 🌊\n\n'
-   E'Todo listo para tu Day Tour del {fecha}.\n\n'
-   E'Aquí está tu pase para presentar en el muelle:\n{enlace}\n\n'
-   E'Te esperamos en el muelle de La Bodeguita. ¡Nos vemos!',
+$msg$¡Hola {nombre}! 🌊
+
+Todo listo para tu Day Tour del {fecha}.
+
+Aquí está tu pase para presentar en el muelle:
+{enlace}
+
+Te esperamos en el muelle de La Bodeguita. ¡Nos vemos!$msg$,
    'El WhatsApp que se manda después del cierre, con el pase. Marcas: {nombre} {fecha} {enlace}')
 on conflict (clave) do nothing;
 
