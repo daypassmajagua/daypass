@@ -52,7 +52,9 @@ const ESPERADO = {
   // La isla no lleva el menú de oficina sino su navegación mínima, que tiene
   // sus propios destinos: Almuerzos vive dentro de Isla desde que el menú se
   // reorganizó por sustantivos.
-  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'Hoy'], dinero: false },
+  // «Embarque» le aparece desde la 032, y para ella quiere decir el regreso:
+  // es quien lo recibe y lo cierra. La ida no la ve — la base se la rechaza.
+  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'Hoy', 'Embarque'], dinero: false },
   // El mesero tiene una sola pantalla, así que NO ve barra: un botón que
   // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.
   mesero:     { inicio: '/isla', menu: [],               dinero: false },

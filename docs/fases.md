@@ -598,11 +598,11 @@ que toque el front debería ir en paralelo con la fase 1 mientras extrae patrone
 | Qué | Desbloquea | Sin eso |
 |---|---|---|
 | Correr la `014` | Cierra la fase 0 técnica | El conteo de cocina sigue sin infantes en producción |
-| **Catálogos reales** | **Umbral A — el piloto** | Daniela no puede crear una reserva de verdad |
-| Clave de Resend + dominio | Manifiesto, recordatorio, agradecimiento, y el correo de los tickets | Todo eso se imprime o se manda a mano |
+| ~~**Catálogos reales**~~ | ~~**Umbral A**~~ | **Ya no está bloqueado por ti.** Los carga Daniela desde Configuración antes de operar, y la app le dice qué le falta: el índice de Configuración muestra «Antes de operar» con lo que impide crear la primera reserva, y desaparece cuando está todo |
+| ~~Clave de Resend + dominio~~ | ~~Fase 6~~ | **Aplazado por decisión del dueño.** Mientras tanto el manifiesto se imprime y el enlace se manda por WhatsApp desde el aparato, como hoy |
 | Correr la consulta de contradictorias | Decidir si es error de captura | `/isla` seguirá diciendo "revisar antes de cobrar" sin que nadie sepa cuántas son |
 | Nombres, cargos y correos | Sembrar los perfiles de la fase 2 | Se construye igual; se siembra después |
-| Saldo inicial de tiquetes | Arrancar el kardex (fase 5) | El mecanismo se construye, el inventario no arranca |
+| Saldo inicial de tiquetes | Arrancar el kardex (fase 5) | El mecanismo se construye, el inventario no arranca. **Lo digita Daniela**, no financiera: la RLS de la 022 ya deja escribir el kardex a `asesora`, así que no hace falta rol nuevo. Falta la pantalla, que es de la fase 5 |
 | Metas del año y comisiones | Metas y liquidación (fase 5) | Igual |
 | Revisión jurídica de habeas data | Que la fase 3 pueda entrar en producción | Se construye, no se despliega |
 | Respuesta de Capitanía sobre plazas sin nombre | Cerrar el manifiesto | Hoy salen visibles y contadas, y el muelle puede nombrarlas |

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import {
   Ship, Building2, Tag, CalendarDays, Mail, History, Palette,
@@ -7,7 +8,8 @@ import { usePerfil } from '../hooks/usePerfil'
 import { seccionesDe } from '../lib/navegacion'
 import { classNames } from '../lib/utils'
 import PageHeader from '../components/layout/PageHeader'
-import { Esqueleto } from '../components/patrones'
+import { Esqueleto, TarjetaPendiente } from '../components/patrones'
+import { loQueFalta } from '../lib/listoParaOperar'
 import Config from './Config'
 
 /**
@@ -110,6 +112,8 @@ export default function Configuracion() {
         subtitle="Lo que se cambia de vez en cuando. Lo de todos los días está arriba."
       />
 
+      <AntesDeOperar />
+
       <div className="flex flex-col gap-2">
         {secciones.map(s => {
           const Icono = ICONOS[s.icono] || Settings
@@ -136,5 +140,61 @@ export default function Configuracion() {
         })}
       </div>
     </div>
+  )
+}
+
+/**
+ * Lo que falta para poder operar, si es que falta algo.
+ *
+ * ── Por qué está aquí y no en un documento ──────────────────────────────────
+ *
+ * «Cargar los catálogos reales» era un pendiente que vivía en la cabeza del
+ * dueño. Eso funciona una vez y falla el día que se monte otro entorno o que
+ * alguien desactive la última lancha sin darse cuenta.
+ *
+ * **El silencio es el estado sano**: cuando todo está cargado, este bloque no
+ * existe. Aparece solo cuando hay algo que hacer, y dice qué se rompe si no se
+ * hace — no «falta configurar temporadas», sino que sin ellas el precio se
+ * congela mal.
+ */
+function AntesDeOperar() {
+  const [falta, setFalta] = useState(null)
+
+  useEffect(() => {
+    let vigente = true
+    loQueFalta().then(r => { if (vigente) setFalta(r) })
+    return () => { vigente = false }
+  }, [])
+
+  if (!falta?.length) return null
+
+  const detieneLaReserva = falta.some(f => f.detiene === 'la reserva')
+
+  return (
+    <section className="mb-6">
+      <h2 className="text-[12px] font-bold uppercase tracking-[.12em] text-tinta-2 mb-2">
+        Antes de operar
+      </h2>
+      <p className="text-[15px] text-tinta-2 mb-3">
+        {detieneLaReserva
+          ? 'Todavía no se puede crear una reserva. Esto es lo que falta:'
+          : 'Se puede reservar, pero hay cosas que van a fallar más adelante:'}
+      </p>
+      <ul className="flex flex-col gap-2">
+        {falta.map(f => (
+          <TarjetaPendiente
+            key={f.id}
+            pendiente={{
+              // Coral solo para lo que detiene una reserva: si todo se pinta
+              // igual, la temporada que falta pesa lo mismo que el piloto.
+              tono: f.detiene === 'la reserva' ? 'tardio' : 'pendiente',
+              texto: f.texto,
+              detalle: f.detalle,
+              accion: f.accion,
+            }}
+          />
+        ))}
+      </ul>
+    </section>
   )
 }

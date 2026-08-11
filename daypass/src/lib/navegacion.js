@@ -209,11 +209,13 @@ export const POR_ROL = {
 
   // La isla. Entra viendo la isla, no un menú. Su «Hoy» le dice cuántos
   // vienen y a qué hora; los almuerzos viven dentro de Isla.
+  // Y el regreso: desde la 032 lo cierra la isla. Va en `extra` y no en el
+  // menú porque no es un destino de todos los días — es de las 3:30.
   admin_isla: {
     home: '/isla',
     menu: ['/', '/isla'],
     config: ['reportes'],
-    extra: ['/cocina'],
+    extra: ['/cocina', '/embarque'],
   },
 
   // No hay `recepcion`. Lo hubo un rato, por la regla 18 —recepción cobra el
@@ -231,6 +233,23 @@ export const POR_ROL = {
     config: [],
     extra: ['/cocina'],
   },
+}
+
+/**
+ * Quién opera el muelle por su rol, sin contar guardias.
+ *
+ * Espeja a `puedo_operar_muelle()` de la 015, **menos los turnos**: saber si
+ * alguien tiene guardia hoy es una consulta al servidor, y esta pregunta se
+ * hace para decidir qué pintar, en una pantalla que tiene que funcionar sin
+ * señal. Quien tenga guardia y no esté en esta lista igual puede escribir —lo
+ * decide la base, que es la que manda— solo que verá el regreso y no la ida.
+ *
+ * Se usa para no ofrecerle a la isla las lanchas de la mañana: la base se las
+ * rechazaría, y cuatro botones que responden con un error son peores que no
+ * tener botones.
+ */
+export function operaElMuelle(rol) {
+  return ['super_admin', 'gerencia', 'directora', 'asesora', 'asesora_comercial'].includes(rol)
 }
 
 /** El rol con el que se trabaja mientras no haya perfil. */

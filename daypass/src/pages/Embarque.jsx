@@ -14,6 +14,8 @@ import { veredictoDePase } from '../lib/veredictoPase'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
 import { opcionesDePais } from '../lib/paisesISO'
+import { operaElMuelle } from '../lib/navegacion'
+import { usePerfil } from '../hooks/usePerfil'
 import Select from '../components/ui/Select'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 import LectorQR from '../components/zarpe/LectorQR'
@@ -42,7 +44,7 @@ const TIPOS_DOCUMENTO = [
 
 // ─── Selección de zarpe ────────────────────────────────────────────────────────
 
-function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, error, hayIdaCerrada, hayRegreso }) {
+function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRecargar, fecha, cargando, error, hayIdaCerrada, hayRegreso, soloRegreso }) {
   const [programando, setProgramando] = useState(false)
   const [preparando, setPreparando] = useState(null)
 
@@ -53,6 +55,26 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   if (error) return <EstadoError error={error} onReintentar={onRecargar} />
 
   if (!zarpes.length) {
+    // Para la isla el vacío quiere decir otra cosa: no es que no haya zarpes,
+    // es que todavía no hay regreso programado. Ofrecerle «programar los
+    // zarpes del día» sería mandarla a hacer lo del muelle.
+    if (soloRegreso) {
+      return (
+        <div className="p-6 flex flex-col items-start gap-3">
+          <p className="text-[1.25rem] font-bold text-sol-tinta">
+            Todavía no hay regreso programado.
+          </p>
+          <p className="text-[1.0625rem] text-sol-tinta-2 max-w-[40ch]">
+            El regreso se programa desde el muelle cuando ya salió alguna lancha. Aquí aparece
+            cuando esté listo, para recibir a la gente.
+          </p>
+          <Link to="/isla" className="text-[1rem] font-bold text-blue-700 underline min-h-[2.75rem] flex items-center">
+            Volver a la isla
+          </Link>
+        </div>
+      )
+    }
+
     return (
       <div className="p-6 flex flex-col items-start gap-4">
         <p className="text-[1.25rem] font-bold text-sol-tinta">
@@ -81,10 +103,13 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
     <div className="p-4 sm:p-6 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4 flex-wrap">
         <h1 className="text-[1.5rem] font-bold text-sol-tinta tracking-[-.02em]">
-          ¿Qué lancha vas a embarcar?
+          {soloRegreso ? '¿Qué lancha vas a recibir?' : '¿Qué lancha vas a embarcar?'}
         </h1>
-        <Link to="/" className="text-[1rem] font-bold text-blue-700 underline min-h-[2.75rem] flex items-center">
-          Volver a la oficina
+        <Link
+          to={soloRegreso ? '/isla' : '/'}
+          className="text-[1rem] font-bold text-blue-700 underline min-h-[2.75rem] flex items-center"
+        >
+          {soloRegreso ? 'Volver a la isla' : 'Volver a la oficina'}
         </Link>
       </div>
       {zarpes.map(z => {
@@ -294,6 +319,7 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
 
 export default function Embarque() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
+  const { rol } = usePerfil()
   const {
     zarpes, cargando, error, programar, programarRegreso, hayIdaCerrada, hayRegreso,
     recargar: recargarZarpes,
@@ -392,10 +418,25 @@ export default function Embarque() {
     return () => { document.body.style.background = '' }
   }, [])
 
+  /**
+   * La isla ve el regreso, y solo el regreso.
+   *
+   * Desde la 032 el regreso se cierra en la isla: lo hace la asesora de turno
+   * o quien administre la isla. Pero la ida sigue siendo del muelle, y la base
+   * la rechaza. Mostrarle a la isla una lista con las lanchas de la mañana
+   * sería ofrecerle cuatro botones que le van a responder con un error.
+   */
+  const soloRegreso = !operaElMuelle(rol)
+  const zarpesQuePuedeAbrir = useMemo(
+    () => (soloRegreso ? zarpes.filter(z => z.sentido === 'regreso') : zarpes),
+    [zarpes, soloRegreso]
+  )
+
   if (!zarpe) {
     return (
       <div className="min-h-screen bg-sol-fondo">
-        <SelectorZarpe zarpes={zarpes} onElegir={z => setZarpeId(z.id)}
+        <SelectorZarpe zarpes={zarpesQuePuedeAbrir} onElegir={z => setZarpeId(z.id)}
+          soloRegreso={soloRegreso}
           onProgramar={programar} onProgramarRegreso={programarRegreso}
           onRecargar={recargarZarpes}
           hayIdaCerrada={hayIdaCerrada} hayRegreso={hayRegreso}

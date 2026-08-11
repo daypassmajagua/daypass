@@ -26,7 +26,9 @@ import { classNames } from '../../lib/utils'
  */
 
 /** Los destinos de la isla, en el orden en que se usan. */
-const DESTINOS = ['/isla', '/cocina', '/']
+// `/embarque` al final: para la isla es el regreso de las 3:30, no algo de
+// todo el día. Quien no lo pueda abrir no lo ve, que es lo que hace el filtro.
+const DESTINOS = ['/isla', '/cocina', '/', '/embarque']
 
 export default function NavegacionMinima({ className = '' }) {
   const { rol } = usePerfil()

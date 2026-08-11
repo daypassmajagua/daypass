@@ -352,11 +352,22 @@ globalmente y se queda así.
 > una duda porque dejó de ser una elección. Al absorberse en «Hoy» no hay pantalla nueva que
 > justificar ni ruta que mantener.
 
-### 6.4 · Lo que el regreso todavía no sabe hacer — **pendiente con Daniela**
+### 6.4 · Lo que el regreso todavía no sabe hacer
 
-Salió al construir «en la isla ahora» (paso 8), y no es una decisión de diseño: **es una regla de
-operación que no está definida**. El regreso de hoy solo sabe registrar `desembarque` de quien
-subió por la mañana. Le faltan dos cosas, y las dos hay que preguntarlas antes de construirlas:
+> **Decidido: el regreso se gestiona en la isla**, por la asesora de turno o por quien administre
+> la isla. Eso destapó un bloqueo que no se veía y que arregla la **032**: la isla ya podía
+> marcar cada desembarque —`embarques_alta` la deja desde la 015— pero **no podía cerrar el
+> zarpe de regreso**, porque `cerrar_zarpe()` exigía operar el muelle. Hacía todo el trabajo y
+> necesitaba que alguien del muelle apretara el botón, y ese botón no es un trámite: es el que
+> marca `completada`, invalida los enlaces y **deja en `en_isla` a quien no bajó**, que es la
+> alerta de que alguien se quedó. Ahora la ida la cierra el muelle y el regreso, los dos.
+>
+> En la app, `admin_isla` ve Embarque y **solo los zarpes de regreso**: la ida se la rechaza la
+> base, y cuatro botones que responden con un error son peores que no tener botones.
+
+**Lo que sigue sin definirse es de operación, no de permisos.** Salió al construir «en la isla
+ahora» (paso 8). El regreso de hoy solo sabe registrar `desembarque` de quien subió por la mañana;
+le faltan dos cosas, y las dos hay que preguntarlas antes de construirlas:
 
 - **Los empleados no salen igual que como entraron.** El zarpe de ida lleva su lista de equipo,
   pero quién se devuelve esa tarde no tiene por qué ser la misma gente: alguien se queda de

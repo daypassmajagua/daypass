@@ -164,7 +164,7 @@ export default function Reserva() {
 
   const valores = watch()
   const fechaValue = valores.fecha
-  const { temporada } = useTemporada(fechaValue)
+  const { temporada, supuesta } = useTemporada(fechaValue)
 
   // Las reservas del día, para dibujar la ocupación de cada lancha.
   const { registros: delDia } = useRegistros(fechaValue)
@@ -361,11 +361,27 @@ export default function Reserva() {
       <PageHeader
         title={isEdit ? 'Editar la reserva' : 'Nueva reserva'}
         subtitle={
+          /**
+           * Cuando ninguna temporada cubre la fecha, el sistema asume baja y
+           * **congela ese precio** (regla 4). Decirlo aquí es la diferencia
+           * entre un ajuste de dos minutos y una reserva vendida barata para
+           * siempre que nadie descubre hasta facturar.
+           */
           temporada ? (
-            <span className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-[10px] font-bold bg-blue-50 text-blue-700">
-              <Info size={13} />
-              Temporada {temporada === 'alta' ? 'alta' : 'baja'} — precios aplicados
-            </span>
+            supuesta ? (
+              <Link
+                to="/config/temporadas"
+                className="inline-flex items-center gap-1.5 text-[0.8125rem] px-2.5 py-1 rounded-[10px] font-bold bg-coral-50 text-coral-700 hover:bg-coral-100"
+              >
+                <Info size={13} />
+                Esta fecha no cae en ninguna temporada cargada — se está usando el precio bajo
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[13px] px-2.5 py-1 rounded-[10px] font-bold bg-blue-50 text-blue-700">
+                <Info size={13} />
+                Temporada {temporada === 'alta' ? 'alta' : 'baja'} — precios aplicados
+              </span>
+            )
           ) : null
         }
       />
