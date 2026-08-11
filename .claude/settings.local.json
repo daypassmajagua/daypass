@@ -280,7 +280,9 @@
       "PowerShell($x = $null; try { $x = New-Object -ComObject Excel.Application; \"Excel disponible: \" + $x.Version } catch { \"sin Excel COM: $\\($_.Exception.Message\\)\" } finally { if \\($x\\) { $x.Quit\\(\\); [void][Runtime.InteropServices.Marshal]::ReleaseComObject\\($x\\) } })",
       "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);const c={};for\\(const f of r\\)for\\(const m of f.messages\\){const k=\\(m.severity===2?'ERROR ':'aviso '\\)+m.ruleId;c[k]=\\(c[k]||0\\)+1}Object.entries\\(c\\).sort\\(\\(a,b\\)=>b[1]-a[1]\\).forEach\\(\\([k,v]\\)=>console.log\\(String\\(v\\).padStart\\(3\\),k\\)\\)}\\)\")",
       "Bash(echo \"=== código de salida: $? ===\")",
-      "Bash(echo \"lint sale con: $?\")"
+      "Bash(echo \"lint sale con: $?\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@supabase/supabase-js/package.json'\\).version\\)\")",
+      "Bash(echo \"lint: $?\")"
     ]
   }
 }

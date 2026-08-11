@@ -1,101 +1,46 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
-import { supabase } from '../lib/supabase'
-import { ROL_POR_DEFECTO } from '../lib/navegacion'
+import { createContext, useContext, useSyncExternalStore } from 'react'
 import { alCambiarVerComo, leerVerComo, PUEDE_VER_COMO } from '../lib/verComo'
 
 /**
  * Quién soy y qué puedo ver.
  *
- * ── Lo que más importa de este archivo ──────────────────────────────────────
+ * ── Lo que cambió, y por qué importa ────────────────────────────────────────
  *
- * **Tolera que la migración 015 no haya corrido.** Si la tabla `perfiles` no
- * existe todavía, se asume el rol por defecto y todo sigue funcionando como
- * antes. Sin eso, desplegar el front antes que la migración dejaría a todo el
- * mundo mirando una pantalla vacía — y el orden de despliegue no siempre lo
- * decide quien escribió el código.
+ * Esto **era** un hook con estado propio: cada componente que lo llamaba hacía
+ * su propio `getSession()`, su propia consulta a `perfiles` y su propio escucha
+ * de sesión. Lo llaman quince componentes, así que abrir una pantalla disparaba
+ * cinco veces lo mismo y cada refresco de token despertaba a los quince.
  *
- * Pero **con perfiles ya creados, no tener perfil sí bloquea**: es la
- * diferencia entre "el sistema no está listo" y "esta persona no tiene
- * permiso", y confundirlas sería dejar entrar a cualquiera con una cuenta.
+ * Peor: el hook pedía la sesión **dentro** del callback de
+ * `onAuthStateChange`, que es pedirla desde adentro del candado con el que el
+ * cliente de Supabase la protege. De ahí salía la pantalla «Viendo qué te toca
+ * hoy…» que no abría y terminaba en «el servidor no respondió a tiempo», sin
+ * un solo error en la consola — porque no había error, había una espera que no
+ * acababa.
  *
- * ── Y una tercera cosa, que costó una pantalla colgada ──────────────────────
+ * Ahora el trabajo lo hace `ProveedorPerfil` **una vez**, y esto solo lee.
+ * La forma que devuelve es la misma de antes a propósito: quince sitios lo
+ * usan y ninguno tuvo que cambiar.
  *
- * Antes, si cualquiera de las dos consultas no respondía, `setPerfil` no se
- * llamaba nunca y la app se quedaba en «Viendo qué te toca hoy…» **para
- * siempre**, sin error, sin botón y sin forma de salir. Una consulta que no
- * vuelve es un caso real —la sesión que se está refrescando, PostgREST
- * ocupado, la red del hotel— y merecía su propio estado en vez de un limbo.
+ * ── Lo que sí se decide aquí ────────────────────────────────────────────────
  *
- * Ahora hay tres respuestas posibles y ninguna es esperar sin fin: **tiene
- * perfil**, **no está en el equipo**, o **no se pudo saber** — y esta última
- * trae reintentar y salir.
+ * «Ver la app como» — que es una mirada y no un permiso. Cambia lo que se
+ * muestra, nunca lo que el servidor responde; el control de verdad es la RLS.
+ * Vive aquí y no en el proveedor porque no toca la red: es estado local que se
+ * lee de `lib/verComo.js`.
  */
 
-/**
- * Toda espera tiene final. Doce segundos es mucho más de lo que tarda una
- * consulta sana y mucho menos de lo que aguanta alguien mirando un logo.
- */
-function conLimite(promesa, ms = 12000) {
-  return Promise.race([
-    promesa,
-    new Promise((_, rechazar) =>
-      setTimeout(() => rechazar(new Error('El servidor no respondió a tiempo.')), ms)
-    ),
-  ])
-}
+/** Lo que llena `ProveedorPerfil`. Fuera de él, la app se ve cargando. */
+export const ContextoPerfil = createContext({
+  perfil: undefined,
+  hayTablaPerfiles: true,
+  fallo: null,
+  recargar: () => {},
+})
 
 export function usePerfil() {
-  const [perfil, setPerfil] = useState(undefined)   // undefined = cargando
-  const [hayTablaPerfiles, setHayTablaPerfiles] = useState(true)
-  const [fallo, setFallo] = useState(null)
+  const { perfil, hayTablaPerfiles, fallo, recargar } = useContext(ContextoPerfil)
 
-  const cargar = useCallback(async () => {
-    setFallo(null)
-    try {
-      const { data: sesion } = await conLimite(supabase.auth.getSession())
-      const userId = sesion?.session?.user?.id
-      if (!userId) { setPerfil(null); return }
-
-      const { data, error } = await conLimite(
-        supabase
-          .from('perfiles')
-          .select('user_id, nombre, rol, activo')
-          .eq('user_id', userId)
-          .maybeSingle()
-      )
-
-      // 42P01 = la tabla no existe. La migración todavía no corrió.
-      if (error && (error.code === '42P01' || /does not exist/i.test(error.message || ''))) {
-        setHayTablaPerfiles(false)
-        setPerfil({
-          user_id: userId,
-          nombre: sesion.session.user.email?.split('@')[0] || 'alguien',
-          rol: ROL_POR_DEFECTO,
-          activo: true,
-          provisional: true,
-        })
-        return
-      }
-
-      if (error) { setPerfil(null); return }
-      setPerfil(data?.activo ? data : null)
-    } catch (e) {
-      // **El perfil NO se pone en null aquí, a propósito.** Null significa "esta
-      // persona no está en el equipo", y decirle eso a alguien porque se cayó la
-      // red sería acusarlo de algo que no pasó. Queda como fallo, que es otra
-      // cosa y se cuenta distinto.
-      setFallo(e?.message || 'No se pudo comprobar tu acceso.')
-    }
-  }, [])
-
-  useEffect(() => {
-    cargar()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => cargar())
-    return () => subscription.unsubscribe()
-  }, [cargar])
-
-  // Una mirada, no un permiso: cambia lo que se muestra, nunca lo que el
-  // servidor responde. Ver `lib/verComo.js`.
   const mirandoComo = useSyncExternalStore(alCambiarVerComo, leerVerComo, () => null)
   const rolReal = perfil?.rol || null
   const puedeMirar = PUEDE_VER_COMO.includes(rolReal)
@@ -117,6 +62,6 @@ export function usePerfil() {
     puedeMirar,
     /** Sin perfil y con la tabla ya creada: la persona existe pero no está en el equipo. */
     sinPermiso: perfil === null && hayTablaPerfiles,
-    recargar: cargar,
+    recargar,
   }
 }

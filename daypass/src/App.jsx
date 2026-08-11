@@ -5,6 +5,7 @@ import useAppStore from './store/useAppStore'
 import { useSincronizarDia, usePresencia } from './hooks/useDiaOperativo'
 import ProtectedRoute from './components/layout/ProtectedRoute'
 import ProveedorModo from './components/layout/ProveedorModo'
+import ProveedorPerfil from './components/layout/ProveedorPerfil'
 import Navbar from './components/layout/Navbar'
 import { Esqueleto } from './components/patrones'
 import { escucharErrores } from './lib/diagnostico'
@@ -88,6 +89,10 @@ export default function App() {
     // cliente: un iPad configurado como muelle abre siempre así, sin importar
     // quién inicie sesión.
     <ProveedorModo>
+    {/* Quién soy, resuelto una sola vez para toda la app. Antes cada
+        componente que preguntaba hacía su propia consulta y su propio escucha
+        de sesión: quince en total, y de ahí salía el cuelgue de la carga. */}
+    <ProveedorPerfil>
     <BrowserRouter>
       <Toaster position="top-right" richColors closeButton />
       <Suspense fallback={<Trayendo />}>
@@ -403,6 +408,7 @@ export default function App() {
       </Routes>
       </Suspense>
     </BrowserRouter>
+    </ProveedorPerfil>
     </ProveedorModo>
   )
 }

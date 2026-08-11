@@ -98,18 +98,45 @@ Con esa salida escribo la migración que haga falta, o descarto esta hipótesis.
 
 ---
 
-## 3 · «A veces problemas de servidor» — **falta información**
+## 3 · CRÍTICO · La app se quedaba en «Viendo qué te toca hoy…» — **arreglado**
 
-No lo puedo diagnosticar desde el código: «problema de servidor» puede ser un 400 de PostgREST, un
-500 de un trigger, un tiempo agotado, o la sesión vencida. Cada uno se arregla distinto.
+Las dos capturas lo resolvieron: la pantalla de carga que no abre, y después **«El servidor no
+respondió a tiempo»** con nada en la consola. Ese mensaje es nuestro —es el límite de doce
+segundos que tiene el arranque— así que **no había ningún error del servidor**. Había una consulta
+que no volvía.
 
-Lo que necesito es **el mensaje exacto**. Dos formas, la que sea más cómoda:
+### Por qué no volvía
 
-- Cuando salga, la consola del navegador (F12 → Consola) muestra la respuesta completa.
-- O el botón de reportar que ya está en todas las pantallas: guarda la pantalla y el rol, y queda
-  en `/reportes`.
+`usePerfil()` lo llaman **quince componentes**: `ProtectedRoute`, `Navbar`, `FranjaDia`,
+`BarraVerComo`, y casi cada pantalla. Y era un hook con estado propio, así que **cada llamada
+hacía su propio trabajo**: un `getSession()`, una consulta a `perfiles` y **un escucha de sesión**.
 
-Con un solo caso concreto es cuestión de minutos.
+Abrir «Hoy» disparaba cinco veces lo mismo. Y cada refresco de token despertaba a los quince
+escuchas a la vez.
+
+Encima de eso, lo que lo convertía en un cuelgue y no solo en lentitud:
+
+> El cliente de Supabase protege la sesión con un candado — mientras uno la refresca, los demás
+> esperan. El hook pedía la sesión **dentro** del callback de `onAuthStateChange`, que es pedirla
+> desde adentro del candado. Con quince listeners haciéndolo a la vez, la espera no se acababa.
+
+Cuadra con que apareciera al buscar: el buscador lanza cuatro consultas más encima de las que ya
+se atropellaban.
+
+### Qué se cambió
+
+Un **`ProveedorPerfil`** que resuelve quién eres **una sola vez** para toda la app: un escucha, una
+sesión, una consulta. `usePerfil()` sigue existiendo con la misma forma —los quince sitios no
+cambiaron ni una línea— pero ahora solo lee.
+
+Y el escucha **usa la sesión que le llega por parámetro** en vez de volver a pedirla, que es la
+forma de no entrar al candado desde adentro. El refresco de token ya no vuelve a consultar
+`perfiles`: renovar el token no cambia quién es nadie.
+
+Comprobado: la app abre, y «Ver la app como» sigue cambiando de rol sin recargar.
+
+> **`useDiaOperativo` ya estaba bien** y sirve de modelo: lee del store compartido y no consulta
+> por instancia. Era `usePerfil` el que se había quedado atrás.
 
 ---
 
@@ -129,7 +156,12 @@ Con un solo caso concreto es cuestión de minutos.
 
 ## 5 · Lo que sigue, en orden
 
-1. **Correr `por_que_se_demora.sql`** y pegarme la salida. Es lo único que separa una corazonada
-   de una causa.
-2. **Un caso concreto del «problema de servidor»**, con su mensaje.
-3. Con lo uno y lo otro: la migración de las vistas, si los números la justifican.
+1. **Probar la app otra vez.** Con el perfil resuelto una sola vez, el arranque debería dejar de
+   colgarse y toda la navegación debería sentirse más liviana — son cuatro consultas menos y
+   catorce escuchas menos por pantalla.
+2. **Correr `por_que_se_demora.sql`** y pegarme la salida. Sigue haciendo falta: si Cartera,
+   Informes o el «Hoy» de gerencia siguen pesados, la causa es la del punto 2 y se arregla con una
+   migración.
+3. Si vuelve a aparecer un cuelgue después de esto, **el momento exacto en que pasa** —qué
+   pantalla, qué se acababa de tocar—. Ya no quedan sospechas de este tamaño, así que la siguiente
+   habrá que buscarla con datos.
