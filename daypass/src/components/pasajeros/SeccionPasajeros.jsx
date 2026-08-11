@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { ClipboardPaste, Plus, Trash2, TriangleAlert, Users, X } from 'lucide-react'
 import { parsePasajeros, resumenPasajeros } from '../../lib/parsePasajeros'
 import { classNames } from '../../lib/utils'
+import { opcionesDePais } from '../../lib/paisesISO'
 import Button from '../ui/Button'
 import Select from '../ui/Select'
 
@@ -45,10 +46,7 @@ export default function SeccionPasajeros({ plan, pasajeros, onChange, paises = [
   const resumen = useMemo(() => resumenPasajeros(plan, pasajeros), [plan, pasajeros])
   const dudosas = pasajeros.filter(p => p._dudosa).length
 
-  const opcionesPais = useMemo(
-    () => [{ value: '', label: '— País —' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))],
-    [paises]
-  )
+  const opcionesPais = useMemo(() => opcionesDePais(paises), [paises])
 
   function editar(i, campo, valor) {
     const copia = [...pasajeros]

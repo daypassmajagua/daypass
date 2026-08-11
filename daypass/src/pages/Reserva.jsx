@@ -28,6 +28,7 @@ import PrecargaPersona from '../components/reserva/PrecargaPersona'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
 import PageHeader from '../components/layout/PageHeader'
 import { RESERVA_CON_DINERO } from '../lib/columnas'
+import { opcionesDePais } from '../lib/paisesISO'
 
 const schema = z.object({
   fecha: z.string().min(1),
@@ -464,7 +465,7 @@ export default function Reserva() {
             <Controller name="pais_id" control={control} render={({ field }) => (
               <Select label="País (opcional)" value={field.value || ''} onChange={field.onChange}
                 placeholder="— País —"
-                options={[{ value: '', label: '— País —' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))]} />
+                options={opcionesDePais(paises)} />
             )} />
           </div>
 

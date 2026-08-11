@@ -257,7 +257,11 @@
       "Bash(sed -n '/^create table planes/,/^\\);/p' supabase/migrations/001_initial_schema.sql)",
       "Bash(sed -n '/create table if not exists opciones_plato/,/^\\);/p' supabase/migrations/007_modelo_operacion.sql)",
       "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length\\)console.log\\(f.filePath.split\\('src'\\)[1], f.messages.map\\(m=>m.ruleId+':'+m.line\\).join\\(' '\\)\\)}}\\)\")",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(git commit -m '@ *)",
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5175/)",
+      "Read(//c/Users/ragui/AppData/Local/Temp/**)"
     ]
   }
 }

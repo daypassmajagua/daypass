@@ -1,6 +1,7 @@
 import { hoyLocal, aFechaLocal } from './utils.js'
 import { valorACobrar, pagadoDe, diasDeDeuda, tramoDe } from './cartera.js'
 import { rangoDeMeta } from './metas.js'
+import { paisesComoFilas } from './paisesISO.js'
 
 // ─── Catálogos ────────────────────────────────────────────────────────────────
 
@@ -82,21 +83,27 @@ const PLANES = [
   { id: 'p-guia',     nombre: 'Guía de Turismo',                categoria: 'guia',                    nivel: 'na',     incluye_transporte: true,  precio_adulto_baja: 205482, precio_adulto_alta: 205482, precio_nino_baja: 0,      precio_nino_alta: 0,      activo: true },
 ]
 
+/**
+ * Los países, los mismos 249 que la migración 028 mete en producción.
+ *
+ * Antes eran catorce con códigos inventados —'COL', 'ING'— y esa diferencia
+ * no era inocente: `Equipo` buscaba `codigo === 'COL'` para poner Colombia por
+ * defecto, así que en la demo funcionaba y en producción, donde el código es
+ * 'CO', el empleado nuevo nacía sin país. La demo tiene que mentir lo menos
+ * posible.
+ *
+ * Los ids viejos se conservan porque hay reservas de muestra apuntándoles.
+ */
+const ALIAS_DEMO = {
+  CO: 'pa-col', US: 'pa-usa', MX: 'pa-mex', ES: 'pa-esp', AR: 'pa-arg',
+  BR: 'pa-bra', CA: 'pa-can', CL: 'pa-chi', EC: 'pa-ecu', IT: 'pa-ita',
+  GB: 'pa-ing', FR: 'pa-fra', DE: 'pa-ale',
+}
+
 const PAISES = [
-  { id: 'pa-col', codigo: 'COL',   nombre: 'Colombia' },
-  { id: 'pa-usa', codigo: 'USA',   nombre: 'Estados Unidos' },
-  { id: 'pa-mex', codigo: 'MEX',   nombre: 'México' },
-  { id: 'pa-esp', codigo: 'ESP',   nombre: 'España' },
-  { id: 'pa-arg', codigo: 'ARG',   nombre: 'Argentina' },
-  { id: 'pa-bra', codigo: 'BRA',   nombre: 'Brasil' },
-  { id: 'pa-can', codigo: 'CAN',   nombre: 'Canadá' },
-  { id: 'pa-chi', codigo: 'CHI',   nombre: 'Chile' },
-  { id: 'pa-ecu', codigo: 'ECU',   nombre: 'Ecuador' },
-  { id: 'pa-ita', codigo: 'ITA',   nombre: 'Italia' },
-  { id: 'pa-ing', codigo: 'ING',   nombre: 'Inglaterra' },
-  { id: 'pa-fra', codigo: 'FRA',   nombre: 'Francia' },
-  { id: 'pa-ale', codigo: 'ALE',   nombre: 'Alemania' },
-  { id: 'pa-otr', codigo: 'OTR',   nombre: 'Otro' },
+  ...paisesComoFilas(ALIAS_DEMO),
+  // No es ISO, pero está en producción desde la 027 y hay gente apuntándole.
+  { id: 'pa-otr', codigo: 'OT', nombre: 'Otro', frecuente: false },
 ]
 
 const TEMPORADAS = [

@@ -13,6 +13,7 @@ import { tocar } from '../lib/sonido'
 import { veredictoDePase } from '../lib/veredictoPase'
 import { openPrintWindow, buildManifiestoHTML } from '../lib/printDoc'
 import { classNames, fraseFecha, hora12, plural } from '../lib/utils'
+import { opcionesDePais } from '../lib/paisesISO'
 import Select from '../components/ui/Select'
 import PrepararZarpe from '../components/zarpe/PrepararZarpe'
 import LectorQR from '../components/zarpe/LectorQR'
@@ -236,10 +237,10 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
             value={paisElegido}
             onChange={setPaisId}
             placeholder="Sin especificar"
-            options={[
-              { value: '', label: 'Sin especificar' },
-              ...paises.map(p => ({ value: p.id, label: p.nombre })),
-            ]}
+            // Aquí es donde más pesa el orden: de pie, con una mano y con la
+            // fila esperando. Los veinte de siempre arriba, y el buscador para
+            // el pasaporte raro que aparece una vez al mes.
+            options={opcionesDePais(paises, 'Sin especificar')}
           />
         </div>
 

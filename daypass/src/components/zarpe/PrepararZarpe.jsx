@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { BedDouble, Plus, Trash2, Users, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { classNames, plural } from '../../lib/utils'
+import { opcionesDePais } from '../../lib/paisesISO'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
@@ -252,7 +253,7 @@ export default function PrepararZarpe({ zarpe, onCerrar, onGuardado }) {
                 <Select label="País" value={nuevoAlojado.pais_id}
                   onChange={v => setNuevoAlojado(x => ({ ...x, pais_id: v }))}
                   placeholder="—"
-                  options={[{ value: '', label: '—' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))]} />
+                  options={opcionesDePais(paises, '—')} />
                 <Button type="button" variant="secondary" onClick={agregarAlojado}
                   disabled={!nuevoAlojado.nombre.trim()} className="mb-0">
                   <Plus size={16} /> Agregar

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Layers, ChevronRight } from 'lucide-react'
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Layers, ChevronRight, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { classNames, formatCurrency } from '../lib/utils'
 import Button from '../components/ui/Button'
@@ -160,7 +160,14 @@ const CATALOGOS = {
       titulo: 'No hay países',
       detalle: 'La Capitanía exige la nacionalidad de cada persona en la lista nominal.',
     },
-    fila: p => ({ titulo: p.nombre, detalle: p.codigo, datos: [] }),
+    fila: p => ({
+      titulo: p.nombre,
+      // Los 249 de la ISO caben; los que llegan seguido van marcados, porque
+      // son los que salen primero cuando alguien elige un país.
+      detalle: [p.codigo, p.frecuente ? 'de los que llegan seguido' : null]
+        .filter(Boolean).join(' · '),
+      datos: [],
+    }),
   },
 }
 
@@ -281,8 +288,24 @@ export default function Config({
   const [editando, setEditando] = useState(null)     // {} = nuevo · fila = editar
   const [eliminando, setEliminando] = useState(null)
   const [borrando, setBorrando] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
 
   const config = CATALOGOS[clave]
+
+  /**
+   * Buscar dentro del catálogo, y solo si hace falta. Los países pasaron de
+   * veinte a 249 con la 028: sin esto, cambiar el nombre de Zimbabue son diez
+   * segundos de rueda del ratón. Los otros catálogos tienen doce filas y un
+   * campo de búsqueda encima solo sería una cosa más.
+   */
+  const conBuscador = filas.length > 20
+  const visibles = conBuscador && busqueda.trim()
+    ? filas.filter(f => {
+        const q = busqueda.trim().toLowerCase()
+        return String(f.nombre || '').toLowerCase().includes(q)
+          || String(f.codigo || '').toLowerCase().includes(q)
+      })
+    : filas
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -370,8 +393,21 @@ export default function Config({
         ))}
       </div>
 
+      {conBuscador && (
+        <div className="flex items-center gap-2 bg-white rounded-xl border border-linea px-3 mb-4">
+          <Search size={16} className="shrink-0 text-tinta-3" />
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder={`Buscar entre ${filas.length}`}
+            className="w-full bg-transparent py-2.5 min-h-[44px] text-[15px] text-tinta placeholder-tinta-3 focus:outline-none"
+          />
+        </div>
+      )}
+
       <ListaDelDia
-        items={filas}
+        items={visibles}
+        buscando={Boolean(busqueda.trim())}
         cargando={cargando}
         error={error}
         onReintentar={cargar}
@@ -557,6 +593,47 @@ function CamposDe({ tabla, form, set }) {
         />
         <DatePicker label="Desde" value={form.fecha_inicio || ''} onChange={v => set('fecha_inicio', v)} />
         <DatePicker label="Hasta" value={form.fecha_fin || ''} onChange={v => set('fecha_fin', v)} />
+      </SeccionFormulario>
+    )
+  }
+
+  // Países y canales caían aquí, en el formulario de la agencia: agregar un
+  // país pedía «Contacto» y «Correo», y al guardar escribía columnas que la
+  // tabla no tiene. Nunca se notó porque nadie había agregado un país a mano.
+  if (tabla === 'paises') {
+    return (
+      <SeccionFormulario
+        titulo="El país"
+        porque="La Capitanía exige la nacionalidad de cada persona en la lista nominal."
+      >
+        <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
+        <Input
+          label="Código"
+          value={form.codigo || ''}
+          maxLength={2}
+          onChange={e => set('codigo', e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+        />
+        <p className="text-[13px] text-tinta-2 -mt-1">
+          Dos letras, como en el pasaporte: CO, US, BR.
+        </p>
+        <Casilla
+          etiqueta="De los que llegan seguido — sale primero en la lista"
+          valor={form.frecuente === true}
+          onChange={v => set('frecuente', v)}
+        />
+      </SeccionFormulario>
+    )
+  }
+
+  if (tabla === 'canales') {
+    return (
+      <SeccionFormulario titulo="El canal" porque="Por dónde entró la reserva. Toda reserva trae uno.">
+        <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
+        <Input
+          label="Código"
+          value={form.codigo || ''}
+          onChange={e => set('codigo', e.target.value.toLowerCase().replace(/[^a-z_]/g, ''))}
+        />
       </SeccionFormulario>
     )
   }

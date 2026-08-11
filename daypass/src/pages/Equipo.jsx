@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Anchor, Pencil, Plus, Ship, UserCheck, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { classNames, plural } from '../lib/utils'
+import { opcionesDePais } from '../lib/paisesISO'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
@@ -217,7 +218,10 @@ export default function Equipo() {
               Se cargan una sola vez. Después solo marcas con un toque quiénes
               van en cada zarpe, y entran al manifiesto.
             </p>
-            <Button size="sm" onClick={() => setEditando({ tabla: 'empleados', fila: { nombre: '', tipo_documento: 'cc', documento: '', pais_id: paises.find(p => p.codigo === 'COL')?.id || null, activo: true } })}>
+            <Button size="sm" onClick={() => setEditando({ tabla: 'empleados', fila: { nombre: '', tipo_documento: 'cc', documento: '', // 'CO' es el código ISO y 'COL' el que traía la demo. Se aceptan los dos
+// porque hasta la 028 no eran el mismo, y un empleado nuevo nacía sin país
+// en producción sin que nadie lo notara.
+pais_id: paises.find(p => p.codigo === 'CO' || p.codigo === 'COL')?.id || null, activo: true } })}>
               <Plus size={16} /> Nuevo empleado
             </Button>
           </div>
@@ -317,7 +321,7 @@ function EditorEquipo({ editando, paises, onCerrar, onGuardar }) {
             <Select
               label="País" value={f.pais_id || ''} onChange={v => set('pais_id', v || null)}
               placeholder="— País —"
-              options={[{ value: '', label: '— País —' }, ...paises.map(p => ({ value: p.id, label: p.nombre }))]}
+              options={opcionesDePais(paises)}
             />
           </>
         )}

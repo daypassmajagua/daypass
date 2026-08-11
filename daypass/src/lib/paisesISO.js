@@ -1,0 +1,320 @@
+/**
+ * Los países del mundo, tal como los define la ISO 3166-1.
+ *
+ * ── Por qué esta lista y no otra ────────────────────────────────────────────
+ *
+ * «Todos los países del mundo» no tiene una sola respuesta: la ONU reconoce
+ * 193, hay 195 con los observadores, y la ISO 3166-1 lista 249 porque incluye
+ * territorios que emiten o sellan pasaporte propio —Puerto Rico, Hong Kong,
+ * Curazao, Gibraltar—. Se usa la ISO **porque es la que habla el documento**:
+ * la Capitanía pide la nacionalidad que dice el pasaporte, y un pasaporte de
+ * Hong Kong no dice China.
+ *
+ * Por eso también están las que no tienen habitantes fijos (Antártida, Isla
+ * Bouvet): sacarlas obligaría a decidir a mano cuál sí y cuál no, y esa lista
+ * a medias es la que después no tiene el país de alguien.
+ *
+ * ── `frecuente` ─────────────────────────────────────────────────────────────
+ *
+ * De 249, al pasadía llegan veinte. `frecuente` los sube al principio del
+ * desplegable; el resto sigue ahí, detrás del buscador. No es una lista
+ * cerrada escrita en el código: vive en la base y se marca desde
+ * Configuración (regla 22). Esto es la semilla, no la verdad.
+ *
+ * ── De dónde sale cada copia ────────────────────────────────────────────────
+ *
+ * Este archivo es el origen de dos cosas: la migración 028, que es la que de
+ * verdad importa, y los datos de la demo. Se escriben una vez y desde aquí,
+ * porque el desfase entre demo y producción ya nos costó una vez —la 027
+ * descubrió que la primera reserva contra una base nueva era imposible y en la
+ * demo no se veía, porque el mock traía los catálogos puestos.
+ */
+
+/** `[código ISO alpha-2, nombre en español, frecuente]` */
+export const PAISES_ISO = [
+  ['AD', 'Andorra', false],
+  ['AE', 'Emiratos Árabes Unidos', false],
+  ['AF', 'Afganistán', false],
+  ['AG', 'Antigua y Barbuda', false],
+  ['AI', 'Anguila', false],
+  ['AL', 'Albania', false],
+  ['AM', 'Armenia', false],
+  ['AO', 'Angola', false],
+  ['AQ', 'Antártida', false],
+  ['AR', 'Argentina', true],
+  ['AS', 'Samoa Americana', false],
+  ['AT', 'Austria', false],
+  ['AU', 'Australia', true],
+  ['AW', 'Aruba', false],
+  ['AX', 'Islas Åland', false],
+  ['AZ', 'Azerbaiyán', false],
+  ['BA', 'Bosnia y Herzegovina', false],
+  ['BB', 'Barbados', false],
+  ['BD', 'Bangladés', false],
+  ['BE', 'Bélgica', false],
+  ['BF', 'Burkina Faso', false],
+  ['BG', 'Bulgaria', false],
+  ['BH', 'Baréin', false],
+  ['BI', 'Burundi', false],
+  ['BJ', 'Benín', false],
+  ['BL', 'San Bartolomé', false],
+  ['BM', 'Bermudas', false],
+  ['BN', 'Brunéi', false],
+  ['BO', 'Bolivia', false],
+  ['BQ', 'Caribe Neerlandés', false],
+  ['BR', 'Brasil', true],
+  ['BS', 'Bahamas', false],
+  ['BT', 'Bután', false],
+  ['BV', 'Isla Bouvet', false],
+  ['BW', 'Botsuana', false],
+  ['BY', 'Bielorrusia', false],
+  ['BZ', 'Belice', false],
+  ['CA', 'Canadá', true],
+  ['CC', 'Islas Cocos', false],
+  ['CD', 'República Democrática del Congo', false],
+  ['CF', 'República Centroafricana', false],
+  ['CG', 'Congo', false],
+  ['CH', 'Suiza', true],
+  ['CI', 'Costa de Marfil', false],
+  ['CK', 'Islas Cook', false],
+  ['CL', 'Chile', true],
+  ['CM', 'Camerún', false],
+  ['CN', 'China', false],
+  ['CO', 'Colombia', true],
+  ['CR', 'Costa Rica', true],
+  ['CU', 'Cuba', false],
+  ['CV', 'Cabo Verde', false],
+  ['CW', 'Curazao', false],
+  ['CX', 'Isla de Navidad', false],
+  ['CY', 'Chipre', false],
+  ['CZ', 'Chequia', false],
+  ['DE', 'Alemania', true],
+  ['DJ', 'Yibuti', false],
+  ['DK', 'Dinamarca', false],
+  ['DM', 'Dominica', false],
+  ['DO', 'República Dominicana', false],
+  ['DZ', 'Argelia', false],
+  ['EC', 'Ecuador', true],
+  ['EE', 'Estonia', false],
+  ['EG', 'Egipto', false],
+  ['EH', 'Sáhara Occidental', false],
+  ['ER', 'Eritrea', false],
+  ['ES', 'España', true],
+  ['ET', 'Etiopía', false],
+  ['FI', 'Finlandia', false],
+  ['FJ', 'Fiyi', false],
+  ['FK', 'Islas Malvinas', false],
+  ['FM', 'Micronesia', false],
+  ['FO', 'Islas Feroe', false],
+  ['FR', 'Francia', true],
+  ['GA', 'Gabón', false],
+  ['GB', 'Reino Unido', true],
+  ['GD', 'Granada', false],
+  ['GE', 'Georgia', false],
+  ['GF', 'Guayana Francesa', false],
+  ['GG', 'Guernsey', false],
+  ['GH', 'Ghana', false],
+  ['GI', 'Gibraltar', false],
+  ['GL', 'Groenlandia', false],
+  ['GM', 'Gambia', false],
+  ['GN', 'Guinea', false],
+  ['GP', 'Guadalupe', false],
+  ['GQ', 'Guinea Ecuatorial', false],
+  ['GR', 'Grecia', false],
+  ['GS', 'Islas Georgias del Sur y Sandwich del Sur', false],
+  ['GT', 'Guatemala', false],
+  ['GU', 'Guam', false],
+  ['GW', 'Guinea-Bisáu', false],
+  ['GY', 'Guyana', false],
+  ['HK', 'Hong Kong', false],
+  ['HM', 'Islas Heard y McDonald', false],
+  ['HN', 'Honduras', false],
+  ['HR', 'Croacia', false],
+  ['HT', 'Haití', false],
+  ['HU', 'Hungría', false],
+  ['ID', 'Indonesia', false],
+  ['IE', 'Irlanda', false],
+  ['IL', 'Israel', true],
+  ['IM', 'Isla de Man', false],
+  ['IN', 'India', false],
+  ['IO', 'Territorio Británico del Océano Índico', false],
+  ['IQ', 'Irak', false],
+  ['IR', 'Irán', false],
+  ['IS', 'Islandia', false],
+  ['IT', 'Italia', true],
+  ['JE', 'Jersey', false],
+  ['JM', 'Jamaica', false],
+  ['JO', 'Jordania', false],
+  ['JP', 'Japón', false],
+  ['KE', 'Kenia', false],
+  ['KG', 'Kirguistán', false],
+  ['KH', 'Camboya', false],
+  ['KI', 'Kiribati', false],
+  ['KM', 'Comoras', false],
+  ['KN', 'San Cristóbal y Nieves', false],
+  ['KP', 'Corea del Norte', false],
+  ['KR', 'Corea del Sur', false],
+  ['KW', 'Kuwait', false],
+  ['KY', 'Islas Caimán', false],
+  ['KZ', 'Kazajistán', false],
+  ['LA', 'Laos', false],
+  ['LB', 'Líbano', false],
+  ['LC', 'Santa Lucía', false],
+  ['LI', 'Liechtenstein', false],
+  ['LK', 'Sri Lanka', false],
+  ['LR', 'Liberia', false],
+  ['LS', 'Lesoto', false],
+  ['LT', 'Lituania', false],
+  ['LU', 'Luxemburgo', false],
+  ['LV', 'Letonia', false],
+  ['LY', 'Libia', false],
+  ['MA', 'Marruecos', false],
+  ['MC', 'Mónaco', false],
+  ['MD', 'Moldavia', false],
+  ['ME', 'Montenegro', false],
+  ['MF', 'San Martín', false],
+  ['MG', 'Madagascar', false],
+  ['MH', 'Islas Marshall', false],
+  ['MK', 'Macedonia del Norte', false],
+  ['ML', 'Malí', false],
+  ['MM', 'Birmania', false],
+  ['MN', 'Mongolia', false],
+  ['MO', 'Macao', false],
+  ['MP', 'Islas Marianas del Norte', false],
+  ['MQ', 'Martinica', false],
+  ['MR', 'Mauritania', false],
+  ['MS', 'Montserrat', false],
+  ['MT', 'Malta', false],
+  ['MU', 'Mauricio', false],
+  ['MV', 'Maldivas', false],
+  ['MW', 'Malaui', false],
+  ['MX', 'México', true],
+  ['MY', 'Malasia', false],
+  ['MZ', 'Mozambique', false],
+  ['NA', 'Namibia', false],
+  ['NC', 'Nueva Caledonia', false],
+  ['NE', 'Níger', false],
+  ['NF', 'Isla Norfolk', false],
+  ['NG', 'Nigeria', false],
+  ['NI', 'Nicaragua', false],
+  ['NL', 'Países Bajos', true],
+  ['NO', 'Noruega', false],
+  ['NP', 'Nepal', false],
+  ['NR', 'Nauru', false],
+  ['NU', 'Niue', false],
+  ['NZ', 'Nueva Zelanda', false],
+  ['OM', 'Omán', false],
+  ['PA', 'Panamá', true],
+  ['PE', 'Perú', true],
+  ['PF', 'Polinesia Francesa', false],
+  ['PG', 'Papúa Nueva Guinea', false],
+  ['PH', 'Filipinas', false],
+  ['PK', 'Pakistán', false],
+  ['PL', 'Polonia', false],
+  ['PM', 'San Pedro y Miquelón', false],
+  ['PN', 'Islas Pitcairn', false],
+  ['PR', 'Puerto Rico', false],
+  ['PS', 'Palestina', false],
+  ['PT', 'Portugal', true],
+  ['PW', 'Palaos', false],
+  ['PY', 'Paraguay', false],
+  ['QA', 'Catar', false],
+  ['RE', 'Reunión', false],
+  ['RO', 'Rumania', false],
+  ['RS', 'Serbia', false],
+  ['RU', 'Rusia', false],
+  ['RW', 'Ruanda', false],
+  ['SA', 'Arabia Saudita', false],
+  ['SB', 'Islas Salomón', false],
+  ['SC', 'Seychelles', false],
+  ['SD', 'Sudán', false],
+  ['SE', 'Suecia', false],
+  ['SG', 'Singapur', false],
+  ['SH', 'Santa Elena', false],
+  ['SI', 'Eslovenia', false],
+  ['SJ', 'Svalbard y Jan Mayen', false],
+  ['SK', 'Eslovaquia', false],
+  ['SL', 'Sierra Leona', false],
+  ['SM', 'San Marino', false],
+  ['SN', 'Senegal', false],
+  ['SO', 'Somalia', false],
+  ['SR', 'Surinam', false],
+  ['SS', 'Sudán del Sur', false],
+  ['ST', 'Santo Tomé y Príncipe', false],
+  ['SV', 'El Salvador', false],
+  ['SX', 'Sint Maarten', false],
+  ['SY', 'Siria', false],
+  ['SZ', 'Esuatini', false],
+  ['TC', 'Islas Turcas y Caicos', false],
+  ['TD', 'Chad', false],
+  ['TF', 'Territorios Australes Franceses', false],
+  ['TG', 'Togo', false],
+  ['TH', 'Tailandia', false],
+  ['TJ', 'Tayikistán', false],
+  ['TK', 'Tokelau', false],
+  ['TL', 'Timor Oriental', false],
+  ['TM', 'Turkmenistán', false],
+  ['TN', 'Túnez', false],
+  ['TO', 'Tonga', false],
+  ['TR', 'Turquía', false],
+  ['TT', 'Trinidad y Tobago', false],
+  ['TV', 'Tuvalu', false],
+  ['TW', 'Taiwán', false],
+  ['TZ', 'Tanzania', false],
+  ['UA', 'Ucrania', false],
+  ['UG', 'Uganda', false],
+  ['UM', 'Islas Menores Alejadas de Estados Unidos', false],
+  ['US', 'Estados Unidos', true],
+  ['UY', 'Uruguay', false],
+  ['UZ', 'Uzbekistán', false],
+  ['VA', 'Ciudad del Vaticano', false],
+  ['VC', 'San Vicente y las Granadinas', false],
+  ['VE', 'Venezuela', true],
+  ['VG', 'Islas Vírgenes Británicas', false],
+  ['VI', 'Islas Vírgenes de Estados Unidos', false],
+  ['VN', 'Vietnam', false],
+  ['VU', 'Vanuatu', false],
+  ['WF', 'Wallis y Futuna', false],
+  ['WS', 'Samoa', false],
+  ['YE', 'Yemen', false],
+  ['YT', 'Mayotte', false],
+  ['ZA', 'Sudáfrica', false],
+  ['ZM', 'Zambia', false],
+  ['ZW', 'Zimbabue', false],
+]
+
+/**
+ * Los países como opciones de un desplegable: los de siempre primero y el
+ * resto alfabético.
+ *
+ * Vive aquí y no en cada pantalla porque son cuatro las que arman esta lista
+ * —la reserva, el equipo, preparar el zarpe y el embarque— y con 249 el orden
+ * dejó de ser un detalle. Se ordena en el aparato y no en la consulta a
+ * propósito: la copia local del muelle no ordena, y allá es donde más importa.
+ */
+export function opcionesDePais(paises = [], placeholder = '— País —') {
+  const ordenados = [...paises].sort((a, b) => {
+    if (Boolean(a.frecuente) !== Boolean(b.frecuente)) return a.frecuente ? -1 : 1
+    return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es')
+  })
+  return [
+    { value: '', label: placeholder },
+    ...ordenados.map(p => ({ value: p.id, label: p.nombre })),
+  ]
+}
+
+/**
+ * Los mismos, como filas de tabla — para los datos de muestra.
+ *
+ * `alias` deja conservar el id que un país ya tenía en la demo: hay reservas
+ * de muestra apuntando a `pa-col` desde antes de que la lista fuera la ISO, y
+ * cambiarlas todas para ganar un id más bonito es mover cuarenta y cuatro
+ * referencias a cambio de nada.
+ */
+export const paisesComoFilas = (alias = {}) =>
+  PAISES_ISO.map(([codigo, nombre, frecuente]) => ({
+    id: alias[codigo] || `pa-${codigo.toLowerCase()}`,
+    codigo,
+    nombre,
+    frecuente,
+  }))

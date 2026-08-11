@@ -133,7 +133,11 @@ export function parsePasajeros(texto, paises = []) {
   const porNombre = new Map()
   paises.forEach(p => {
     porNombre.set(sinTildes(p.nombre), p.id)
-    if (p.codigo) porNombre.set(sinTildes(p.codigo), p.id)
+    // El código solo si no es también una forma de escribir un documento.
+    // Con los 249 de la 028 entró 'CC' —Islas Cocos— y una línea normal de
+    // agencia, «Juan Pérez, CC, 45789123», habría salido con el pasajero
+    // nacido en un atolón del Índico. El nombre completo sigue resolviendo.
+    if (p.codigo && !detectarTipoDoc(p.codigo)) porNombre.set(sinTildes(p.codigo), p.id)
   })
 
   const filas = []

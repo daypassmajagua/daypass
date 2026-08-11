@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { Check, ChevronDown } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { Check, ChevronDown, Search } from 'lucide-react'
 import { classNames } from '../../lib/utils'
 import useClickOutside from '../../hooks/useClickOutside'
 
@@ -20,6 +20,13 @@ import useClickOutside from '../../hooks/useClickOutside'
 // tenía dos `<select>` nativos porque el de la oficina le quedaba chico, y esa
 // es exactamente la excusa con la que un sistema de diseño se empieza a
 // deshacer. Es la misma pieza en otro tamaño, no otra pieza.
+// `\p{Diacritic}` y no el rango U+0300–U+036F: el rango habría que escribirlo
+// con caracteres que en el archivo no se ven, y lo que no se ve se pierde en
+// el primer guardado con otra codificación.
+function sinTildes(str) {
+  return String(str).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+}
+
 const sizes = {
   sm:  'px-2.5 py-1.5 text-xs rounded-lg min-h-[36px] [@media(pointer:coarse)]:min-h-[44px]',
   md:  'px-3 py-2.5 text-sm rounded-xl min-h-[44px]',
@@ -40,30 +47,55 @@ export default function Select({
   disabled = false,
   align = 'left',
   className = '',
+  /**
+   * Buscar dentro del desplegable. Se enciende solo cuando la lista es larga:
+   * lo pidieron los 249 países de la 028, donde llegar a Kiribati bajando con
+   * el dedo no es elegir, es rendirse. Por debajo de trece opciones estorba
+   * —un campo más entre el dedo y lo que se ve— así que no aparece.
+   */
+  buscable,
 }) {
   const [open, setOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
   const wrapRef = useRef(null)
   const listRef = useRef(null)
+  const buscadorRef = useRef(null)
 
-  const close = useCallback(() => setOpen(false), [])
+  // Cerrar limpia lo escrito. Va aquí y no en un efecto sobre `open` porque un
+  // efecto que solo sirve para borrar un campo es un render de más.
+  const close = useCallback(() => { setOpen(false); setBusqueda('') }, [])
   useClickOutside(wrapRef, close, open)
+
+  const conBuscador = buscable ?? options.length > 12
 
   const selected = options.find(o => String(o.value) === String(value ?? ''))
 
+  // Sin tildes y sin mayúsculas: nadie escribe "Türkiye" ni "Panamá" con la
+  // tilde puesta cuando está buscando de afán.
+  const visibles = useMemo(() => {
+    const q = sinTildes(busqueda.trim())
+    if (!q || !conBuscador) return options
+    return options.filter(o => sinTildes(String(o.label)).includes(q))
+  }, [options, busqueda, conBuscador])
+
   function pick(v) {
     onChange(v)
-    setOpen(false)
+    close()
   }
 
-  // Al abrir, enfocar la opción seleccionada (o la primera)
+  // Al abrir: si hay buscador, el cursor va ahí —abrir para escribir es lo
+  // normal en una lista larga—; si no, a la opción elegida.
   useEffect(() => {
-    if (!open || !listRef.current) return
+    if (!open) return
+    if (conBuscador) { buscadorRef.current?.focus(); return }
+    if (!listRef.current) return
     const el = listRef.current.querySelector('[data-selected="true"]') || listRef.current.firstElementChild
     el?.focus()
-  }, [open])
+  }, [open, conBuscador])
 
   function onListKeyDown(e) {
-    if (e.key === 'Escape') { setOpen(false); return }
+    if (e.key === 'Escape') { close(); return }
+    if (!listRef.current) return
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
       const items = [...listRef.current.querySelectorAll('button')]
@@ -92,7 +124,7 @@ export default function Select({
           disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
-          onClick={() => setOpen(o => !o)}
+          onClick={() => (open ? close() : setOpen(true))}
           onKeyDown={e => {
             if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
@@ -127,15 +159,44 @@ export default function Select({
 
         {open && (
           <div
-            ref={listRef}
-            role="listbox"
             onKeyDown={onListKeyDown}
             className={classNames(
-              'absolute z-50 mt-1 w-full max-h-[min(60vh,20rem)] overflow-y-auto overscroll-contain rounded-xl bg-white shadow-[0_12px_32px_rgba(22,24,44,.18)] ring-1 ring-black/5 py-1.5',
+              'absolute z-50 mt-1 w-full rounded-xl bg-white shadow-[0_12px_32px_rgba(22,24,44,.18)] ring-1 ring-black/5 overflow-hidden',
               align === 'right' && 'right-0'
             )}
           >
-            {options.map(o => {
+            {conBuscador && (
+              <div className="flex items-center gap-2 px-3 border-b border-linea">
+                <Search size={size === 'sol' ? 20 : 15} className="shrink-0 text-tinta-3" />
+                <input
+                  ref={buscadorRef}
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  onKeyDown={e => {
+                    // Enter escoge lo primero que quedó: escribir "col" y darle
+                    // Enter tiene que bastar.
+                    if (e.key === 'Enter' && visibles.length) { e.preventDefault(); pick(visibles[0].value) }
+                  }}
+                  placeholder="Buscar"
+                  className={classNames(
+                    'w-full bg-transparent text-tinta placeholder-tinta-3 focus:outline-none',
+                    size === 'sol' ? 'py-3.5 text-[18px]' : 'py-2.5 text-[15px]'
+                  )}
+                />
+              </div>
+            )}
+
+            <div
+              ref={listRef}
+              role="listbox"
+              className="max-h-[min(60vh,20rem)] overflow-y-auto overscroll-contain py-1.5"
+            >
+            {visibles.length === 0 && (
+              <p className="px-3.5 py-3 text-[15px] text-tinta-2">
+                Nada con «{busqueda.trim()}».
+              </p>
+            )}
+            {visibles.map(o => {
               const isSel = String(o.value) === String(value ?? '')
               return (
                 <button
@@ -159,6 +220,7 @@ export default function Select({
                 </button>
               )
             })}
+            </div>
           </div>
         )}
       </div>
