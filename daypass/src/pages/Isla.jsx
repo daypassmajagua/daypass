@@ -9,7 +9,9 @@ import { comoSeCobra, coincideEnIsla, COBROS } from '../lib/cobroEnIsla'
 import { classNames, fraseFecha, plural } from '../lib/utils'
 import IndicadorSync from '../components/layout/IndicadorSync'
 import NavegacionMinima from '../components/layout/NavegacionMinima'
-import { EstadoError } from '../components/patrones'
+import { EstadoError, ContadorVivo } from '../components/patrones'
+import { edadDe } from '../lib/enLaIsla'
+import { useEnLaIsla } from '../hooks/useEnLaIsla'
 import { reservaCon, CON_LANCHA } from '../lib/columnas'
 
 /**
@@ -96,6 +98,44 @@ function Fila({ registro, tiposIngreso }) {
   )
 }
 
+/**
+ * El número de ahora, en el encabezado de la isla.
+ *
+ * ── Por qué el grande es solo el de pasadía ─────────────────────────────────
+ *
+ * Es el único de los tres que registra el regreso, así que es el único que se
+ * puede restar y afirmar. Alojamiento y equipo van en el manifiesto pero no
+ * tienen un hecho por persona: se dicen al lado, en pequeño, sin sumarse. Un
+ * total que mezclara lo contado con lo supuesto sería un total que nadie puede
+ * defender cuando la Capitanía pregunte.
+ *
+ * Antes de que zarpe la primera lancha el número es cero y eso es correcto,
+ * pero un cero grande a las siete de la mañana parece un error: mientras nadie
+ * haya subido, el bloque no aparece.
+ */
+function EnLaIslaAhora({ conteo, mirado }) {
+  if (!conteo || conteo.subieron === 0) return null
+
+  const aparte = [
+    conteo.alojamiento ? `${conteo.alojamiento} de alojamiento` : null,
+    conteo.equipo ? `${conteo.equipo} del equipo` : null,
+  ].filter(Boolean)
+
+  return (
+    <div className="shrink-0 text-right">
+      <ContadorVivo
+        valor={conteo.pasadia}
+        etiqueta="de pasadía, en la isla"
+        edad={edadDe(mirado)}
+        tamano="lg"
+      />
+      {aparte.length > 0 && (
+        <p className="text-[13px] text-sol-tinta-2">{aparte.join(' · ')}, aparte</p>
+      )}
+    </div>
+  )
+}
+
 export default function Isla() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
   const [registros, setRegistros] = useState([])
@@ -103,6 +143,9 @@ export default function Isla() {
   const [busqueda, setBusqueda] = useState('')
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  // Cuánta gente hay ahora, y de cuándo es ese número. Los dos van juntos: sin
+  // la hora, un número viejo se lee como fresco.
+  const { conteo, mirado, remirar } = useEnLaIsla(fechaActiva)
 
   /**
    * Con red del servidor, sin red de la copia local. En la isla la señal va y
@@ -140,7 +183,11 @@ export default function Isla() {
   }, [fechaActiva])
 
   useEffect(() => { cargar() }, [cargar])
-  useRegistrosEnVivo(fechaActiva, cargar)
+
+  // Cuando cambia una reserva del día, la lista se recarga y el conteo también:
+  // una que pasa a `en_isla` es alguien que acaba de llegar.
+  const alCambiar = useCallback(() => { cargar(); remirar() }, [cargar, remirar])
+  useRegistrosEnVivo(fechaActiva, alCambiar)
 
   useEffect(() => {
     document.body.style.background = '#f4f4f0'
@@ -169,6 +216,7 @@ export default function Isla() {
               {fraseFecha(fechaActiva)}
             </p>
           </div>
+          <EnLaIslaAhora conteo={conteo} mirado={mirado} />
           <IndicadorSync muelle />
         </div>
 

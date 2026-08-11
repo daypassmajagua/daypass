@@ -42,7 +42,8 @@ export default function ContadorVivo({
   etiqueta,
   sufijo,
   edad,                 // texto ya formateado: 'hace 12 min'
-  tamano = 'lg',        // lg (isla, panorama) · md (franja, en línea)
+  // lg (isla, panorama) · md (en línea, fondo claro) · oscuro (la franja navy)
+  tamano = 'lg',
   className = '',
 }) {
   const [reciente, setReciente] = useState(false)
@@ -66,11 +67,26 @@ export default function ContadorVivo({
 
   const grande = tamano === 'lg'
 
+  /**
+   * Sobre fondo oscuro el color se hereda del contenedor.
+   *
+   * La franja del día es navy, y con los tonos de tinta el número quedaba casi
+   * invisible: se veía la etiqueta y no la cifra, que es exactamente al revés
+   * de lo que hace falta. Con `currentColor` el mismo componente sirve en la
+   * isla —fondo claro— y en la franja, sin dos versiones que mantener.
+   */
+  const enOscuro = tamano === 'oscuro'
+  const colorCifra = enOscuro ? '' : 'text-tinta'
+  const colorApoyo = enOscuro ? 'opacity-75' : 'text-tinta-2'
+
   return (
     <div
       className={classNames(
         'inline-flex flex-col rounded-xl px-3 py-2 transition-colors duration-500',
-        reciente ? 'bg-mar-50' : 'bg-transparent',
+        reciente && !enOscuro ? 'bg-mar-50' : '',
+        // En oscuro el destello es del color del texto, no un fondo claro que
+        // rompería la franja.
+        reciente && enOscuro ? 'bg-white/15' : '',
         className
       )}
       // Lo lee el lector de pantalla cuando cambia, sin robarle el foco a nadie.
@@ -79,7 +95,8 @@ export default function ContadorVivo({
     >
       {etiqueta && (
         <span className={classNames(
-          'font-bold uppercase tracking-wider text-tinta-2',
+          'font-bold uppercase tracking-wider',
+          colorApoyo,
           grande ? 'text-[13px]' : 'text-[11px]'
         )}>
           {etiqueta}
@@ -92,21 +109,22 @@ export default function ContadorVivo({
           // que el dígito nuevo entre animado en vez de reemplazarse en seco.
           key={valor}
           className={classNames(
-            'tabular font-bold text-tinta tic-entra',
+            'tabular font-bold tic-entra',
+            colorCifra,
             grande ? 'text-[44px] leading-none' : 'text-[20px] leading-none'
           )}
         >
           {valor}
         </span>
         {sufijo && (
-          <span className={classNames('text-tinta-2', grande ? 'text-[17px]' : 'text-[13px]')}>
+          <span className={classNames(colorApoyo, grande ? 'text-[17px]' : 'text-[13px]')}>
             {sufijo}
           </span>
         )}
       </span>
 
       {edad && (
-        <span className={classNames('text-tinta-2', grande ? 'text-[13px]' : 'text-[11px]')}>
+        <span className={classNames(colorApoyo, grande ? 'text-[13px]' : 'text-[11px]')}>
           {edad}
         </span>
       )}

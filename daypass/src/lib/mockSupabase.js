@@ -752,11 +752,82 @@ const STORE = {
 // Las fichas de los clientes salen de las reservas de muestra, como en la base.
 enlazarTitularesDeMuestra()
 
+// Y el día de muestra arranca a media mañana, con la primera lancha ya afuera.
+zarparLaPrimeraLancha()
+
 /**
  * 48 caracteres hex, igual que el `encode(gen_random_bytes(24),'hex')` de la
  * migración. Nunca deriva del id de la reserva: un token no debe revelar a
  * qué reserva apunta ni permitir adivinar el siguiente.
  */
+/**
+ * Media mañana en la isla: la primera lancha ya zarpó.
+ *
+ * La demo arrancaba con cero zarpes y cero embarques, así que «cuánta gente
+ * hay en la isla ahora» siempre daba cero y el bloque no se podía ver. Y no
+ * era solo eso: el muelle también arrancaba con la lista entera sin tocar,
+ * que no es el estado en el que uno mira esa pantalla.
+ *
+ * Se embarcan las reservas que ya están en la isla —las que el día de muestra
+ * marca `en_isla`— y nadie ha regresado todavía, que es el momento en el que
+ * este número sirve para algo.
+ */
+function zarparLaPrimeraLancha() {
+  const hoy = hoyLocal()
+  const enIsla = STORE.registros.filter(r => r.fecha === hoy && r.estado === 'en_isla')
+  if (!enIsla.length) return
+
+  // Con una lancha afuera el día está en operación, no planeándose. Dejarlo en
+  // «planeando» con cinco personas en la isla sería el tipo de incoherencia
+  // que hace dudar de todo lo demás.
+  const dia = diaDe(hoy)
+  dia.estado = 'en_operacion'
+  dia.cerrado_tentativo_at = `${hoy}T13:00:00Z`   // 8 a.m. en Bogotá
+
+  const ida = {
+    id: 'z-hoy-ida',
+    fecha: hoy,
+    lancha_id: enIsla[0].lancha_id || 'l-maj1',
+    sentido: 'ida',
+    hora_programada: '08:30',
+    hora_real_salida: `${hoy}T13:35:00Z`,   // 8:35 en Bogotá
+    hora_real_regreso: null,
+    piloto_id: PILOTOS[0]?.id || null,
+    estado: 'zarpado',
+    created_at: `${hoy}T12:00:00Z`,
+  }
+  STORE.zarpes.push(ida)
+
+  // Un hecho por persona, como en el muelle: el toque de un dedo por cabeza.
+  let n = 0
+  for (const r of enIsla) {
+    const pax = (r.adultos || 0) + (r.ninos || 0) + (r.infantes || 0) + (r.cortesias || 0)
+    for (let i = 0; i < pax; i++) {
+      STORE.embarques.push({
+        id: genId(),
+        zarpe_id: ida.id,
+        pasajero_id: null,
+        registro_id: r.id,
+        evento: 'check_in',
+        nombre: null, documento: null, pais_id: null, categoria: null,
+        ocurrido_at: `${hoy}T13:${String(20 + (n % 15)).padStart(2, '0')}:00Z`,
+        sincronizado_at: `${hoy}T13:30:00Z`,
+        registrado_por: 'mock-dani',
+        dispositivo: 'iPad del muelle',
+        client_id: `emb-muestra-${n}`,
+        created_at: `${hoy}T13:30:00Z`,
+      })
+      n += 1
+    }
+  }
+
+  // Y los que van sin ser pasadía: al manifiesto sí, a `embarques` no.
+  STORE.zarpe_empleados.push(
+    { zarpe_id: ida.id, empleado_id: EMPLEADOS[0]?.id },
+    { zarpe_id: ida.id, empleado_id: EMPLEADOS[1]?.id },
+  )
+}
+
 function nuevoToken() {
   let t = ''
   for (let i = 0; i < 48; i++) t += '0123456789abcdef'[Math.floor(Math.random() * 16)]

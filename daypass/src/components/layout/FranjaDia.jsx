@@ -2,6 +2,9 @@ import { Wifi } from 'lucide-react'
 import { classNames, formatDate } from '../../lib/utils'
 import { ESTADO_DIA_LABELS, PUNTO_LABELS, useDiaOperativo } from '../../hooks/useDiaOperativo'
 import useAppStore from '../../store/useAppStore'
+import { useEnLaIsla } from '../../hooks/useEnLaIsla'
+import { edadDe } from '../../lib/enLaIsla'
+import { ContadorVivo } from '../patrones'
 
 /**
  * La franja del día: el latido del sistema.
@@ -33,6 +36,11 @@ export default function FranjaDia() {
   const look = APARIENCIA[estado] || APARIENCIA.planeando
   const cerradoA = horaCorta(dia?.cerrado_tentativo_at)
 
+  // Solo se pregunta mientras hay gente afuera: la oficina no necesita contar
+  // la isla un martes de planeación.
+  const enOperacion = estado === 'en_operacion'
+  const { conteo, mirado } = useEnLaIsla(fechaActiva, enOperacion)
+
   return (
     <div className={classNames(
       'flex items-center gap-2.5 flex-wrap px-4 py-2.5 rounded-2xl mb-5',
@@ -63,6 +71,22 @@ export default function FranjaDia() {
         <span className="text-[13px] opacity-75 tabular">
           a las {cerradoA}
           {dia?.cerrado_tentativo_por_nombre && ` por ${dia.cerrado_tentativo_por_nombre}`}
+        </span>
+      )}
+
+      {/* Cuánta gente hay allá, mientras el día está en operación.
+          Fuera de esa ventana el número no dice nada —antes del zarpe es cero
+          y después del regreso también— y una franja que arrastra un cero todo
+          el día enseña a no mirarla. */}
+      {enOperacion && conteo?.subieron > 0 && (
+        <span className="flex items-center gap-1.5 text-[13px] font-bold">
+          <span className="opacity-40">·</span>
+          <ContadorVivo
+            valor={conteo.pasadia}
+            etiqueta="en la isla"
+            edad={edadDe(mirado)}
+            tamano="oscuro"
+          />
         </span>
       )}
 

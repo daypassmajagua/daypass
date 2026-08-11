@@ -475,7 +475,27 @@ globalmente y se queda así.
        sistema decide qué precio aplicar.
 
    Con esto el paso 7 queda cerrado.
-8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
+8. ✅ **En la isla ahora** (isla + franja + su prueba con eventos derivados). *(hecho)*
+
+   > **El §3.1 decía «En la isla ahora · 34». Se queda en «de pasadía, en la isla».** Al ir a
+   > derivarlo apareció que **son tres poblaciones y solo una registra el regreso**: pasadía sale
+   > de `embarques`, que tiene un hecho por persona —subió, bajó—; alojamiento y equipo van al
+   > manifiesto pero **no generan evento propio**, y además los huéspedes no bajan porque se
+   > quedan. Un total que sumara lo contado con lo supuesto sería un total que nadie puede
+   > defender cuando la Capitanía pregunte. El número grande es el que se puede afirmar; los
+   > otros dos se dicen al lado, sin sumarse.
+
+   - Se calcula **en el aparato** y no en una vista de SQL, porque el número se necesita justo
+     donde no hay señal. Sale de lo que la copia local ya baja, y el servidor solo completa.
+   - **Declara su edad**: «hace 12 min». Un número viejo que se sabe viejo es información; uno
+     viejo que parece fresco es una mentira. Por debajo del minuto no dice nada — un contador
+     que se repinta solo llama más la atención que la cifra.
+   - **Antes del primer embarque no aparece.** Un cero grande a las siete de la mañana parece un
+     error, no un dato.
+   - En la franja del día sale **solo mientras el día está en operación**: fuera de esa ventana
+     es cero por definición, y una franja que arrastra un cero todo el día enseña a no mirarla.
+   - `ContadorVivo` ganó su versión para fondo oscuro: sobre el navy de la franja los tonos de
+     tinta dejaban la cifra invisible y la etiqueta legible, que es justo al revés.
 9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
 10. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
