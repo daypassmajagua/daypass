@@ -43,4 +43,23 @@ export default defineConfig({
       },
     }),
   ],
+
+  /**
+   * Las pruebas no hablan con producción. Nunca.
+   *
+   * Vite carga el `.env` también en modo test, así que `VITE_SUPABASE_URL`
+   * llegaba puesta y cualquier módulo que importe `lib/supabase` construía el
+   * cliente **real**: una prueba de `busqueda.js` alcanzó a hacerle consultas
+   * a la base del hotel antes de que se notara. Fueron lecturas y volvieron
+   * vacías por la RLS, pero el camino estaba abierto.
+   *
+   * Vaciarla aquí cierra la clase entera de error: `isMock` da true siempre en
+   * pruebas, sin depender de que cada archivo se acuerde de simularlo.
+   */
+  test: {
+    env: {
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+    },
+  },
 })

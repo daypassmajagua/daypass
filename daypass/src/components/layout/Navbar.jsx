@@ -27,6 +27,7 @@ import { useState } from 'react'
 import { classNames } from '../../lib/utils'
 import logoBlanco from '../../assets/logo-blanco.png'
 import IndicadorSync from './IndicadorSync'
+import Buscador from './Buscador'
 import { usePerfil } from '../../hooks/usePerfil'
 import { menuDe, seccionesDe, ETIQUETA_ROL } from '../../lib/navegacion'
 
@@ -131,6 +132,10 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* La otra mitad de la navegación. Va antes del engranaje porque se
+                usa mil veces más. */}
+            <Buscador />
+
             <IndicadorSync />
 
             {/* El engranaje va aparte y con separador: no es un octavo destino,

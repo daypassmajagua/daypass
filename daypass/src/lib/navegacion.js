@@ -221,18 +221,27 @@ function rutasDe(rol) {
 export function puedeVer(rol, ruta) {
   const config = POR_ROL[rol]
   if (!config) return false
-  // `/editar/:id` llega con el id pegado; `/config/planes` cuelga de `/config`.
-  // Y la ficha de un plan —`/config/planes/:id`— es la misma sección con un
-  // registro adentro: quien puede ver la sección puede ver sus fichas.
-  const base = ruta.startsWith('/editar')
-    ? '/editar'
-    : ruta.startsWith('/config/')
-      ? '/config/' + ruta.split('/')[2]
-      : ruta
+  const base = ruta.startsWith('/editar') ? '/editar' : ruta
   const permitidas = rutasDe(rol)
   if (permitidas.includes(base)) return true
-  // Una sección de Configuración vale si su rol la tiene.
-  return base.startsWith('/config/') && permitidas.includes(base)
+
+  /**
+   * Una ficha cuelga de donde vive: `/clientes/:id` de `/clientes`,
+   * `/config/planes/:id` de `/config/planes`. Quien puede ver la sección
+   * puede ver un registro suyo.
+   *
+   * **`/config` no cuenta como padre.** Está en la lista de todo el que tenga
+   * al menos una sección, así que aceptarlo como prefijo le abriría
+   * `/config/temporadas` a quien solo tiene `/config/agencias`. La trampa es
+   * fácil de no ver y por eso está escrita.
+   */
+  const partes = base.split('/').filter(Boolean)
+  for (let n = partes.length - 1; n >= 1; n--) {
+    const padre = '/' + partes.slice(0, n).join('/')
+    if (padre === '/config') continue
+    if (permitidas.includes(padre)) return true
+  }
+  return false
 }
 
 /** A dónde mandar a alguien al entrar, o cuando pide algo que no puede ver. */

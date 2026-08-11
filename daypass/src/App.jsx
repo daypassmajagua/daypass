@@ -254,6 +254,18 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* La ficha de una persona tiene dirección propia: es a donde aterriza
+            el buscador global, y una ventana no se puede compartir. */}
+        <Route
+          path="/clientes/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Clientes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/reportes"
           element={

@@ -383,8 +383,20 @@ globalmente y se queda así.
    - **`puedeVer` no sabía de fichas.** Daba falso para `/config/planes/:id` porque comparaba la
      ruta completa. Ahora una ficha hereda el permiso de su sección — quien puede ver planes
      puede ver un plan.
-5. **La búsqueda global** (§10) — ya con dónde aterrizar. Encuentra personas, reservas, agencias,
-   planes, lanchas y empleados.
+5. ✅ **La búsqueda global** (§10) — ya con dónde aterrizar. Encuentra personas, reservas,
+   agencias, lanchas y empleados. *(hecho)* Tres cosas que cambiaron al construirla:
+   - **Sin funciones nuevas en la base.** Personas ya tenía la suya; los otros tres grupos son
+     `select` con `or`, que PostgREST resuelve respetando la RLS de cada tabla. Tres funciones
+     nuevas serían tres puertas que hay que acordarse de cerrar en cada migración (la lección de
+     la 012), a cambio de nada.
+   - **Buscar por documento no funcionaba** — ni aquí ni en Clientes, desde la 020. Se digita
+     «CC 1023456789» y `buscar_personas` comparaba *empieza por*, así que buscar el número no
+     encontraba a nadie. Lo arregla la **029**.
+   - **`/clientes/:id` ya es una dirección.** La ficha de una persona vivía en el estado de la
+     pantalla; sin dirección, la búsqueda no tenía dónde aterrizar. Sigue siendo una ventana —el
+     paso 6 la vuelve página— pero la dirección ya es la definitiva.
+   - Los planes no entraron: se busca lo que se busca a diario, y un plan se elige en un
+     desplegable al crear la reserva, no se busca. Si hace falta, es una línea.
 6. **Los perfiles** (§11) — persona y reserva con el patrón ya hecho; agencia después.
 7. **El resto del CMS** — lancha, empleado y temporada con la misma ficha, y las tres secciones
    que faltan: **turnos primero**, porque sin ellos la Fase 6 no arranca.

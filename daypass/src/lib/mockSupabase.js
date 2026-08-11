@@ -1537,7 +1537,10 @@ const RPC = {
     const norm = normalizarDocumento(texto)
     const encaja = p => {
       const pd = normalizarDocumento(p.documento)
-      return (norm && pd && pd.startsWith(norm))
+      // Contiene, no empieza por (029). Los documentos se digitan «CC 1023456»
+      // y el número queda detrás de las letras: con `startsWith`, buscar el
+      // número no encontraba a nadie.
+      return (norm && pd && pd.includes(norm))
         || p.nombre_completo.toLowerCase().includes(texto.toLowerCase())
     }
     const veces = p => STORE.pasajeros.filter(x => x.persona_id === p.id).length
@@ -1707,6 +1710,40 @@ class QB {
     const clean = pattern.replace(/%/g, '.*')
     const re = new RegExp(clean, 'i')
     this._filters.push(r => re.test(r[col] || ''))
+    return this
+  }
+
+  /**
+   * `or('nombre.ilike.*ana*,folio.eq.4471')` — la forma de PostgREST.
+   *
+   * La búsqueda global la necesita: una reserva se encuentra por el titular,
+   * por el nombre del grupo o por el folio, y son tres columnas de la misma
+   * fila. Sin esto habría que lanzar tres consultas y unirlas a mano, que es
+   * justo lo que el servidor sabe hacer solo.
+   *
+   * Entiende `ilike` y `eq`, que es lo que se usa. Un operador que no conozca
+   * no encuentra nada en vez de encontrarlo todo: en una búsqueda, de más es
+   * peor que de menos.
+   */
+  or(expresion) {
+    const partes = String(expresion).split(',').map(p => p.trim()).filter(Boolean)
+    const pruebas = partes.map(parte => {
+      const [col, op, ...resto] = parte.split('.')
+      const valor = resto.join('.')
+      if (op === 'ilike') {
+        // Se escapa todo menos los comodines, y después `*` y `%` se vuelven
+        // `.*`. Al revés —escapar primero el asterisco— el comodín quedaría
+        // literal y la búsqueda no encontraría nada.
+        const re = new RegExp(
+          valor.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/[*%]/g, '.*'),
+          'i'
+        )
+        return r => re.test(r[col] ?? '')
+      }
+      if (op === 'eq') return r => String(r[col] ?? '') === valor
+      return () => false
+    })
+    this._filters.push(r => pruebas.some(p => p(r)))
     return this
   }
 

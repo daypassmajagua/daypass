@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Search, Users, Phone, Mail, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, formatDateShort, classNames, plural } from '../lib/utils'
@@ -20,6 +21,8 @@ import Modal from '../components/ui/Modal'
  * visitas y no por los datos.
  */
 export default function Clientes() {
+  const { id } = useParams()
+  const navigate = useNavigate()
   const [texto, setTexto] = useState('')
   const [lista, setLista] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -50,11 +53,24 @@ export default function Clientes() {
     return () => clearTimeout(t)
   }, [cargar, texto])
 
-  async function abrir(persona) {
-    const { data, error: err } = await supabase.rpc('ficha_persona', { p_persona_id: persona.id })
-    if (err) { setError(err.message); return }
-    setFicha(data)
-  }
+  /**
+   * La ficha vive en la dirección, no en el estado.
+   *
+   * Antes se abría con un clic y no se podía volver a ella: ni compartirla, ni
+   * recargarla, ni llegar desde otro lado. Ahora `/clientes/:id` es un sitio,
+   * que es lo que necesita el buscador global para tener a dónde aterrizar. El
+   * paso 6 le cambia la ventana por una página; la dirección ya es la buena.
+   */
+  useEffect(() => {
+    if (!id) { setFicha(null); return }
+    let vigente = true
+    supabase.rpc('ficha_persona', { p_persona_id: id }).then(({ data, error: err }) => {
+      if (!vigente) return
+      if (err) { setError(err.message); return }
+      setFicha(data)
+    })
+    return () => { vigente = false }
+  }, [id])
 
   return (
     <div className="max-w-4xl mx-auto px-4">
@@ -102,7 +118,7 @@ export default function Clientes() {
           {lista.map(p => (
             <button
               key={p.id}
-              onClick={() => abrir(p)}
+              onClick={() => navigate(`/clientes/${p.id}`)}
               className="text-left bg-white rounded-2xl px-4 py-3.5 ring-1 ring-transparent
                          hover:ring-linea transition-colors flex items-center gap-3"
             >
@@ -126,7 +142,7 @@ export default function Clientes() {
         </div>
       )}
 
-      {ficha && <Ficha ficha={ficha} onCerrar={() => setFicha(null)} />}
+      {ficha && <Ficha ficha={ficha} onCerrar={() => navigate('/clientes')} />}
     </div>
   )
 }
