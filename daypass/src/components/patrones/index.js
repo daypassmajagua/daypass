@@ -46,3 +46,8 @@ export { default as ContadorVivo } from './ContadorVivo'
 // reserva, lancha y empleado.
 export { default as Ficha, DondeSeUsa } from './Ficha'
 export { default as LineaDeTiempo } from './LineaDeTiempo'
+
+// El perfil que se abre al lado sin soltar la lista. Es hermano de `Ficha`,
+// no su reemplazo: la ficha es para lo que se va a editar —un plan, una
+// tarifa—, el panel para lo que se va a consultar y cerrar.
+export { default as PanelLateral } from './PanelLateral'

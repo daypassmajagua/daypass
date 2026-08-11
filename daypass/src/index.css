@@ -279,6 +279,18 @@ input[type="number"] {
 }
 .aparecer { animation: aparecer 160ms ease-out; }
 
+/* El panel lateral, que entra desde el borde de donde viene.
+   180ms: lo justo para que el ojo sepa de qué lado apareció y por dónde se va
+   a ir — un panel que aparece de golpe parece que reemplazó la pantalla, y la
+   promesa de este es justamente que no la reemplazó. En el celular ocupa todo
+   y el desplazamiento es el mismo: viene de la derecha, como la siguiente
+   pantalla de cualquier teléfono. */
+@keyframes entra-de-lado {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: none; }
+}
+.entra-de-lado { animation: entra-de-lado 180ms cubic-bezier(.32, .72, 0, 1); }
+
 /**
  * El degradado de la marca: la barra de la oficina y el encabezado de la
  * página del cliente.

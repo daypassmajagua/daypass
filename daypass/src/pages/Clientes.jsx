@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Search, Users, Phone, Mail, X } from 'lucide-react'
+import { Search, Users, X, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { formatCurrency, formatDateShort, classNames, plural } from '../lib/utils'
-import { EstadoError, Esqueleto } from '../components/patrones'
+import { formatDateShort, classNames, plural } from '../lib/utils'
+import { EstadoError, Esqueleto, PanelLateral } from '../components/patrones'
+import FichaPersona from '../components/clientes/FichaPersona'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
-import Modal from '../components/ui/Modal'
 
 /**
  * Quiénes son los clientes.
@@ -19,6 +19,13 @@ import Modal from '../components/ui/Modal'
  * hace de verdad: *esta señora que está llamando, ¿ya vino?* Por eso lo
  * primero es un buscador y no una lista, y por eso la ficha empieza por las
  * visitas y no por los datos.
+ *
+ * ── El perfil se abre al lado ───────────────────────────────────────────────
+ *
+ * La lista no se va: el perfil entra por la derecha y la deja detrás. Así
+ * mirar a cinco personas seguidas son cinco toques y no diez, y quien buscaba
+ * no pierde su sitio. La dirección sigue siendo `/clientes/:id`, que es lo que
+ * lo hace compartible y lo que le da destino al buscador global.
  */
 export default function Clientes() {
   const { id } = useParams()
@@ -28,6 +35,7 @@ export default function Clientes() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
   const [ficha, setFicha] = useState(null)
+  const [fallo, setFallo] = useState(null)
 
   // Sin búsqueda: los que más vienen. Es el mejor arranque para una lista que
   // va a tener miles de filas.
@@ -54,23 +62,30 @@ export default function Clientes() {
   }, [cargar, texto])
 
   /**
-   * La ficha vive en la dirección, no en el estado.
+   * El perfil vive en la dirección, no en el estado.
    *
-   * Antes se abría con un clic y no se podía volver a ella: ni compartirla, ni
-   * recargarla, ni llegar desde otro lado. Ahora `/clientes/:id` es un sitio,
-   * que es lo que necesita el buscador global para tener a dónde aterrizar. El
-   * paso 6 le cambia la ventana por una página; la dirección ya es la buena.
+   * Antes se abría con un clic y no se podía volver a él: ni compartirlo, ni
+   * recargarlo, ni llegar desde otro lado. Con `/clientes/:id` es un sitio —y
+   * quien llega directo por la dirección ve la lista detrás igual, porque la
+   * pantalla la carga de todos modos. No hay dos caminos.
+   *
+   * El fallo se guarda aparte del de la lista: que no se pueda abrir una
+   * ficha no debería borrar los veinticinco resultados de atrás.
    */
   useEffect(() => {
-    if (!id) { setFicha(null); return }
+    if (!id) { setFicha(null); setFallo(null); return }
     let vigente = true
+    setFicha(null)
+    setFallo(null)
     supabase.rpc('ficha_persona', { p_persona_id: id }).then(({ data, error: err }) => {
       if (!vigente) return
-      if (err) { setError(err.message); return }
+      if (err) { setFallo(err.message); return }
       setFicha(data)
     })
     return () => { vigente = false }
   }, [id])
+
+  const abierta = Boolean(id)
 
   return (
     <div className="max-w-4xl mx-auto px-4">
@@ -115,134 +130,57 @@ export default function Clientes() {
         </Card>
       ) : (
         <div className="flex flex-col gap-2">
-          {lista.map(p => (
-            <button
-              key={p.id}
-              onClick={() => navigate(`/clientes/${p.id}`)}
-              className="text-left bg-white rounded-2xl px-4 py-3.5 ring-1 ring-transparent
-                         hover:ring-linea transition-colors flex items-center gap-3"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-[16px] font-bold text-tinta truncate">{p.nombre_completo}</p>
-                <p className="text-[13px] text-tinta-2 truncate">
-                  {p.documento || 'sin documento'}
-                  {p.telefono && <> · {p.telefono}</>}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-[15px] font-bold text-tinta tabular">
-                  {plural(p.visitas ?? p.veces ?? 0, 'visita', 'visitas')}
-                </p>
-                {p.ultima && (
-                  <p className="text-[12px] text-tinta-2">última {formatDateShort(p.ultima)}</p>
+          {lista.map(p => {
+            // La fila abierta se queda marcada: con el panel al lado, saber
+            // cuál se está mirando es la mitad de para qué sirve el panel.
+            const activa = p.id === id
+            return (
+              <button
+                key={p.id}
+                onClick={() => navigate(`/clientes/${p.id}`)}
+                aria-current={activa ? 'true' : undefined}
+                className={classNames(
+                  'text-left bg-white rounded-2xl px-4 py-3.5 ring-1 transition-colors flex items-center gap-3',
+                  activa ? 'ring-blue-600 bg-blue-50/40' : 'ring-transparent hover:ring-linea'
                 )}
-              </div>
-            </button>
-          ))}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[16px] font-bold text-tinta truncate">{p.nombre_completo}</p>
+                  <p className="text-[13px] text-tinta-2 truncate">
+                    {p.documento || 'sin documento'}
+                    {p.telefono && <> · {p.telefono}</>}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[15px] font-bold text-tinta tabular">
+                    {plural(p.visitas ?? p.veces ?? 0, 'visita', 'visitas')}
+                  </p>
+                  {p.ultima && (
+                    <p className="text-[12px] text-tinta-2">última {formatDateShort(p.ultima)}</p>
+                  )}
+                </div>
+                <ChevronRight size={16} className="shrink-0 text-tinta-3" aria-hidden="true" />
+              </button>
+            )
+          })}
         </div>
       )}
 
-      {ficha && <Ficha ficha={ficha} onCerrar={() => navigate('/clientes')} />}
-    </div>
-  )
-}
-
-function Ficha({ ficha, onCerrar }) {
-  const p = ficha.persona || {}
-  const calculadas = ficha.etiquetas_calculadas || []
-  const puestas = ficha.etiquetas_puestas || []
-
-  return (
-    <Modal open onClose={onCerrar} title={p.nombre_completo}>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-4">
-          <Dato etiqueta="Visitas" valor={ficha.visitas} />
-          {ficha.ultima && <Dato etiqueta="Última" valor={formatDateShort(ficha.ultima)} />}
-          {ficha.primera && <Dato etiqueta="Primera" valor={formatDateShort(ficha.primera)} />}
-          {/* En null cuando quien mira no puede ver plata: lo decide el
-              servidor, no esta pantalla. */}
-          {ficha.gastado != null && (
-            <Dato etiqueta="Ha dejado" valor={formatCurrency(ficha.gastado)} />
+      {abierta && (
+        <PanelLateral
+          titulo={ficha?.persona?.nombre_completo || 'Cargando…'}
+          subtitulo={ficha?.persona?.documento || undefined}
+          onCerrar={() => navigate('/clientes')}
+        >
+          {fallo ? (
+            <EstadoError error={fallo} onReintentar={() => navigate(`/clientes/${id}`, { replace: true })} />
+          ) : !ficha ? (
+            <Esqueleto filas={4} />
+          ) : (
+            <FichaPersona ficha={ficha} />
           )}
-        </div>
-
-        {(p.telefono || p.email || p.documento) && (
-          <div className="flex flex-col gap-1.5 text-[15px] text-tinta">
-            {p.documento && <p className="text-tinta-2">{p.documento}</p>}
-            {p.telefono && (
-              <a href={`tel:${p.telefono}`} className="flex items-center gap-2 text-blue-700 font-bold">
-                <Phone size={15} /> {p.telefono}
-              </a>
-            )}
-            {p.email && (
-              <a href={`mailto:${p.email}`} className="flex items-center gap-2 text-blue-700 font-bold break-all">
-                <Mail size={15} /> {p.email}
-              </a>
-            )}
-          </div>
-        )}
-
-        {(calculadas.length > 0 || puestas.length > 0) && (
-          <div className="flex flex-wrap gap-1.5">
-            {calculadas.map(e => (
-              <span key={e} className="text-[13px] font-bold px-2.5 py-1 rounded-lg bg-mar-50 text-mar-700">
-                {e}
-              </span>
-            ))}
-            {puestas.map(e => (
-              <span key={e} className="text-[13px] font-bold px-2.5 py-1 rounded-lg bg-arena-100 text-arena-700">
-                {e}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {ficha.plan_usual && (
-          <p className="text-[15px] text-tinta-2">
-            Suele venir en <b className="text-tinta">{ficha.plan_usual}</b>.
-          </p>
-        )}
-
-        {(ficha.organizaciones || []).length > 0 && (
-          <p className="text-[15px] text-tinta-2">
-            {ficha.organizaciones.map(o => `${o.nombre} (${o.tipo.replace('_', ' ')})`).join(' · ')}
-          </p>
-        )}
-
-        {(ficha.historial || []).length > 0 && (
-          <div>
-            <p className="text-[13px] font-bold text-tinta-2 uppercase tracking-wider mb-1.5">
-              Cuándo vino
-            </p>
-            <ul className="flex flex-col gap-1">
-              {ficha.historial.slice(0, 12).map(v => (
-                <li key={`${v.fecha}-${v.registro_id}`}
-                  className="flex items-center gap-2 text-[15px] text-tinta">
-                  <span className="tabular">{formatDateShort(v.fecha)}</span>
-                  {v.plan && <span className="text-tinta-2">· {v.plan}</span>}
-                  {!v.titular && (
-                    <span className="text-[12px] text-tinta-2">· con otra reserva</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {ficha.historial.length > 12 && (
-              <p className="text-[13px] text-tinta-2 mt-1">
-                y {ficha.historial.length - 12} más.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </Modal>
-  )
-}
-
-function Dato({ etiqueta, valor }) {
-  return (
-    <div>
-      <p className="text-[12px] font-bold text-tinta-2 uppercase tracking-wider">{etiqueta}</p>
-      <p className={classNames('text-[20px] font-bold text-tinta tabular')}>{valor}</p>
+        </PanelLateral>
+      )}
     </div>
   )
 }

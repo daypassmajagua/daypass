@@ -74,7 +74,7 @@ export default function LineaDeTiempo({
                       aria-hidden="true"
                     />
                     <time className="text-[13px] text-tinta-2 tabular shrink-0 w-14 pt-0.5">
-                      {hora(e.cuando)}
+                      {momento(e.cuando, agruparPor)}
                     </time>
                     <div className="min-w-0 flex-1">
                       <p className={classNames(
@@ -86,9 +86,17 @@ export default function LineaDeTiempo({
                       {e.motivo && (
                         <p className="text-[14px] text-tinta-2 italic">«{e.motivo}»</p>
                       )}
-                      <p className="text-[13px] text-tinta-2">
-                        {e.quien || (sinFirma ? 'sin registro de quién' : 'el sistema')}
-                      </p>
+                      {/* El autor solo cuando el evento es algo que alguien
+                          hizo. Una línea de visitas no tiene autor —nadie
+                          «hizo» que una señora viniera en abril— y ponerle
+                          «el sistema» debajo a cada fila sería ruido con
+                          formato de dato. Se sabe porque esa línea de tiempo
+                          no declara `desdeCuandoHayFirma`. */}
+                      {(e.quien || desdeCuandoHayFirma) && (
+                        <p className="text-[13px] text-tinta-2">
+                          {e.quien || (sinFirma ? 'sin registro de quién' : 'el sistema')}
+                        </p>
+                      )}
                     </div>
                   </li>
                 </Fragment>
@@ -138,13 +146,29 @@ function tituloDe(cuando, por) {
   return `${Number(d)} de ${MESES[Number(m) - 1]} ${a}`
 }
 
-/** Solo la hora: el día ya lo dice el encabezado del grupo. */
-function hora(cuando) {
+/**
+ * La columna de la izquierda dice lo que el encabezado del grupo todavía no
+ * dijo.
+ *
+ * Agrupando por día, el encabezado ya trae la fecha y lo que falta es la hora.
+ * Agrupando por mes o por año no: ahí la hora sobra y lo que hace falta es el
+ * día. Sin esto, una línea de visitas agrupada por año dejaba la columna vacía
+ * y el texto flotando a cincuenta píxeles de su viñeta.
+ */
+function momento(cuando, por) {
   const s = String(cuando)
-  if (s.length <= 10) return ''
-  const d = new Date(s)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const conHora = s.length > 10
+
+  if (por === 'dia') {
+    if (!conHora) return ''
+    const d = new Date(s)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+  }
+
+  const [, m, dia] = s.slice(0, 10).split('-')
+  if (!m || !dia) return ''
+  return `${dia}/${m}`
 }
 
 function fecha(iso) {

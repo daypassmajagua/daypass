@@ -397,7 +397,31 @@ globalmente y se queda así.
      paso 6 la vuelve página— pero la dirección ya es la definitiva.
    - Los planes no entraron: se busca lo que se busca a diario, y un plan se elige en un
      desplegable al crear la reserva, no se busca. Si hace falta, es una línea.
-6. **Los perfiles** (§11) — persona y reserva con el patrón ya hecho; agencia después.
+6. ✅ **Los perfiles** (§11) — persona y reserva; agencia después. *(hecho)*
+
+   > **Decisión del dueño: en computador, un panel que se despliega al lado.** Y no contradice
+   > lo que se decidió con la ficha del plan: lo que se descartó no fue el panel, fue **el modal
+   > sin dirección**. Este vive en `/clientes/:id`. La dirección es lo que lo hace un sitio; el
+   > panel es lo que lo hace barato de abrir y de cerrar.
+
+   - **`PanelLateral`**, el patrón. Entra desde la derecha en 180ms, deja la lista viva detrás y
+     marca la fila abierta. Por debajo de `lg` ocupa la pantalla completa: un panel de 480px en
+     un teléfono de 390 no es un panel, es una página con menos sitio. El foco entra al abrir y
+     **vuelve a la fila que se tocó** al cerrar, que es lo que permite recorrer una lista con el
+     teclado.
+   - **El perfil de una persona** responde en su orden la pregunta que lo abre —*«esta señora que
+     está llamando, ¿ya vino?»*—: cómo hablarle primero (teléfono y WhatsApp, tocables), después
+     si es de casa, y al final su historia. Arriba el tiempo va relativo —«hace cuatro meses»— y
+     la fecha exacta vive en la línea de tiempo, que es donde se necesita precisa.
+   - **La reserva no se lleva panel, se lleva su historia.** Ya tiene página propia; abrirle un
+     perfil al lado sería mantener dos sitios que muestran lo mismo. Lo que faltaba era lo que la
+     base guarda desde la 003 en `cambios_estado` y nadie mostraba: cada cambio con su hora, su
+     origen y quién. **Lo manual va destacado y lo del sistema no** — es la regla 3 dicha en la
+     pantalla.
+   - Y una que apareció al mirar: **una reserva que ya estaba en la isla mostraba
+     «— Seleccionar —» en Estado**, porque el desplegable solo ofrece los dos manuales. Decía que
+     no tenía estado, y el primer clic la habría sacado de la isla desde un formulario. Ahora,
+     cuando el estado lo puso la operación, se muestra como dato y se dice quién lo mueve.
 7. **El resto del CMS** — lancha, empleado y temporada con la misma ficha, y las tres secciones
    que faltan: **turnos primero**, porque sin ellos la Fase 6 no arranca.
 8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).

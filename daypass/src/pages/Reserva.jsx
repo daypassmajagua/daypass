@@ -26,9 +26,18 @@ import TarjetasPlan from '../components/reserva/TarjetasPlan'
 import FichasLancha from '../components/reserva/FichasLancha'
 import PrecargaPersona from '../components/reserva/PrecargaPersona'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
+import HistoriaDeLaReserva from '../components/reserva/HistoriaDeLaReserva'
 import PageHeader from '../components/layout/PageHeader'
 import { RESERVA_CON_DINERO } from '../lib/columnas'
 import { opcionesDePais } from '../lib/paisesISO'
+import { InsigniaEstado } from '../components/patrones'
+
+/**
+ * Los dos estados que se eligen a mano. El resto —en la isla, completada, no
+ * llegó— los pone la operación al embarcar y al recibir (regla 3), y por eso
+ * no se ofrecen en un formulario.
+ */
+const MANUALES = ['confirmada', 'tentativa']
 
 const schema = z.object({
   fecha: z.string().min(1),
@@ -392,11 +401,34 @@ export default function Reserva() {
               error={errors.fecha?.message} />
           )} />
           <Controller name="estado" control={control} render={({ field }) => (
-            <Select label="Estado" value={field.value} onChange={field.onChange}
-              options={[
-                { value: 'confirmada', label: 'Confirmada' },
-                { value: 'tentativa', label: 'Tentativa' },
-              ]} />
+            /**
+             * Solo dos estados se eligen a mano; los demás los dispara la
+             * operación (regla 3). Pero el desplegable solo ofrecía esos dos,
+             * así que una reserva que ya estaba en la isla mostraba
+             * «— Seleccionar —»: la pantalla decía que no tenía estado, y el
+             * primer clic la habría sacado de la isla desde un formulario.
+             *
+             * Ahora, cuando el estado lo puso la operación, se muestra y se
+             * dice quién lo mueve. No es un campo bloqueado: es un dato.
+             */
+            MANUALES.includes(field.value)
+              ? (
+                <Select label="Estado" value={field.value} onChange={field.onChange}
+                  options={[
+                    { value: 'confirmada', label: 'Confirmada' },
+                    { value: 'tentativa', label: 'Tentativa' },
+                  ]} />
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-tinta">Estado</span>
+                  <div className="min-h-[44px] flex items-center">
+                    <InsigniaEstado estado={field.value} />
+                  </div>
+                  <p className="text-[13px] text-tinta-2">
+                    Lo puso el embarque, no se cambia aquí.
+                  </p>
+                </div>
+              )
           )} />
           <Controller name="tipo_ingreso_id" control={control} render={({ field }) => (
             <Select label="Tipo de ingreso" value={field.value || ''} onChange={field.onChange}
@@ -636,6 +668,10 @@ export default function Reserva() {
             opcionesPlato={opcionesDelPlan}
           />
         </Seccion>
+
+        {/* Solo al editar: una reserva que todavía no existe no tiene historia,
+            y un bloque vacío ahí sería una promesa sin cumplir. */}
+        {isEdit && <HistoriaDeLaReserva registroId={id} />}
 
         <div className="flex items-center gap-3 flex-wrap sticky bottom-0 bg-fondo/95 backdrop-blur py-3 -mx-4 px-4 border-t border-linea">
           <Button type="submit" size="lg" loading={guardando}>

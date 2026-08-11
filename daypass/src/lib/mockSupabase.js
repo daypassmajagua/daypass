@@ -289,6 +289,10 @@ function buildRegistros() {
       forma_pago: 'pago_directo', impuestos_puerto: 'si',
       voucher_os: null, folio_zeus: null,
       observaciones: 'Bebé de 18 meses. Solicitan silla de bebé.',
+      // Sin teléfono no se ve funcionar nada de lo que cuelga de él: ni el
+      // envío de tarjetas por WhatsApp ni el botón de llamar del perfil. La
+      // demo tenía cero números y esas dos cosas parecían no existir.
+      telefono: '3115540982', email: 'rodriguez.torres@gmail.com',
       vendida_por: 'Valentina Ospina',
       created_at: hoy + 'T07:45:00Z', updated_at: hoy + 'T09:15:00Z',
     },
@@ -303,6 +307,7 @@ function buildRegistros() {
       forma_pago: 'cortesia', impuestos_puerto: 'exe',
       voucher_os: null, folio_zeus: null,
       observaciones: 'Huésped VIP. Cortesía de gerencia.',
+      telefono: '3004471209', email: 'mfrios@outlook.com',
       vendida_por: 'Dirección',
       created_at: hoy + 'T09:00:00Z', updated_at: hoy + 'T09:00:00Z',
     },
@@ -331,6 +336,7 @@ function buildRegistros() {
       forma_pago: 'pago_directo', impuestos_puerto: 'si',
       voucher_os: null, folio_zeus: null,
       observaciones: null, vendida_por: 'Valentina Ospina',
+      telefono: '3128896541', email: null,
       created_at: hoy + 'T09:30:00Z', updated_at: hoy + 'T09:30:00Z',
     },
     {
@@ -484,6 +490,7 @@ function buildRegistros() {
       forma_pago: 'pago_directo', impuestos_puerto: 'si',
       voucher_os: null, folio_zeus: 'F-24-0861',
       observaciones: null, vendida_por: 'Camila Pedraza',
+      telefono: '3157742210', email: 'elena.martinez@empresa.com.co',
       created_at: daysAgo(2) + 'T09:00:00Z', updated_at: daysAgo(2) + 'T16:30:00Z',
     },
 

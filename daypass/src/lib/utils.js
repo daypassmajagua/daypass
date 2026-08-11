@@ -85,6 +85,29 @@ export function fraseFecha(fecha) {
 }
 
 /**
+ * Cuánto hace: "hace 4 meses", "hace 3 días", "hoy".
+ *
+ * Es lo que se dice al contestar el teléfono. «Vino el 14 de abril» obliga a
+ * restar mentalmente; «hace cuatro meses» ya es la respuesta. La fecha exacta
+ * no desaparece: vive en la línea de tiempo, donde sí se necesita precisa.
+ */
+export function hace(fecha) {
+  if (!fecha) return null
+  const dias = Math.round(
+    (new Date(hoyLocal() + 'T00:00:00') - new Date(String(fecha).slice(0, 10) + 'T00:00:00'))
+    / 86400000
+  )
+  if (dias < 0) return 'en unos días'
+  if (dias === 0) return 'hoy'
+  if (dias === 1) return 'ayer'
+  if (dias < 30) return `hace ${dias} días`
+  const meses = Math.round(dias / 30)
+  if (meses < 12) return `hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`
+  const anios = Math.floor(dias / 365)
+  return `hace ${anios} ${anios === 1 ? 'año' : 'años'}`
+}
+
+/**
  * Los campos vacíos del formulario llegan como '' y Postgres no acepta
  * cadena vacía en una columna uuid ni en una con lista de valores: hay que
  * mandar null. En modo demo esto no se nota porque el mock no valida tipos.
