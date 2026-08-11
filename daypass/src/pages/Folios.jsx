@@ -199,7 +199,7 @@ export default function Folios() {
                               r.impuestos_puerto === 'no' ? 'text-red-600 font-semibold' :
                               'text-gray-400'
                             }>
-                              Imp: {IMPUESTOS_LABELS[r.impuestos_puerto]}
+                              Impuesto: {IMPUESTOS_LABELS[r.impuestos_puerto]}
                             </span>
                           </div>
                         </div>

@@ -73,6 +73,61 @@ function ContadorNombres({ registro, conteo }) {
   )
 }
 
+/**
+ * El estado de una reserva: un dato que se puede cambiar, no un control.
+ *
+ * ── Qué estaba mal ──────────────────────────────────────────────────────────
+ *
+ * Cada fila tenía un desplegable abierto. Con doce reservas eso son **doce
+ * controles activos** compitiendo por la atención en una pantalla que se abre
+ * para *leer* el día, no para editarlo.
+ *
+ * Y hay algo peor que el ruido. La regla 3 dice que **los estados los dispara
+ * la operación y el cambio manual es la excepción auditada**: el muelle marca
+ * quién subió, el regreso marca quién bajó. Con un desplegable por fila, la
+ * excepción era lo más fácil de hacer sin querer — un roce en el iPad y una
+ * reserva pasaba a «no llegó» sin que nadie lo notara.
+ *
+ * ── Qué hace ahora ──────────────────────────────────────────────────────────
+ *
+ * Se muestra como lo que es: el estado, con su palabra y su color. Tocarlo
+ * abre el selector. **Es un clic más y está bien**: lo que cansa no es hacer
+ * clic, es dudar. Un clic deliberado sobre algo que dice «Confirmada» no
+ * cuesta nada; doce desplegables sí cuestan.
+ *
+ * Quien no puede editar ve lo mismo, sin el toque. La pantalla se lee igual
+ * para todos, que es lo que hace que se pueda hablar de ella por teléfono.
+ */
+function EstadoDeLaFila({ registro, puedeEditar, onCambiar }) {
+  const [abierto, setAbierto] = useState(false)
+
+  if (!puedeEditar) return <InsigniaEstado estado={registro.estado} />
+
+  if (abierto) {
+    return (
+      <Select
+        size="sm"
+        value={registro.estado}
+        onChange={v => { setAbierto(false); onCambiar(v) }}
+        options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
+        className="w-36"
+      />
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setAbierto(true)}
+      // El objetivo llega a 44px aunque la insignia sea más chica: esto se
+      // toca en un iPad.
+      className="min-h-[2.75rem] flex items-center rounded-xl hover:bg-blue-50 px-1 -mx-1"
+      title={`Cambiar el estado de ${registro.nombre_pasajero}`}
+    >
+      <InsigniaEstado estado={registro.estado} />
+    </button>
+  )
+}
+
 export default function ListadoDia() {
   const navigate = useNavigate()
 
@@ -327,7 +382,10 @@ export default function ListadoDia() {
                         <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Nombres</th>
                         <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
                         <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pago</th>
-                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Imp.</th>
+                        {/* «Impuesto», no «Imp.». La columna la lee quien va a
+                            cobrarlo en el muelle: abreviarla ahorra ocho
+                            píxeles y cuesta una pregunta. */}
+                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Impuesto</th>
                         <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
                         <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Folio Zeus</th>
                         <th className="px-3 py-3"></th>
@@ -365,27 +423,40 @@ export default function ListadoDia() {
                               </span>
                             )}
                           </td>
+                          {/**
+                            * El impuesto es un dato, no un estado.
+                            *
+                            * Venía como píldora de color —verde, rojo, gris—
+                            * al lado de la columna de estado, que también son
+                            * píldoras de color. Dos filas de colores juntas y
+                            * el ojo no sabe cuál mirar.
+                            *
+                            * Y el rojo mentía. En este sistema **rojo es error
+                            * real y sobrecupo**; que a alguien no se le cobre
+                            * el impuesto de puerto no es un error, es lo
+                            * acordado. Ese rojo le robaba peso al coral de «No
+                            * llegó», que sí pide algo.
+                            *
+                            * Queda como texto. Solo «Exento» se distingue, y
+                            * en gris: es la excepción, y la que hay que ver de
+                            * reojo cuando se cobra en el muelle.
+                            */}
                           <td className="px-3 py-3">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                              r.impuestos_puerto === 'si' ? 'bg-green-100 text-green-700' :
-                              r.impuestos_puerto === 'no' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-100 text-gray-600'
-                            }`}>
+                            <span className={classNames(
+                              'text-xs',
+                              r.impuestos_puerto === 'exe'
+                                ? 'font-bold text-tinta-2 bg-fondo px-2 py-0.5 rounded'
+                                : 'text-tinta-2'
+                            )}>
                               {IMPUESTOS_LABELS[r.impuestos_puerto]}
                             </span>
                           </td>
                           <td className="px-3 py-3">
-                            {puedeEditar ? (
-                              <Select
-                                size="sm"
-                                value={r.estado}
-                                onChange={v => handleEstadoChange(r.id, v, r)}
-                                options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
-                                className="w-32"
-                              />
-                            ) : (
-                              <InsigniaEstado estado={r.estado} />
-                            )}
+                            <EstadoDeLaFila
+                              registro={r}
+                              puedeEditar={puedeEditar}
+                              onCambiar={v => handleEstadoChange(r.id, v, r)}
+                            />
                           </td>
                           <td className="px-3 py-3">
                             {!puedeEditar ? (
@@ -428,22 +499,30 @@ export default function ListadoDia() {
                             )}
                           </td>
                           <td className="px-3 py-3">
-                            <div className="flex items-center gap-1">
+                            {/* Editar y eliminar, separados. Estaban pegados,
+                                a 26px cada uno y del mismo gris: el
+                                destructivo se veía igual que el corriente y
+                                cabían los dos bajo un dedo. Ahora el objetivo
+                                es de 44px —esto se usa en iPad— y entre los
+                                dos hay aire. */}
+                            <div className="flex items-center gap-2">
                               {puedeEditar && (
                                 <>
                                   <button
                                     onClick={() => navigate(`/editar/${r.id}`)}
-                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    className="w-11 h-11 flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
+                                    aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
                                     title="Editar"
                                   >
-                                    <Edit2 size={14} />
+                                    <Edit2 size={16} />
                                   </button>
                                   <button
                                     onClick={() => setDeletingId(r.id)}
-                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    className="w-11 h-11 flex items-center justify-center text-tinta-3 hover:text-peligro-500 hover:bg-peligro-50 rounded-xl transition-colors"
+                                    aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
                                     title="Eliminar"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                   </button>
                                 </>
                               )}
@@ -512,14 +591,13 @@ export default function ListadoDia() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {puedeEditar ? (
+                          <EstadoDeLaFila
+                            registro={r}
+                            puedeEditar={puedeEditar}
+                            onCambiar={v => handleEstadoChange(r.id, v, r)}
+                          />
+                          {puedeEditar && (
                             <>
-                              <Select
-                                value={r.estado}
-                                onChange={v => handleEstadoChange(r.id, v, r)}
-                                options={ESTADOS.map(e => ({ value: e, label: ESTADO_LABELS[e] }))}
-                                className="flex-1"
-                              />
                               <button
                                 onClick={() => navigate(`/editar/${r.id}`)}
                                 className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-blue-700 bg-blue-50 rounded-xl"
@@ -535,8 +613,6 @@ export default function ListadoDia() {
                                 <Trash2 size={18} />
                               </button>
                             </>
-                          ) : (
-                            <InsigniaEstado estado={r.estado} />
                           )}
                         </div>
                       </div>

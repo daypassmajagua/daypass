@@ -282,7 +282,10 @@
       "Bash(echo \"=== código de salida: $? ===\")",
       "Bash(echo \"lint sale con: $?\")",
       "Bash(node -e \"console.log\\(require\\('./node_modules/@supabase/supabase-js/package.json'\\).version\\)\")",
-      "Bash(echo \"lint: $?\")"
+      "Bash(echo \"lint: $?\")",
+      "Bash(npx --yes skills add wondelai/skills --all --global)",
+      "Bash(ls -1 \"c:/Users/ragui/.claude/skills\" 2>/dev/null | head -20; echo \"--- total ---\"; ls -1 \"c:/Users/ragui/.claude/skills\" 2>/dev/null | wc -l)",
+      "Read(//c/Users/ragui/.claude/skills/**)"
     ]
   }
 }

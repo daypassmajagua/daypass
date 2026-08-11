@@ -156,8 +156,18 @@ export const FORMA_PAGO_LABELS = {
   cortesia: 'Cortesía',
 }
 
+/**
+ * El impuesto de puerto, dicho con palabras.
+ *
+ * Era `SÍ · NO · EXE`, debajo de una columna llamada `IMP.`. Tres
+ * abreviaturas bajo una cuarta: para saber qué decía esa casilla había que
+ * acordarse de dos cosas —qué es «IMP» y qué es «EXE»— antes de leer el dato.
+ * Y quien lo cobra es el muelle, con la fila esperando.
+ *
+ * «Exento» no es jerga: es la palabra que usa la Capitanía. «EXE» sí lo era.
+ */
 export const IMPUESTOS_LABELS = {
-  si: 'SÍ',
-  no: 'NO',
-  exe: 'EXE',
+  si: 'Lo paga',
+  no: 'No lo paga',
+  exe: 'Exento',
 }
