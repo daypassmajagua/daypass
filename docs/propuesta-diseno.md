@@ -367,9 +367,13 @@ globalmente y se queda así.
 3. **La navegación nueva** (§9) — siete sustantivos, Configuración con secciones, y los siete
    menús por rol. Es el paso que reacomoda las pantallas que ya existen; después de esto nada
    vuelve a cambiar de sitio.
-4. **La búsqueda global** (§10) — sin ella el menú corto queda a medias.
+4. **La búsqueda global** (§10) — sin ella el menú corto queda a medias. Encuentra también planes,
+   lanchas y empleados, así que de paso es la primera pieza del CMS.
 5. **Los perfiles y `LineaDeTiempo`** (§11) — primero reserva y persona, que son los dos que se
    abren todos los días; agencia después.
+5b. **El CMS con fichas** (§10.5) — el mismo patrón aplicado a plan, lancha, empleado y temporada,
+   con «dónde se usa» y su historia. Y las tres secciones que faltan: **turnos primero**, porque
+   sin ellos la Fase 6 no arranca.
 6. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 7. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
@@ -521,6 +525,88 @@ con el documento normalizado. Los otros cuatro grupos son funciones nuevas del m
 
 **Y el resultado no es un enlace a una lista filtrada: abre el perfil.** Ahí es donde esto deja
 de ser una comodidad y se vuelve la forma de moverse.
+
+---
+
+## 10.5 · El CMS: dónde sí hace falta profundidad, y dónde no
+
+*«Siento que le falta dinamismo y profundidad. El CMS está muy pobre.»* Tienes razón, y al ir a
+mirar por qué, el diagnóstico es más específico que «falta pulir».
+
+### Qué está pobre, exactamente
+
+Un catálogo hoy es **una lista plana y un modal**. Eso es todo. Y de ahí salen cinco carencias
+concretas:
+
+1. **Ningún registro tiene ficha.** Un plan se edita en una ventana emergente y se cierra. No hay
+   dónde ver *ese* plan: qué platos tiene, cuántas reservas lo usan, cuánto ha facturado, quién le
+   cambió el precio en marzo.
+2. **La historia existe y no se ve.** Desde la 024 la base guarda quién cambió cada tarifa, cada
+   ajuste y cada cierre — con fecha, nombre y el valor anterior. **Está toda ahí y no hay una sola
+   pantalla que la muestre.** Es la carencia que más rabia da, porque el trabajo duro ya está.
+3. **Ningún registro dice dónde se usa.** Desactivar un plan es un botón sin consecuencia visible.
+   ¿Lo están usando cuarenta reservas del mes que viene? Nadie lo sabe hasta que algo falla.
+4. **Los platos no tienen pantalla.** `opciones_plato` existe desde la 007 y es la regla 9 —*plato
+   ≠ plan*— y **no se administra desde ninguna parte**. Hoy solo se pueden cambiar por SQL.
+5. **Tres secciones prometidas no existen**: turnos y guardias, destinatarios y mensajes, y
+   actividad. Las tres tienen su tabla llena y ninguna tiene dónde verse. La de guardias además
+   **bloquea la Fase 6**: las notificaciones se enrutan al turno, no a la persona.
+
+### Lo que propongo: el CMS son perfiles, no formularios
+
+La respuesta no es agregarle funciones a los formularios. Es que **cada registro del catálogo sea
+una ficha, igual que una persona o una agencia** (§11). Mismo patrón, misma `LineaDeTiempo`, mismo
+encabezado con el estado y lo que falta. Un plan es una entidad del negocio con historia, no una
+fila de una tabla.
+
+```
+Plan «Day Tour Gold»
+├─ Datos          nombre, nivel, si incluye transporte, sus cuatro precios
+├─ Platos         los de este plan, aquí y no en otro lado (regla 9)
+├─ Dónde se usa   47 reservas · 12 este mes · última el 9 de agosto
+└─ Historia       «Rafael subió el precio de adulto alta de 380.000 a 398.889 · 3 jul»
+```
+
+Eso mismo, con su propio contenido, para lancha, piloto, empleado, agencia y temporada. Es
+**profundidad de contexto**: la que convierte un catálogo en algo que se consulta y no solo se
+edita.
+
+Y una consecuencia que me gusta: **el CMS y los perfiles dejan de ser dos trabajos.** `Ficha` +
+`LineaDeTiempo` sirven para persona, agencia, reserva, plan, lancha y empleado. Un patrón, seis
+usos.
+
+### Lo que NO voy a hacer, y aquí te discuto
+
+«Como un gran SaaS» tiene una lectura que sería un error seguir. Un admin de Shopify o de Stripe
+trae acciones masivas, paginación, columnas configurables, importación por CSV, filtros guardados.
+**Nada de eso sirve aquí y todo estorba**, por una razón que está en las reglas del proyecto:
+
+> *«Volumen real: 20–35 pax en un día típico… **Diseña para claridad y velocidad de uso, no para
+> escala.**»*
+
+Hay **seis lanchas**, unos pocos pilotos, una docena de planes. Paginar doce planes es agregar un
+control que nunca se usa; una casilla de selección múltiple sobre seis lanchas es ruido con forma
+de función. Y el peor: importar catálogos por CSV, que suena a robustez y en la práctica es una vía
+para meter datos sucios sin las validaciones que la base sí hace.
+
+**Robusto aquí no significa «más controles». Significa que cada dato diga de dónde viene, quién lo
+tocó y qué se rompe si lo cambio.** Un SaaS grande necesita herramientas de volumen porque tiene
+volumen; nosotros necesitamos herramientas de consecuencia porque cada dato mueve una lancha.
+
+Lo que sí tomo de un SaaS grande, porque sirve a cualquier escala: **buscar dentro de cada lista**
+(útil desde diez elementos), **la ficha por registro**, **el rastro de cambios** y **«dónde se
+usa» antes de desactivar algo**.
+
+### Las tres secciones que faltan
+
+- **Turnos y guardias.** La tabla y sus permisos existen desde la 015 —la isla la asigna la
+  dirección; embarque y recibimiento se los reparten las asesoras— y no hay pantalla. Un
+  calendario del mes, un toque por día. **Va antes que las otras dos**: sin turnos no hay a quién
+  notificar, y eso es la Fase 6 entera.
+- **Destinatarios y mensajes.** `organizacion_correos` existe desde la 020. Es donde el manifiesto
+  sabe a qué correo de la Capitanía sale.
+- **Actividad.** La bitácora completa, filtrable por acción y por persona. Es la vista general de
+  lo que las fichas muestran por registro.
 
 ---
 

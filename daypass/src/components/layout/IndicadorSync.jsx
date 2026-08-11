@@ -1,22 +1,47 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, CloudUpload, RefreshCw, WifiOff, X } from 'lucide-react'
 import { useOffline } from '../../lib/offline/useOffline'
 import { descartar } from '../../lib/offline/cola'
 import { classNames, hora12, plural } from '../../lib/utils'
 
 /**
- * El estado de la sincronización, siempre a la vista.
+ * El estado de lo que falta por subir. **Solo cuando hay algo que decir.**
  *
- * Nunca se esconde y nunca dice "sincronizar": la asesora tiene que poder
- * responder de un vistazo si lo que acaba de marcar ya quedó guardado o
- * está esperando señal en el iPad.
+ * Antes vivía puesto en la barra con un visto verde permanente que decía
+ * «Todo guardado». Es la misma trampa que la regla de los colores: si el
+ * estado sano ocupa espacio todos los días, deja de leerse — y el día que se
+ * pone ámbar tampoco se ve, porque esa esquina ya se aprendió a ignorar.
+ *
+ * Ahora hay tres situaciones y cada una pesa lo que debe:
+ *
+ *   · **todo bien y con señal** → nada. El silencio ES el estado sano.
+ *   · **acaba de guardarse lo último** → un aviso leve abajo a la derecha que
+ *     se va solo en dos segundos y medio. Confirma sin quedarse.
+ *   · **sin señal, o con cosas esperando** → la ficha en la barra, como
+ *     siempre: eso sí cambia lo que alguien decide hacer.
  *
  * `muelle` lo pinta en alto contraste y con objetivos grandes.
  */
+const DURA_AVISO = 2500
+
 export default function IndicadorSync({ muelle = false }) {
   const { enLinea, pendientes, sincronizando, forzar, listarPendientes } = useOffline()
   const [abierto, setAbierto] = useState(false)
   const [lista, setLista] = useState([])
+  const [recienGuardado, setRecienGuardado] = useState(false)
+  const habiaPendientes = useRef(false)
+
+  // El aviso solo aparece cuando algo pasó de estar esperando a estar guardado.
+  // Al entrar a la app no hay nada que celebrar, y por eso se recuerda si
+  // antes había algo: sin eso, cada carga saludaría con un «todo guardado».
+  useEffect(() => {
+    if (pendientes > 0) { habiaPendientes.current = true; return }
+    if (!habiaPendientes.current) return
+    habiaPendientes.current = false
+    setRecienGuardado(true)
+    const t = setTimeout(() => setRecienGuardado(false), DURA_AVISO)
+    return () => clearTimeout(t)
+  }, [pendientes])
 
   useEffect(() => {
     if (!abierto) return
@@ -39,6 +64,32 @@ export default function IndicadorSync({ muelle = false }) {
   const detalle = !enLinea && pendientes > 0
     ? 'Se suben solos al volver la señal'
     : null
+
+  // Nada que decir: ni ficha en la barra ni aviso. Solo queda el panel, que
+  // se abre desde donde haga falta cuando vuelva a haber algo.
+  const callado = enLinea && pendientes === 0
+
+  if (callado && !recienGuardado && !abierto) return null
+
+  if (callado) {
+    return (
+      <>
+        {recienGuardado && (
+          <div
+            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-40
+                       flex items-center gap-2 rounded-xl bg-verde-50 text-verde-600
+                       px-3.5 py-2.5 text-[14px] font-bold shadow-[0_4px_16px_rgba(22,24,44,.12)]
+                       aparecer pointer-events-none"
+            role="status"
+            aria-live="polite"
+          >
+            <Check size={16} strokeWidth={3} />
+            Todo guardado
+          </div>
+        )}
+      </>
+    )
+  }
 
   return (
     <>
