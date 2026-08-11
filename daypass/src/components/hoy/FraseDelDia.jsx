@@ -37,7 +37,7 @@ export default function FraseDelDia({ fecha, pax, lanchas, resumen, dia, hayRese
   if (resumen.faltanNombres > 0) {
     faltantes.push(
       <span key="n">
-        <Cifra a="/dia">{resumen.faltanNombres}</Cifra>{' '}
+        <Cifra a="/reservas">{resumen.faltanNombres}</Cifra>{' '}
         {resumen.faltanNombres === 1 ? 'nombre' : 'nombres'}
       </span>
     )
@@ -45,7 +45,7 @@ export default function FraseDelDia({ fecha, pax, lanchas, resumen, dia, hayRese
   if (resumen.sinPago > 0) {
     faltantes.push(
       <span key="p">
-        <Cifra a="/dia">{resumen.sinPago}</Cifra>{' '}
+        <Cifra a="/reservas">{resumen.sinPago}</Cifra>{' '}
         {resumen.sinPago === 1 ? 'pago' : 'pagos'} por confirmar
       </span>
     )

@@ -640,7 +640,7 @@ export default function Reserva() {
           <Button type="submit" size="lg" loading={guardando}>
             {isEdit ? 'Guardar cambios' : 'Guardar la reserva'}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => navigate('/dia')}>
+          <Button type="button" variant="ghost" onClick={() => navigate('/reservas')}>
             Cancelar
           </Button>
           {!isEdit && (

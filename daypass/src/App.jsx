@@ -42,7 +42,7 @@ const Equipo = lazy(() => import('./pages/Equipo'))
 const ListadoDia = lazy(() => import('./pages/ListadoDia'))
 const Folios = lazy(() => import('./pages/Folios'))
 const Historial = lazy(() => import('./pages/Historial'))
-const Config = lazy(() => import('./pages/Config'))
+const Configuracion = lazy(() => import('./pages/Configuracion'))
 const Cocina = lazy(() => import('./pages/Cocina'))
 const Usuarios = lazy(() => import('./pages/Usuarios'))
 const Reportes = lazy(() => import('./pages/Reportes'))
@@ -170,8 +170,10 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* El sustantivo es «Reservas». `/dia` sigue respondiendo para no
+            romper un enlace guardado ni un acceso directo del iPad. */}
         <Route
-          path="/dia"
+          path="/reservas"
           element={
             <ProtectedRoute>
               <AppLayout>
@@ -180,6 +182,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/dia" element={<Navigate to="/reservas" replace />} />
         <Route
           path="/folios"
           element={
@@ -260,12 +263,24 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* Configuración es un contenedor: sin sección muestra su índice, con
+            sección muestra lo suyo. */}
         <Route
           path="/config"
           element={
             <ProtectedRoute>
               <AppLayout>
-                <Config />
+                <Configuracion />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/config/:seccion"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Configuracion />
               </AppLayout>
             </ProtectedRoute>
           }

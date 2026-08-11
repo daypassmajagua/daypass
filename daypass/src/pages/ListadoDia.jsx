@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
   PlusCircle, Edit2, Trash2,
-  AlertTriangle, CheckCircle2, Filter, MessageCircle
+  AlertTriangle, CheckCircle2, Filter, MessageCircle, History
 } from 'lucide-react'
 import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
@@ -191,11 +191,20 @@ export default function ListadoDia() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       <FranjaDia />
       <PageHeader
-        title="Listado del día"
+        title="Reservas"
         subtitle={formatDate(fechaActiva)}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <DateNav value={fechaActiva} onChange={setFechaActiva} />
+            {/* Historial salió del menú: se llega desde su sustantivo, que es
+                donde alguien lo busca — «reservas, pero de antes». */}
+            <Link
+              to="/historial"
+              className="flex items-center gap-1.5 text-sm font-bold text-tinta-2 hover:text-blue-700 px-2 min-h-[40px]"
+            >
+              <History size={14} />
+              Historial
+            </Link>
             <Button variant="ghost" size="sm" onClick={() => setShowFilters(!showFilters)}>
               <Filter size={14} />
               Filtros

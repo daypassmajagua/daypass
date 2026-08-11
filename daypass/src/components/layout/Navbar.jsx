@@ -28,7 +28,7 @@ import { classNames } from '../../lib/utils'
 import logoBlanco from '../../assets/logo-blanco.png'
 import IndicadorSync from './IndicadorSync'
 import { usePerfil } from '../../hooks/usePerfil'
-import { menuDe, ETIQUETA_ROL } from '../../lib/navegacion'
+import { menuDe, seccionesDe, ETIQUETA_ROL } from '../../lib/navegacion'
 
 /**
  * El menú sale de navegacion.js, no de una lista aquí. Antes había tres
@@ -52,6 +52,27 @@ export default function Navbar() {
   // Lo que este rol no puede usar no aparece: nada en gris, nada con candado.
   // Un menú lleno de cosas que no puedes tocar se lee mal todos los días.
   const secciones = menuDe(rol)
+  const hayConfig = seccionesDe(rol).length > 0
+
+  /**
+   * Si esta entrada es la que está abierta.
+   *
+   * No basta comparar rutas: quien está en `/nuevo` o en `/historial` sigue
+   * estando en «Reservas», y quien está en `/config/planes` sigue en el
+   * engranaje. Sin esto, media app se ve como si nadie estuviera en ninguna
+   * parte.
+   */
+  function activo(ruta) {
+    const aqui = location.pathname
+    if (ruta === '/') return aqui === '/'
+    if (ruta === '/reservas') {
+      return ['/reservas', '/nuevo', '/historial'].includes(aqui) || aqui.startsWith('/editar')
+    }
+    if (ruta === '/isla') return aqui === '/isla' || aqui === '/cocina'
+    if (ruta === '/informes') return aqui === '/informes' || aqui === '/metas'
+    if (ruta === '/config') return aqui.startsWith('/config') || ['/equipo', '/usuarios', '/reportes'].includes(aqui)
+    return aqui === ruta
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -87,15 +108,19 @@ export default function Navbar() {
             )}
           </div>
 
-          <nav className="hidden 2xl:flex items-center gap-1 min-w-0">
+          {/* Siete sustantivos, y con siete ya cabe desde `lg` — antes eran
+              dieciséis y solo cabían desde 1536px. */}
+          <nav className="hidden lg:flex items-center gap-1 min-w-0">
             {secciones.map(({ a: to, etiqueta: label, icono }) => { const Icon = ICONOS[icono]; return (
               <Link
                 key={to}
                 to={to}
                 className={classNames(
-                  'flex items-center gap-1.5 px-2.5 py-2 rounded-[10px] text-sm font-semibold whitespace-nowrap transition-colors',
-                  location.pathname === to
-                    ? 'bg-white/20 text-white'
+                  'flex items-center gap-1.5 px-3 py-2 rounded-[10px] text-sm font-semibold whitespace-nowrap transition-colors',
+                  // La píldora del activo es sólida, no un velo: saber dónde
+                  // estás no debería costar una segunda mirada.
+                  activo(to)
+                    ? 'bg-white text-brand-900'
                     : 'text-white/70 hover:bg-white/10 hover:text-white'
                 )}
               >
@@ -107,9 +132,28 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2 shrink-0">
             <IndicadorSync />
+
+            {/* El engranaje va aparte y con separador: no es un octavo destino,
+                es otra clase de sitio. */}
+            {hayConfig && (
+              <Link
+                to="/config"
+                aria-label="Configuración"
+                className={classNames(
+                  'hidden lg:flex items-center justify-center w-10 h-10 rounded-[10px] transition-colors',
+                  'border-l border-white/15 ml-1 pl-1 rounded-l-none',
+                  activo('/config')
+                    ? 'bg-white text-brand-900'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                )}
+              >
+                <Settings size={18} />
+              </Link>
+            )}
+
             <button
               onClick={handleLogout}
-              className="hidden 2xl:flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white rounded-[10px] transition-colors"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white rounded-[10px] transition-colors"
             >
               <LogOut size={16} />
               Salir
@@ -120,7 +164,7 @@ export default function Navbar() {
 
       {/* Cajón táctil: filas de 56px, se cierra al elegir o al tocar afuera. */}
       {mobileOpen && (
-        <div className="2xl:hidden fixed inset-0 z-50 flex">
+        <div className="lg:hidden fixed inset-0 z-50 flex">
           <nav className="relative bg-brand-900 w-72 max-w-[80vw] h-full shadow-2xl flex flex-col py-3 pt-[calc(env(safe-area-inset-top)+12px)] overflow-y-auto">
             <div className="flex items-center justify-between px-5 pb-3">
               <span className="font-bold text-lg text-white">DayPASS</span>
@@ -139,8 +183,8 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={classNames(
                   'flex items-center gap-3.5 px-5 min-h-[56px] text-[15px] font-semibold transition-colors',
-                  location.pathname === to
-                    ? 'bg-white/20 text-white'
+                  activo(to)
+                    ? 'bg-white text-brand-900'
                     : 'text-white/75 hover:bg-white/10'
                 )}
               >
@@ -148,6 +192,23 @@ export default function Navbar() {
                 {label}
               </Link>
             )})}
+
+            {/* También aquí va aparte: misma separación que en la barra, para
+                que el cajón no enseñe una jerarquía distinta. */}
+            {hayConfig && (
+              <Link
+                to="/config"
+                onClick={() => setMobileOpen(false)}
+                className={classNames(
+                  'flex items-center gap-3.5 px-5 min-h-[56px] text-[15px] font-semibold transition-colors',
+                  'mt-2 border-t border-white/15 pt-2',
+                  activo('/config') ? 'bg-white text-brand-900' : 'text-white/75 hover:bg-white/10'
+                )}
+              >
+                <Settings size={20} />
+                Configuración
+              </Link>
+            )}
             <div className="mt-auto border-t border-white/15 pt-2 pb-[env(safe-area-inset-bottom)]">
               <button
                 onClick={handleLogout}

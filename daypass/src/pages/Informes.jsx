@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, formatDateShort, aFechaLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
 import Select from '../components/ui/Select'
@@ -13,7 +14,7 @@ import {
 } from 'recharts'
 import {
   Download, FileText, TrendingUp, Users, CalendarDays,
-  BarChart2, Percent, RefreshCw, SlidersHorizontal, X, ChevronDown,
+  BarChart2, Percent, RefreshCw, SlidersHorizontal, X, ChevronDown, Target,
 } from 'lucide-react'
 import { reservaCon, CON_CANAL, CON_PAIS } from '../lib/columnas'
 
@@ -327,6 +328,15 @@ export default function Informes() {
         }
         actions={
           <div className="flex items-center gap-2 flex-wrap print:hidden">
+            {/* Metas salió del menú: son rendimiento, y el rendimiento se mira
+                aquí. */}
+            <Link
+              to="/metas"
+              className="flex items-center gap-1.5 text-sm font-bold text-tinta-2 hover:text-blue-700 px-2 min-h-[40px]"
+            >
+              <Target size={14} />
+              Metas
+            </Link>
             <Button variant="secondary" size="sm" onClick={fetchData}>
               <RefreshCw size={14} />
             </Button>

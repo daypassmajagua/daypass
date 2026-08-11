@@ -28,31 +28,33 @@ const BASE = process.argv[2] || process.env.DAYPASS_URL || 'http://localhost:517
 const ESPERADO = {
   directora: {
     inicio: '/',
-    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Clientes', 'Metas', 'Lanchas y equipo', 'Historial', 'Informes', 'Usuarios',
-           'Reportes', 'Configuración'],
+    menu: ['Hoy', 'Reservas', 'Embarque', 'Isla', 'Folios', 'Cartera', 'Informes'],
     dinero: true,
   },
   asesora: {
     inicio: '/',
-    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Isla', 'Almuerzos',
-           'Folios', 'Cartera', 'Clientes', 'Metas', 'Lanchas y equipo', 'Historial', 'Informes', 'Reportes'],
+    menu: ['Hoy', 'Reservas', 'Embarque', 'Isla', 'Folios', 'Cartera', 'Informes'],
     dinero: true,
   },
   asesora_comercial: {
     inicio: '/',
-    menu: ['Hoy', 'Nueva reserva', 'El día', 'Embarque', 'Clientes', 'Historial', 'Reportes'],
+    menu: ['Hoy', 'Reservas', 'Embarque'],
     dinero: true,
   },
+  // Sin «Hoy» hasta que exista el suyo —el del periodo—: una entrada que abre
+  // a la sala equivocada es peor que no tenerla.
   gerencia: {
     inicio: '/informes',
-    menu: ['Informes', 'Metas', 'Cartera', 'Clientes', 'Historial', 'El día', 'Usuarios', 'Reportes'],
+    menu: ['Cartera', 'Informes'],
     dinero: true,
   },
-  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'El día', 'Reportes'], dinero: false },
+  // La isla no lleva el menú de oficina sino su navegación mínima, que tiene
+  // sus propios destinos: Almuerzos vive dentro de Isla desde que el menú se
+  // reorganizó por sustantivos.
+  admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'Hoy'], dinero: false },
   // El mesero tiene una sola pantalla, así que NO ve barra: un botón que
   // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.
-  mesero:     { inicio: '/isla', menu: [],                              dinero: false },
+  mesero:     { inicio: '/isla', menu: [],               dinero: false },
 }
 
 function buscarChrome() {
@@ -120,16 +122,20 @@ for (const [rol, esp] of Object.entries(ESPERADO)) {
 
   // El dinero se mira donde de verdad se muestra. Para quien no puede abrir el
   // listado, se mira en su propio inicio.
-  const donde = esp.menu.includes('El día') ? '/dia' : esp.inicio
+  const donde = esp.menu.includes('Reservas') ? '/reservas' : esp.inicio
   await p.goto(BASE + donde, { waitUntil: 'networkidle2' })
   await esperar(1600)
   const veDinero = await p.evaluate(() => /\$\s?\d[\d.,]{3,}/.test(document.body.innerText))
 
   // La pantalla que reparte los roles se escribe a mano en la barra de
-  // direcciones tan fácil como cualquier otra. Quien no la tiene en el menú
-  // tampoco debe quedarse en ella: rebota a su inicio.
+  // direcciones tan fácil como cualquier otra. Quien no la tiene entre sus
+  // secciones tampoco debe quedarse en ella: rebota a su inicio.
+  //
+  // Usuarios salió del menú en la reorganización —vive en Configuración— así
+  // que ya no se comprueba contra el menú sino contra quién puede administrar.
+  const administra = ['directora', 'gerencia', 'super_admin'].includes(rol)
   let coladoEnUsuarios = false
-  if (!esp.menu.includes('Usuarios')) {
+  if (!administra) {
     await p.goto(BASE + '/usuarios', { waitUntil: 'networkidle2' })
     await esperar(1400)
     coladoEnUsuarios = await p.evaluate(() => location.pathname === '/usuarios')

@@ -28,7 +28,7 @@ const BASE = process.argv[2] || process.env.DAYPASS_URL || 'http://localhost:517
  */
 const RUTAS = [
   ['/',          'Hoy',                 /Hoy|reserva/i],
-  ['/dia',       'Listado del día',     /Listado del día/i],
+  ['/reservas',  'Reservas',            /Reservas/i],
   ['/cerrar',    'Cerrar el día',       /Cerrar|cocina/i],
   ['/nuevo',     'Nueva reserva',       /reserva/i],
   ['/embarque',  'Embarque',            /lancha/i],
@@ -37,6 +37,8 @@ const RUTAS = [
   ['/usuarios',  'Usuarios',            /Quién entra/i],
   ['/reportes',  'Reportes',            /reporte/i],
   ['/cartera',   'Cartera',             /cobrar|Cartera/i],
+  ['/config',    'Configuración',       /Configuraci/i],
+  ['/config/agencias', 'Config · Agencias', /Agencias/i],
   ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/metas',     'Metas',               /meta|comisi/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],

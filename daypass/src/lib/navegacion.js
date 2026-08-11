@@ -3,125 +3,230 @@
  *
  * De aquí salen tres cosas que antes estaban sueltas y podían contradecirse:
  * el menú de la barra, a dónde cae cada persona al entrar, y qué rutas la
- * dejan pasar. Con ocho roles llegando, tres listas separadas se desincronizan
- * en la primera semana.
+ * dejan pasar. Con siete roles, tres listas separadas se desincronizan en la
+ * primera semana.
  *
- * **Lo que un rol no puede usar no aparece.** Nada en gris, nada deshabilitado
- * con un candado. Un menú lleno de cosas que no puedes tocar es un menú que se
- * lee mal todos los días.
+ * ── El menú lista sustantivos del negocio ───────────────────────────────────
  *
- * Y el `home` importa más de lo que parece: es lo que hace que cada persona
- * abra la app y vea **su trabajo**, no un menú donde adivinar. El mesero entra
- * y ve la isla; Daniela entra y ve el día.
+ * Llegó a tener **dieciséis entradas** porque cada pantalla nueva agregaba la
+ * suya, y porque mezclaba sustantivos del negocio —Folios, Cartera— con
+ * funciones del software —Usuarios, Reportes, Configuración— al mismo nivel.
+ *
+ * Ahora son **siete sustantivos y un engranaje**. El engranaje va aparte, no
+ * como octava entrada: no es otro destino, es otra clase de sitio. Lo diario
+ * arriba; lo ocasional, adentro.
+ *
+ * El criterio para repartir: **lo que se toca todos los días está a un toque;
+ * lo que se toca cada mes está a dos.** Configuración y Nueva reserva pesaban
+ * igual, y una se usa cuarenta veces al día y la otra cuatro veces al año.
+ *
+ * ── Y una salvedad que manda sobre la ubicación ─────────────────────────────
+ *
+ * Lanchas, pilotos y empleados viven en Configuración porque se tocan de vez
+ * en cuando, **no porque sean de otro**. Son de la coordinadora del pasadía,
+ * con acceso pleno y sin pedirle permiso a nadie (regla 21, y la migración 019
+ * ya lo hace cumplir en la base). Estar guardado no es estar restringido: por
+ * eso en su Configuración esas secciones van de primeras.
  *
  * ⚠ Esto **no es seguridad**. Es lo que se muestra. Lo que de verdad protege
- * son las políticas de RLS de la migración 015 — si alguien escribe la ruta a
- * mano, la base le responde vacío igual.
+ * son las políticas de RLS — si alguien escribe la ruta a mano, la base le
+ * responde vacío igual.
  */
 
-/** Toda ruta de la app, con su etiqueta y su icono para la barra. */
+/** Toda ruta de la app, con su etiqueta y su icono. */
 export const RUTAS = {
-  '/':          { etiqueta: 'Hoy',               icono: 'LayoutDashboard' },
-  '/nuevo':     { etiqueta: 'Nueva reserva',     icono: 'PlusCircle' },
-  '/dia':       { etiqueta: 'El día',            icono: 'List' },
-  '/cerrar':    { etiqueta: 'Cerrar el día',     icono: 'Lock', oculta: true },
-  '/embarque':  { etiqueta: 'Embarque',          icono: 'Anchor' },
-  '/isla':      { etiqueta: 'Isla',              icono: 'Palmtree' },
-  '/cocina':    { etiqueta: 'Almuerzos',         icono: 'ChefHat' },
-  '/folios':    { etiqueta: 'Folios',            icono: 'ClipboardList' },
-  '/cartera':   { etiqueta: 'Cartera',           icono: 'Wallet' },
-  '/clientes':  { etiqueta: 'Clientes',          icono: 'Users' },
-  '/metas':     { etiqueta: 'Metas',             icono: 'Target' },
-  '/equipo':    { etiqueta: 'Lanchas y equipo',  icono: 'Ship' },
-  '/historial': { etiqueta: 'Historial',         icono: 'History' },
-  '/informes':  { etiqueta: 'Informes',          icono: 'BarChart2' },
-  '/usuarios':  { etiqueta: 'Usuarios',           icono: 'UserCog' },
-  '/reportes':  { etiqueta: 'Reportes',          icono: 'LifeBuoy' },
-  '/config':    { etiqueta: 'Configuración',     icono: 'Settings' },
-  '/editar':    { etiqueta: 'Editar reserva',    icono: null, oculta: true },
+  '/':          { etiqueta: 'Hoy',              icono: 'LayoutDashboard' },
+  '/reservas':  { etiqueta: 'Reservas',         icono: 'List' },
+  '/embarque':  { etiqueta: 'Embarque',         icono: 'Anchor' },
+  '/isla':      { etiqueta: 'Isla',             icono: 'Palmtree' },
+  '/folios':    { etiqueta: 'Folios',           icono: 'ClipboardList' },
+  '/cartera':   { etiqueta: 'Cartera',          icono: 'Wallet' },
+  '/informes':  { etiqueta: 'Informes',         icono: 'BarChart2' },
+  '/config':    { etiqueta: 'Configuración',    icono: 'Settings' },
+
+  // Destinos que existen pero no son del menú: se llega a ellos desde su
+  // sustantivo, desde el buscador o desde una acción.
+  '/nuevo':     { etiqueta: 'Nueva reserva',    icono: 'PlusCircle', oculta: true },
+  '/editar':    { etiqueta: 'Editar reserva',   icono: null,         oculta: true },
+  '/cerrar':    { etiqueta: 'Cerrar el día',    icono: 'Lock',       oculta: true },
+  '/historial': { etiqueta: 'Historial',        icono: 'History',    oculta: true },
+  '/cocina':    { etiqueta: 'Almuerzos',        icono: 'ChefHat',    oculta: true },
+  '/clientes':  { etiqueta: 'Clientes',         icono: 'Users',      oculta: true },
+  '/metas':     { etiqueta: 'Metas',            icono: 'Target',     oculta: true },
+  '/reportes':  { etiqueta: 'Reportes',         icono: 'LifeBuoy',   oculta: true },
+  '/equipo':    { etiqueta: 'Lanchas y equipo', icono: 'Ship',       oculta: true },
+  '/usuarios':  { etiqueta: 'Usuarios',         icono: 'UserCog',    oculta: true },
 }
 
 /**
- * Por rol: dónde cae al entrar y qué puede ver.
+ * Las secciones de Configuración, en el orden en que se muestran.
  *
- * El orden de `ver` es el orden del menú: primero lo que más usa.
+ * `ruta` es a dónde lleva; `porque` es la línea que explica para qué sirve,
+ * porque una lista de diez nombres sin contexto se lee tan mal como un menú
+ * de dieciséis.
+ */
+export const SECCIONES_CONFIG = {
+  equipo: {
+    etiqueta: 'Lanchas, pilotos y empleados',
+    porque: 'Quiénes navegan y quiénes van a bordo. Se desactivan, nunca se borran.',
+    ruta: '/equipo',
+    icono: 'Ship',
+  },
+  agencias: {
+    etiqueta: 'Agencias y organizaciones',
+    porque: 'Con quién trata el hotel: agencias, operadores, aliados e instituciones.',
+    ruta: '/config/agencias',
+    icono: 'Building2',
+  },
+  planes: {
+    etiqueta: 'Planes, platos y tarifas',
+    porque: 'Lo que se vende y a qué precio. El precio se congela al crear la reserva.',
+    ruta: '/config/planes',
+    icono: 'Tag',
+  },
+  temporadas: {
+    etiqueta: 'Temporadas',
+    porque: 'Qué fechas son de temporada alta.',
+    ruta: '/config/temporadas',
+    icono: 'CalendarDays',
+  },
+  operacion: {
+    etiqueta: 'Ajustes de la operación',
+    porque: 'Hora de zarpe, cierre de cocina, modo del aparato, canales y países.',
+    ruta: '/config/operacion',
+    icono: 'Settings',
+  },
+  usuarios: {
+    etiqueta: 'Usuarios',
+    porque: 'Quién entra y qué ve cada quien.',
+    ruta: '/usuarios',
+    icono: 'UserCog',
+  },
+  reportes: {
+    etiqueta: 'Reportes al sistema',
+    porque: 'Lo que el equipo reporta cuando algo no sirve.',
+    ruta: '/reportes',
+    icono: 'LifeBuoy',
+  },
+}
+
+/**
+ * Por rol: dónde cae al entrar, qué ve en el menú, qué rutas puede abrir y
+ * qué secciones de Configuración le tocan.
+ *
+ * `menu` es el orden del menú: primero lo que más usa.
+ * `ver` incluye el menú **más** los destinos ocultos a los que sí puede entrar.
  */
 export const POR_ROL = {
   // AISA, el proveedor. Ve todo porque mantiene el sistema — y por eso mismo
   // queda auditado como todos los demás.
   super_admin: {
     home: '/',
-    ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
-          '/config', '/editar'],
-  },
-
-  // Mira el negocio, no lo opera día a día. Entra directo a los números.
-  //
-  // `/` no está en su lista a propósito: si lo estuviera, el menú tendría una
-  // entrada "Hoy" que al tocarla rebotaría de vuelta a Informes, porque la raíz
-  // redirige al inicio de cada rol. Un enlace que no lleva a ninguna parte es
-  // peor que no tenerlo.
-  gerencia: {
-    home: '/informes',
-    ver: ['/informes', '/metas', '/cartera', '/clientes', '/historial', '/dia', '/usuarios', '/reportes'],
+    menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
+    config: ['equipo', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
   directora: {
     home: '/',
-    ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/usuarios', '/reportes',
-          '/config', '/editar'],
+    menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
+    config: ['equipo', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
   // Daniela. Es quien más usa la app y quien tiene el día completo.
+  // Lanchas, pilotos y empleados de primeras: son suyos (regla 21).
   asesora: {
     home: '/',
-    ver: ['/', '/nuevo', '/dia', '/cerrar', '/embarque', '/isla', '/cocina',
-          '/folios', '/cartera', '/clientes', '/metas', '/equipo', '/historial', '/informes', '/reportes', '/editar'],
+    menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
+    config: ['equipo', 'agencias', 'operacion', 'reportes'],
+    extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
-  // Vende y puede cubrir turnos de muelle, pero no cierra el día ni toca
-  // catálogos.
+  // Mira el negocio, no lo opera día a día.
+  //
+  // Sin Reservas, Embarque, Isla ni Folios a propósito: llenarle la pantalla
+  // de la operación diaria sería darle siete puertas para no entrar por
+  // ninguna. Sí ve tarifas y temporadas: ahí se decide la plata.
+  //
+  // **Sin «Hoy» todavía, y es a propósito.** Su «Hoy» —el del periodo, con la
+  // meta arriba— es el paso 8 del plan de diseño. Mientras no exista, esa
+  // entrada la llevaría al Hoy de la operación, que no es el suyo: una puerta
+  // que abre a la sala equivocada es peor que no tener la puerta. Entra
+  // cuando su contenido exista.
+  gerencia: {
+    home: '/informes',
+    menu: ['/cartera', '/informes'],
+    config: ['planes', 'temporadas', 'usuarios', 'reportes'],
+    extra: ['/historial', '/clientes', '/metas'],
+  },
+
+  // Vende y puede cubrir turnos de muelle, pero no cierra el día ni cobra.
+  //
+  // Con Agencias en Configuración: al vender aparece la agencia que todavía no
+  // existe, y mandarla a pedir que se la creen es justo el paso que este
+  // producto viene a quitar.
   asesora_comercial: {
     home: '/',
-    ver: ['/', '/nuevo', '/dia', '/embarque', '/clientes', '/historial', '/reportes', '/editar'],
+    menu: ['/', '/reservas', '/embarque'],
+    config: ['agencias', 'reportes'],
+    extra: ['/nuevo', '/editar', '/historial', '/clientes'],
   },
 
-  // La isla. Entra viendo la isla, no un menú.
+  // La isla. Entra viendo la isla, no un menú. Su «Hoy» le dice cuántos
+  // vienen y a qué hora; los almuerzos viven dentro de Isla.
   admin_isla: {
     home: '/isla',
-    ver: ['/isla', '/cocina', '/dia', '/reportes'],
+    menu: ['/', '/isla'],
+    config: ['reportes'],
+    extra: ['/cocina'],
   },
 
   // No hay `recepcion`. Lo hubo un rato, por la regla 18 —recepción cobra el
   // tiquete de las cortesías—, pero en la práctica eso lo hace la isla: quien
-  // esté de guardia o `admin_isla`. Un rol que nadie usa es un rol que se
-  // asigna por error. Migración 017.
+  // esté de guardia o `admin_isla`. Migración 017.
 
   // Una pregunta, de pie junto a la mesa: ¿a qué cuenta va esto?
   //
-  // Sin `/reportes` a propósito, y no por desconfianza: su diseño entero es
-  // **una sola pantalla**, y agregarle una segunda por un canal que usará tres
-  // veces al año sería deshacer lo que la hace usable. El botón de reportar sí
-  // lo tiene —está en todas las pantallas y en los tres modos—, así que puede
-  // contar lo que le pase; lo que no ve es la lista con los estados.
+  // Una sola pantalla, y por eso su menú viene vacío: un botón que lleva a
+  // donde ya estás es ruido. El botón de reportar sí lo tiene —está en todas
+  // las pantallas— así que puede contar lo que le pase.
   mesero: {
     home: '/isla',
-    ver: ['/isla'],
+    menu: [],
+    config: [],
+    extra: ['/cocina'],
   },
 }
 
 /** El rol con el que se trabaja mientras no haya perfil. */
 export const ROL_POR_DEFECTO = 'asesora'
 
+/** Rutas viejas que siguen respondiendo, para no romper un enlace guardado. */
+export const REDIRECCIONES = {
+  '/dia': '/reservas',
+}
+
+/** Todo lo que este rol puede abrir: su menú, sus extras y su Configuración. */
+function rutasDe(rol) {
+  const c = POR_ROL[rol]
+  if (!c) return []
+  const deConfig = c.config.length
+    ? ['/config', ...c.config.map(s => SECCIONES_CONFIG[s]?.ruta).filter(Boolean)]
+    : []
+  return [...c.menu, ...c.extra, ...deConfig]
+}
+
 /** ¿Este rol puede abrir esta ruta? */
 export function puedeVer(rol, ruta) {
   const config = POR_ROL[rol]
   if (!config) return false
-  // `/editar/:id` llega con el id pegado; se compara por el prefijo.
+  // `/editar/:id` llega con el id pegado; `/config/planes` cuelga de `/config`.
   const base = ruta.startsWith('/editar') ? '/editar' : ruta
-  return config.ver.includes(base)
+  const permitidas = rutasDe(rol)
+  if (permitidas.includes(base)) return true
+  // Una sección de Configuración vale si su rol la tiene.
+  return base.startsWith('/config/') && permitidas.includes(base)
 }
 
 /** A dónde mandar a alguien al entrar, o cuando pide algo que no puede ver. */
@@ -129,16 +234,25 @@ export function inicioDe(rol) {
   return POR_ROL[rol]?.home || '/'
 }
 
-/** El menú de este rol, en orden, ya sin las rutas que no se muestran. */
+/** El menú de este rol, en orden. Los siete sustantivos, sin el engranaje. */
 export function menuDe(rol) {
   const config = POR_ROL[rol]
   if (!config) return []
-  return config.ver
+  return config.menu
     .filter(r => RUTAS[r] && !RUTAS[r].oculta)
     .map(r => ({ a: r, ...RUTAS[r] }))
 }
 
-/** Los ocho, para la pantalla que administra usuarios. */
+/** Las secciones de Configuración de este rol, en orden. Vacío = sin engranaje. */
+export function seccionesDe(rol) {
+  const config = POR_ROL[rol]
+  if (!config) return []
+  return config.config
+    .map(id => ({ id, ...SECCIONES_CONFIG[id] }))
+    .filter(s => s.etiqueta)
+}
+
+/** Los roles asignables, para la pantalla que los reparte. */
 export const ROLES = Object.keys(POR_ROL)
 
 export const ETIQUETA_ROL = {

@@ -235,8 +235,23 @@ function FilaCatalogo({ fila, config, onEditar, onEliminar, onAlternar }) {
 
 // ─── Pantalla ─────────────────────────────────────────────────────────────────
 
-export default function Config() {
-  const [clave, setClave] = useState('planes')
+/**
+ * Los catálogos, servidos por sección.
+ *
+ * Antes era una sola pantalla con todas las pestañas. Ahora Configuración es
+ * un contenedor con secciones (`Configuracion.jsx`) y cada una pide lo suyo:
+ * «Agencias» trae un catálogo, «Ajustes de la operación» trae dos más las
+ * horas y el modo del aparato. Cuando la sección trae uno solo, la barra de
+ * pestañas no aparece — una pestaña sola no es una elección.
+ */
+export default function Config({
+  soloClaves,
+  titulo = 'Configuración',
+  subtitulo = 'Lo que la operación puede cambiar sin tocar el sistema',
+  conAjustes = false,
+}) {
+  const claves = soloClaves?.length ? soloClaves : CLAVES
+  const [clave, setClave] = useState(claves[0])
   const [filas, setFilas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
@@ -287,8 +302,8 @@ export default function Config() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <PageHeader
-        title="Configuración"
-        subtitle="Lo que la operación puede cambiar sin tocar el sistema"
+        title={titulo}
+        subtitle={subtitulo}
         actions={
           <Button size="sm" onClick={() => setEditando({})}>
             <Plus size={14} />
@@ -297,18 +312,25 @@ export default function Config() {
         }
       />
 
-      {/* Arriba de los catálogos: no es una lista, es una sola decisión que
-          cambia lo que el cliente puede hacer desde su celular. */}
-      <HoraDeZarpe />
-
-      <div className="mb-5">
-        <ModoDelAparato />
-      </div>
+      {/* Arriba de los catálogos: no son listas, son decisiones sueltas que
+          cambian lo que el cliente puede hacer desde su celular y cómo se ve
+          este aparato. Solo en la sección de operación. */}
+      {conAjustes && (
+        <>
+          <HoraDeZarpe />
+          <div className="mb-5">
+            <ModoDelAparato />
+          </div>
+        </>
+      )}
 
       {/* Los catálogos. No es un filtro —no se puede "limpiar"— así que no usa
           FiltroBarra: sería forzar un patrón donde no encaja. */}
-      <div className="flex gap-1 bg-brand-50 rounded-xl p-1 mb-5 w-fit max-w-full overflow-x-auto">
-        {CLAVES.map(k => (
+      <div className={classNames(
+        'flex gap-1 bg-brand-50 rounded-xl p-1 mb-5 w-fit max-w-full overflow-x-auto',
+        claves.length < 2 && 'hidden'   // una pestaña sola no es una elección
+      )}>
+        {claves.map(k => (
           <button
             key={k}
             onClick={() => setClave(k)}

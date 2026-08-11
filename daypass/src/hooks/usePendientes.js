@@ -93,7 +93,7 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
         tono: 'pendiente',
         texto: `Otros ${resto.length} grupos: faltan ${plural(paxResto, 'nombre', 'nombres')}`,
         porque: porqueNombres(),
-        accion: { etiqueta: 'Ver el listado', a: '/dia' },
+        accion: { etiqueta: 'Ver el listado', a: '/reservas' },
       })
     }
 
@@ -112,7 +112,7 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
           .join(' · ') +
           (individualesFaltos.length > 3 ? ` y ${individualesFaltos.length - 3} más` : ''),
         porque: porqueNombres(),
-        accion: { etiqueta: 'Ver el listado', a: '/dia' },
+        accion: { etiqueta: 'Ver el listado', a: '/reservas' },
       })
     }
 
@@ -137,7 +137,7 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
         texto: `${plural(sinPago.length, 'reserva sin forma de pago', 'reservas sin forma de pago')}`,
         detalle: sinPago.slice(0, 3).map(r => r.nombre_pasajero).join(', ') +
                  (sinPago.length > 3 ? ` y ${sinPago.length - 3} más` : ''),
-        accion: { etiqueta: 'Ver el listado', a: '/dia' },
+        accion: { etiqueta: 'Ver el listado', a: '/reservas' },
       })
     }
 
@@ -149,7 +149,7 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
         tono: 'pendiente',
         texto: `${plural(impuestosPendientes.length, 'reserva debe', 'reservas deben')} impuestos de puerto`,
         detalle: 'Se cobran en el muelle al embarcar',
-        accion: { etiqueta: 'Ver el listado', a: '/dia' },
+        accion: { etiqueta: 'Ver el listado', a: '/reservas' },
       })
     }
 
