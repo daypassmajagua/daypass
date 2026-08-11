@@ -1,10 +1,13 @@
-import { Wifi } from 'lucide-react'
-import { classNames, formatDate } from '../../lib/utils'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Wifi } from 'lucide-react'
+import { classNames, formatDate, hoyLocal } from '../../lib/utils'
 import { ESTADO_DIA_LABELS, PUNTO_LABELS, useDiaOperativo } from '../../hooks/useDiaOperativo'
 import useAppStore from '../../store/useAppStore'
 import { useEnLaIsla } from '../../hooks/useEnLaIsla'
 import { edadDe } from '../../lib/enLaIsla'
 import { ContadorVivo } from '../patrones'
+import { usePerfil } from '../../hooks/usePerfil'
+import { puedeVer } from '../../lib/navegacion'
 
 /**
  * La franja del día: el latido del sistema.
@@ -28,6 +31,24 @@ function horaCorta(iso) {
   })
 }
 
+/**
+ * El verbo que toca ahora, según en qué va el día.
+ *
+ * La franja ya dice en qué estado está; esto la hace ofrecer **lo siguiente**.
+ * Daniela no navega a su próxima tarea: la franja se la acerca.
+ *
+ * No es magia temporal ni un horario escondido: es el mismo estado del día que
+ * ya gobierna el color, gobernando también el botón. Un día en planeación se
+ * cierra; uno cerrado se embarca; uno en operación se recibe de vuelta. Y uno
+ * cerrado del todo no ofrece nada, que también es una respuesta.
+ */
+const VERBO = {
+  planeando:         { etiqueta: 'Cerrar el día', a: '/cerrar' },
+  tentativo_cerrado: { etiqueta: 'Ir al embarque', a: '/embarque' },
+  en_operacion:      { etiqueta: 'Recibir el regreso', a: '/embarque' },
+  cerrado:           null,
+}
+
 export default function FranjaDia() {
   const fechaActiva = useAppStore(s => s.fechaActiva)
   const puntos = useAppStore(s => s.puntosEnLinea)
@@ -40,6 +61,19 @@ export default function FranjaDia() {
   // la isla un martes de planeación.
   const enOperacion = estado === 'en_operacion'
   const { conteo, mirado } = useEnLaIsla(fechaActiva, enOperacion)
+
+  const esHoy = fechaActiva === hoyLocal()
+
+  /**
+   * El verbo solo si quien mira puede hacerlo.
+   *
+   * Gerencia no recibe lanchas: ofrecerle «recibir el regreso» la mandaría a
+   * una pantalla que su rol no abre, y volvería rebotada. Una puerta que da a
+   * la sala equivocada es peor que no tener puerta.
+   */
+  const { rol } = usePerfil()
+  const candidato = VERBO[estado]
+  const verbo = candidato && puedeVer(rol, candidato.a) ? candidato : null
 
   return (
     <div className={classNames(
@@ -96,6 +130,25 @@ export default function FranjaDia() {
           <Wifi size={14} />
           {puntos.map(p => PUNTO_LABELS[p] || p).join(' · ')}
         </span>
+      )}
+
+      {/* El verbo que toca. Va de último y pegado a la derecha: la franja se
+          lee de izquierda a derecha —qué día, en qué va— y termina en qué
+          hacer. Solo para hoy: ofrecer «cerrar el día» sobre el jueves que
+          viene sería ofrecer cerrar el jueves. */}
+      {verbo && esHoy && (
+        <Link
+          to={verbo.a}
+          className={classNames(
+            'ml-auto flex items-center gap-1.5 rounded-xl px-3 min-h-[2.25rem] text-[0.8125rem] font-bold transition-colors',
+            enOperacion
+              ? 'bg-white/15 text-white hover:bg-white/25'
+              : 'bg-white/70 hover:bg-white'
+          )}
+        >
+          {verbo.etiqueta}
+          <ArrowRight size={14} />
+        </Link>
       )}
     </div>
   )

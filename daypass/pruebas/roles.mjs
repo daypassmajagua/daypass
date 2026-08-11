@@ -41,11 +41,12 @@ const ESPERADO = {
     menu: ['Hoy', 'Reservas', 'Embarque'],
     dinero: true,
   },
-  // Sin «Hoy» hasta que exista el suyo —el del periodo—: una entrada que abre
-  // a la sala equivocada es peor que no tenerla.
+  // Ya tiene «Hoy», y es el suyo: el del periodo, con la meta arriba. Es la
+  // misma entrada de menú mostrando cosas distintas según quién entra, que es
+  // lo que evita meter un «Panorama» entre los sustantivos del negocio.
   gerencia: {
-    inicio: '/informes',
-    menu: ['Cartera', 'Informes'],
+    inicio: '/',
+    menu: ['Hoy', 'Cartera', 'Informes'],
     dinero: true,
   },
   // La isla no lleva el menú de oficina sino su navegación mínima, que tiene

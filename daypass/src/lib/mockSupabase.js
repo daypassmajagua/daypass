@@ -1173,7 +1173,11 @@ function derivarAvanceMetas() {
     const logrado = m.unidad === 'ingresos'
       ? cuentan.reduce((s, r) => {
           const ti = STORE.tipos_ingreso.find(t => t.id === r.tipo_ingreso_id)
-          return s + valorACobrar(r, ti)
+          // Sobre la fila unida, no la cruda: `total_calculado` no está
+          // guardado —en Postgres es una columna generada— y `valorACobrar`
+          // lo necesita. Sin esto toda meta de ingresos daba cero, y la
+          // pantalla de Metas llevaba meses mostrando 0% en la demo.
+          return s + valorACobrar(joinRegistro(r), ti)
         }, 0)
       : cuentan.reduce((s, r) => s + r.adultos + r.ninos, 0)
 
@@ -1937,6 +1941,19 @@ class QB {
 
   gte(col, val) {
     this._filters.push(r => r[col] >= val)
+    return this
+  }
+
+  // Estrictos. Los pidió el «Hoy» de gerencia, que compara el día de hoy
+  // contra los treinta anteriores **sin incluirlo**: con `lte` el promedio se
+  // compararía contra sí mismo.
+  lt(col, val) {
+    this._filters.push(r => r[col] < val)
+    return this
+  }
+
+  gt(col, val) {
+    this._filters.push(r => r[col] > val)
     return this
   }
 

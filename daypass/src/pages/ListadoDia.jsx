@@ -25,6 +25,7 @@ import Modal from '../components/ui/Modal'
 import Select from '../components/ui/Select'
 import DateNav from '../components/ui/DateNav'
 import PageHeader from '../components/layout/PageHeader'
+import { useMuestraDinero } from '../lib/modo'
 
 const ESTADOS = ['tentativa', 'confirmada', 'en_isla', 'completada', 'noshow', 'cancelada']
 
@@ -75,6 +76,16 @@ function ContadorNombres({ registro, conteo }) {
 
 export default function ListadoDia() {
   const navigate = useNavigate()
+
+  /**
+   * Si el aparato está configurado como muelle o isla, no se pinta plata.
+   *
+   * **No es control de acceso** —eso es la RLS, y ya enmascara por rol— es
+   * discreción física: esta lista se abre de pie, con la fila detrás mirando
+   * la pantalla. La misma persona con el mismo permiso no debería enseñar
+   * totales en el muelle.
+   */
+  const muestraDinero = useMuestraDinero()
   const {
     fechaActiva, setFechaActiva,
     filtroLancha, setFiltroLancha,
@@ -346,7 +357,7 @@ export default function ListadoDia() {
                             <ContadorNombres registro={r} conteo={nombres[r.id] || 0} />
                           </td>
                           <td className="px-3 py-3 text-right font-medium text-gray-900">
-                            {formatCurrency(r.total_calculado)}
+                            {muestraDinero ? formatCurrency(r.total_calculado) : '—'}
                           </td>
                           <td className="px-3 py-3 text-xs text-gray-600">
                             {r.forma_pago ? FORMA_PAGO_LABELS[r.forma_pago] : (
@@ -467,7 +478,7 @@ export default function ListadoDia() {
                         <div className="flex items-baseline justify-between gap-3 text-sm">
                           <span className="text-tinta-2 truncate">{r.planes?.nombre || '—'}</span>
                           <span className="font-bold text-tinta tabular shrink-0">
-                            {formatCurrency(r.total_calculado)}
+                            {muestraDinero ? formatCurrency(r.total_calculado) : '—'}
                           </span>
                         </div>
 

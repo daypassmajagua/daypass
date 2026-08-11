@@ -173,14 +173,14 @@ export const POR_ROL = {
   // de la operación diaria sería darle siete puertas para no entrar por
   // ninguna. Sí ve tarifas y temporadas: ahí se decide la plata.
   //
-  // **Sin «Hoy» todavía, y es a propósito.** Su «Hoy» —el del periodo, con la
-  // meta arriba— es el paso 8 del plan de diseño. Mientras no exista, esa
-  // entrada la llevaría al Hoy de la operación, que no es el suyo: una puerta
-  // que abre a la sala equivocada es peor que no tener la puerta. Entra
-  // cuando su contenido exista.
+  // **Ya tiene «Hoy», y es el suyo.** No es el de la operación: es el del
+  // periodo —la meta arriba, el día contra el promedio, la cartera vencida—.
+  // Una misma entrada de menú que muestra cosas distintas según quién entra,
+  // que es lo que evita un «Panorama» en el menú: ese sería el nombre que le
+  // pone el software a una pantalla, no algo que exista en la operación.
   gerencia: {
-    home: '/informes',
-    menu: ['/cartera', '/informes'],
+    home: '/',
+    menu: ['/', '/cartera', '/informes'],
     config: ['turnos', 'planes', 'temporadas', 'usuarios', 'actividad', 'reportes'],
     extra: ['/historial', '/clientes', '/metas'],
   },

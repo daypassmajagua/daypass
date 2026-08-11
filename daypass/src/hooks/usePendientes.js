@@ -8,6 +8,35 @@ import { plural } from '../lib/utils'
  * No son alertas genéricas: cada una tiene nombre propio y un botón que lleva
  * directo a resolverla. Si no se puede actuar, no es un pendiente.
  */
+
+/**
+ * Qué tan cerca está cada pendiente de detener una lancha. Menor va primero.
+ *
+ *   0  los nombres     — sin manifiesto no se zarpa (regla 15)
+ *   1  las tentativas  — hay que cerrar el día antes de embarcar
+ *   2  los folios      — se cobra en la isla; duele a mediodía, no a las ocho
+ *   3  los impuestos   — se cobran en el muelle, en efectivo
+ *   4  los pagos       — informan; la reserva vuela igual
+ *
+ * Lo que no esté en la tabla va al final: un pendiente nuevo sin peso no debe
+ * colarse antes de los nombres solo por haberse escrito después.
+ */
+const PESO = {
+  'nombres-grupos-resto': 0,
+  'nombres-individuales': 0,
+  tentativas: 1,
+  folios: 2,
+  impuestos: 3,
+  pagos: 4,
+}
+
+function pesoDe(pendiente) {
+  // Los grupos con nombres faltantes llevan el id de su reserva, no una clave
+  // fija: se reconocen por su acción, que lleva a agregar los nombres.
+  if (PESO[pendiente.id] !== undefined) return PESO[pendiente.id]
+  if (pendiente.accion?.etiqueta === 'Agregar los nombres') return 0
+  return 99
+}
 export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {}) {
   const [nombres, setNombres] = useState({})
 
@@ -165,8 +194,21 @@ export function usePendientes(registros, { enPlaneacion, tiposIngreso = [] } = {
       })
     }
 
-    // Lo tardío primero: es lo único que ya le costó trabajo a alguien más.
-    lista.sort((a, b) => (a.tono === 'tardio' ? 0 : 1) - (b.tono === 'tardio' ? 0 : 1))
+    /**
+     * El orden es por lo que detiene el zarpe, no por tipo.
+     *
+     * **Sin nombres no sale la lancha**: el manifiesto de la Capitanía los
+     * exige y sin él no hay zarpe (regla 15). Sin folio no se puede cobrar el
+     * almuerzo en la isla, que duele a media tarde pero no detiene nada por la
+     * mañana. Y un pago sin confirmar informa: la reserva vuela igual.
+     *
+     * Antes se ordenaba solo por «lo tardío primero», que sigue mandando por
+     * encima de todo —es lo único que ya le costó trabajo a alguien más— pero
+     * dejaba lo demás en el orden en que se fue escribiendo el código, que no
+     * es un orden.
+     */
+    lista.sort((a, b) => (a.tono === 'tardio' ? 0 : 1) - (b.tono === 'tardio' ? 0 : 1)
+      || pesoDe(a) - pesoDe(b))
 
     const faltanNombres = vivas.reduce((s, r) => {
       const plan = r.adultos + r.ninos + r.infantes + r.cortesias

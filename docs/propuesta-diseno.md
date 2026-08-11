@@ -536,9 +536,31 @@ finge saber lo demás. Esa es la razón de que se llame así y no «en la isla»
    - Y dos pruebas, porque esto se rompe en silencio: una estática que falla si vuelve a aparecer
      un tamaño en píxeles en esas tres pantallas, y `npm run modos`, que mide la raíz y una fila
      real en los tres modos y comprueba que **crezcan de verdad** — 105 → 118 → 131 px.
-   - Falta la otra mitad, que es del paso 10: `useMuestraDinero` sigue sin un solo uso. Cuando el
-     iPad del muelle abra «Hoy», los números de plata no se deberían pintar.
-10. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
+10. ✅ **Hoy, en sus dos formas** — la de la operación retocada y la del periodo (§3.3). *(hecho)*
+
+    > **Eran tres y son dos, y la que salió es la de la directora.** El plan le daba a ella el
+    > mismo «Hoy» del periodo que a gerencia. Al construirlo no se sostiene: **la directora abre
+    > la app para operar** —su menú es el completo, cierra días y mueve reservas— y darle un
+    > tablero de indicadores como primera pantalla la dejaría a dos clics del día que dirige. El
+    > resumen del negocio lo tiene a un toque, en Informes. Gerencia es la que no opera.
+
+    - **El verbo del momento vive en la franja**: planeando → *Cerrar el día*; tentativo cerrado
+      → *Ir al embarque*; en operación → *Recibir el regreso*. Solo para hoy —ofrecer «cerrar el
+      día» sobre el jueves que viene sería ofrecer cerrar el jueves— y **solo si quien mira puede
+      hacerlo**: a gerencia no le aparece, porque la mandaría a una pantalla que su rol no abre.
+      El botón de cerrar se queda en «Hoy» para los otros días, que la franja no cubre.
+    - **Los pendientes se ordenan por lo que detiene el zarpe.** Sin nombres no hay manifiesto y
+      no sale la lancha; sin folio no se cobra el almuerzo, que duele a mediodía y no a las ocho;
+      un pago sin confirmar informa. Antes se ordenaban solo por «lo tardío primero» y el resto
+      quedaba en el orden en que se fue escribiendo el código, que no es un orden.
+    - **`useMuestraDinero` estrena su primer uso** en la lista de reservas. No es control de
+      acceso —eso es la RLS— es discreción física: esa lista se abre de pie con la fila detrás
+      mirando la pantalla. Comprobado: en modo oficina se ven los totales, en modo muelle no.
+    - En el «Hoy» de gerencia **la meta va sola y grande** y los otros tres debajo y en pequeño.
+      Cuatro indicadores del mismo tamaño no son una respuesta, son cuatro preguntas.
+    - Y los ingresos salen de `avance_metas`, que suma con `valor_a_cobrar()`. **Nace sin la
+      trampa de `total_calculado`**, que le pone precio a una cortesía, a un huésped de
+      alojamiento y a un empleado. Informes todavía la tiene: es el paso 12.
 11. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
 12. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
     `ListaDelDia` e `InsigniaEstado`; Informes se parte, absorbe Metas y **se corrige
