@@ -48,7 +48,7 @@ export default function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { rol, perfil } = usePerfil()
+  const { rol } = usePerfil()
 
   // Lo que este rol no puede usar no aparece: nada en gris, nada con candado.
   // Un menú lleno de cosas que no puedes tocar se lee mal todos los días.

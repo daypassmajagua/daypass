@@ -174,7 +174,10 @@ export function openPrintWindow(title, bodyHtml) {
   ${bodyHtml}
   <script>
     window.onload = function() { setTimeout(function() { window.print() }, 350) }
-  <\/script>
+  <${/* la barra va partida a propósito: un «</script>» literal dentro de este
+        archivo cerraría la etiqueta del documento que lo contenga. El escape
+        con barra invertida hacía lo mismo, pero ESLint lo lee como un escape
+        sobrante y en un despliegue eso es un error que tumba el build. */''}/script>
 </body>
 </html>`)
   win.document.close()
@@ -184,7 +187,6 @@ export function openPrintWindow(title, bodyHtml) {
 // ─── Tentativo ─────────────────────────────────────────────────────────────────
 export function buildTentativoHTML(registros, fecha) {
   const activos    = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
-  const confirmados = registros.filter(r => ['confirmada', 'en_isla', 'completada'].includes(r.estado))
   const tentativas  = registros.filter(r => r.estado === 'tentativa')
   const grupos      = activos.filter(r => r.tipo === 'grupo')
   const individuales = activos.filter(r => r.tipo === 'individual')

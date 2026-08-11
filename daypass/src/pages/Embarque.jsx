@@ -460,13 +460,21 @@ export default function Embarque() {
   async function alTocar(fila) {
     if (cerrado) return
     const clave = claveDe(fila)
-    const hace = recientes[clave]
     const listo = eventosOk.includes(fila.estado)
 
-    // Volver a tocar dentro de la ventana deshace lo que se acaba de marcar.
-    // En el regreso no hay "no llegó" que registrar —ya está en la isla—, así
-    // que deshacer no aplica: el hecho queda y se corrige con la conciliación.
-    if (listo && hace && Date.now() - hace < VENTANA_DESHACER && !esRegreso) {
+    /**
+     * Volver a tocar dentro de la ventana deshace lo que se acaba de marcar.
+     * En el regreso no hay «no llegó» que registrar —ya está en la isla—, así
+     * que deshacer no aplica: el hecho queda y se corrige con la conciliación.
+     *
+     * **Basta con que la clave esté.** Antes esto comparaba `Date.now()`
+     * contra la marca guardada, pero el temporizador de abajo ya borra la
+     * entrada a los ocho segundos: si sigue ahí, es que la ventana sigue
+     * abierta. Restar horas era guardar dos veces el mismo hecho —y leer el
+     * reloj dentro del cuerpo del componente, que es lo que el compilador de
+     * React marca como impuro.
+     */
+    if (listo && recientes[clave] && !esRegreso) {
       setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
       await registrarEvento(fila, 'no_show')
       toast('Deshecho', { duration: 1500 })
@@ -478,7 +486,8 @@ export default function Embarque() {
     // el servidor. Es el tercer canal de confirmación —color, contador,
     // sonido— para cuando ni siquiera se puede mirar la pantalla.
     tocar('tic')
-    setRecientes(prev => ({ ...prev, [clave]: Date.now() }))
+    // El valor no importa: lo que dice algo es que la clave exista.
+    setRecientes(prev => ({ ...prev, [clave]: true }))
     // Pasada la ventana, la fila deja de ofrecer deshacer por sí sola.
     setTimeout(() => {
       setRecientes(prev => { const s = { ...prev }; delete s[clave]; return s })
