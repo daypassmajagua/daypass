@@ -26,12 +26,33 @@ import logoAzul from '../../assets/logo-azul.png'
  * sistema falló.
  */
 
+/**
+ * El logo mientras se resuelve el acceso.
+ *
+ * A los cuatro segundos cambia lo que dice. No es un detalle de cortesía: una
+ * espera muda de diez segundos se siente rota, y la misma espera con una línea
+ * que la reconoce se siente lenta —que es lo que de verdad está pasando—. Y de
+ * paso, quien lo lee sabe que puede recargar en vez de quedarse mirando.
+ */
 function Cargando({ mensaje }) {
+  const [tarda, setTarda] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setTarda(true), 4000)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-fondo">
-      <div className="flex flex-col items-center gap-3">
+    <div className="min-h-screen flex items-center justify-center bg-fondo px-6">
+      <div className="flex flex-col items-center gap-3 text-center">
         <img src={logoAzul} alt="" className="h-20 w-auto animate-pulse motion-reduce:animate-none" />
         <p className="text-sm text-tinta-2">{mensaje}</p>
+        {tarda && (
+          <p className="text-[13px] text-tinta-2 max-w-xs text-balance">
+            Está tardando más de lo normal. Si no abre en un momento, recarga la
+            página.
+          </p>
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
-import jsQR from 'jsqr'
 
 /**
  * El lector de pases del muelle.
@@ -15,6 +14,11 @@ import jsQR from 'jsqr'
  * batería— y con jsQR donde no. Safari de iPadOS no trae BarcodeDetector, y
  * el iPad es justamente el aparato del muelle, así que el camino de jsQR no es
  * el raro: es el normal.
+ *
+ * **jsQR se trae al abrir el lector, no antes.** Viajaba en el paquete
+ * principal aunque nadie escaneara nunca; ahora llega con el gesto que lo
+ * necesita. El service worker lo tiene precargado igual, así que en el muelle
+ * sin señal está en el aparato desde antes de salir.
  */
 
 const LADO = 640
@@ -54,6 +58,17 @@ export default function LectorQR({ onLeer, onCerrar }) {
       if ('BarcodeDetector' in window) {
         try { detector = new window.BarcodeDetector({ formats: ['qr_code'] }) }
         catch { detector = null }
+      }
+
+      // Solo se trae el decodificador si de verdad hace falta: donde hay
+      // BarcodeDetector —Android, Chrome— jsQR no se descarga nunca.
+      let jsQR = null
+      if (!detector) {
+        try { jsQR = (await import('jsqr')).default }
+        catch {
+          setError('No se pudo cargar el lector.')
+          return
+        }
       }
 
       const ctx = lienzo.current?.getContext('2d', { willReadFrequently: true })
