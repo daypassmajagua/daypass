@@ -17,6 +17,7 @@ import {
   BarChart2, Percent, RefreshCw, SlidersHorizontal, X, ChevronDown, Target,
 } from 'lucide-react'
 import { reservaCon, CON_CANAL, CON_PAIS } from '../lib/columnas'
+import { valorACobrar } from '../lib/cartera'
 
 // ─── Paleta ───────────────────────────────────────────────────────────────────
 // Ancla: navy de marca #1E2045 (LogoAzul) + dorado #B5904D (LogoCafe),
@@ -81,6 +82,7 @@ export default function Informes() {
   // Catálogos para los dropdowns de filtro (extraídos de los datos cargados)
   const [cats, setCats] = useState({ canales: [], lanchas: [], planes: [], asesoras: [] })
   const [pasajeros, setPasajeros] = useState([])
+  const [tiposIngreso, setTiposIngreso] = useState([])
   const [error, setError] = useState(null)
 
   useEffect(() => { fetchData() }, [fechaDesde, fechaHasta])
@@ -95,6 +97,13 @@ export default function Informes() {
       .order('fecha', { ascending: true })
     const rows = data || []
     setError(err?.message || null)
+
+    // Los tipos de ingreso deciden quién genera plata y quién no. Sin ellos
+    // no se puede sumar bien: ver más abajo, en `cobrado`.
+    if (!tiposIngreso.length) {
+      const { data: tipos } = await supabase.from('tipos_ingreso').select('*')
+      setTiposIngreso(tipos || [])
+    }
     setRegistros(rows)
 
     // Origen: el país de cada pasajero con nombre propio manda sobre el de la
@@ -163,10 +172,37 @@ export default function Informes() {
     [filtrados]
   )
 
+  /**
+   * Lo que de verdad se cobra por una reserva.
+   *
+   * ── Por qué no `total_calculado` ────────────────────────────────────────
+   *
+   * Porque le pone precio a plata que no existe. `total_calculado` multiplica
+   * personas por tarifa **para todo el mundo**, incluidas las tres clases de
+   * gente que viaja sin generar ingreso (regla 11):
+   *
+   *   · una **cortesía** no paga: el hotel la invita
+   *   · un huésped de **alojamiento** ya pagó su plan, no el pasadía
+   *   · un **empleado** va a trabajar
+   *
+   * Y al **proveedor** se le cobra el cupo, no la tarifa. Sumar
+   * `total_calculado` infla los ingresos de gerencia con plata que nadie va a
+   * recibir — es exactamente la trampa que la cartera corrigió cuando se
+   * construyó, y que esta pantalla siguió teniendo.
+   *
+   * `valorACobrar` es la misma función que usan la cartera, las metas y el
+   * «Hoy» de gerencia. Una sola forma de sumar plata, o cada pantalla dice un
+   * número distinto y la reunión se va en cuadrar cuál está bien.
+   */
+  const cobrado = useMemo(() => {
+    const porId = new Map(tiposIngreso.map(t => [t.id, t]))
+    return r => valorACobrar(r, porId.get(r.tipo_ingreso_id))
+  }, [tiposIngreso])
+
   // ─── KPIs ──────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
     const totalPax      = activos.reduce((s, r) => s + r.adultos + r.ninos, 0)
-    const totalIngresos = activos.reduce((s, r) => s + (r.total_calculado || 0), 0)
+    const totalIngresos = activos.reduce((s, r) => s + cobrado(r), 0)
     const dias          = new Set(activos.map(r => r.fecha)).size || 1
     const completadas   = filtrados.filter(r => r.estado === 'completada').length
     const canceladas    = filtrados.filter(r => ['cancelada', 'noshow'].includes(r.estado)).length
@@ -174,19 +210,19 @@ export default function Informes() {
     const ingPorPax     = totalPax > 0 ? Math.round(totalIngresos / totalPax) : 0
     return { totalPax, totalIngresos, dias, completadas, canceladas, tasaNoShow,
              promPaxDia: Math.round(totalPax / dias), ingPorPax }
-  }, [activos, filtrados])
+  }, [activos, filtrados, cobrado])
 
   // ─── Series para gráficas ──────────────────────────────────────────────────
   const porDia = useMemo(() => {
     const map = {}
     activos.forEach(r => {
       if (!map[r.fecha]) map[r.fecha] = { fecha: r.fecha, Ingresos: 0, Pasajeros: 0 }
-      map[r.fecha].Ingresos  += r.total_calculado || 0
+      map[r.fecha].Ingresos  += cobrado(r)
       map[r.fecha].Pasajeros += r.adultos + r.ninos
     })
     return Object.values(map).sort((a,b) => a.fecha.localeCompare(b.fecha))
       .map(d => ({ ...d, label: fmtDate(d.fecha) }))
-  }, [activos])
+  }, [activos, cobrado])
 
   const porCanal = useMemo(() => {
     const map = {}
@@ -194,10 +230,10 @@ export default function Informes() {
       const key = r.canales?.nombre || 'Otro'
       if (!map[key]) map[key] = { canal: key, Pasajeros: 0, Ingresos: 0 }
       map[key].Pasajeros += r.adultos + r.ninos
-      map[key].Ingresos  += r.total_calculado || 0
+      map[key].Ingresos  += cobrado(r)
     })
     return Object.values(map).sort((a,b) => b.Pasajeros - a.Pasajeros)
-  }, [activos])
+  }, [activos, cobrado])
 
   const porPlan = useMemo(() => {
     const map = {}
@@ -205,10 +241,10 @@ export default function Informes() {
       const key = r.planes?.nombre || 'N/A'
       if (!map[key]) map[key] = { plan: key, Pasajeros: 0, Ingresos: 0 }
       map[key].Pasajeros += r.adultos + r.ninos
-      map[key].Ingresos  += r.total_calculado || 0
+      map[key].Ingresos  += cobrado(r)
     })
     return Object.values(map).sort((a,b) => b.Ingresos - a.Ingresos).slice(0, 8)
-  }, [activos])
+  }, [activos, cobrado])
 
   const porEstado = useMemo(() => {
     const map = {}
@@ -292,11 +328,14 @@ export default function Informes() {
 
   // ─── Exportar CSV ──────────────────────────────────────────────────────────
   function exportCSV() {
-    const headers = ['Fecha','Nombre','Tipo','Estado','Lancha','Plan','Canal','Adultos','Niños','Total COP','Pago','Impuestos','Folio','Temporada','Asesora']
+    // «A cobrar» y no «Total»: la columna dice lo que el hotel va a recibir,
+    // que para una cortesía o un empleado es cero. Con el encabezado viejo,
+    // quien abriera el CSV en Excel volvería a sumar la columna equivocada.
+    const headers = ['Fecha','Nombre','Tipo','Estado','Lancha','Plan','Canal','Adultos','Niños','A cobrar COP','Pago','Impuestos','Folio','Temporada','Asesora']
     const rows = filtrados.map(r => [
       r.fecha, r.nombre_pasajero, r.tipo, r.estado,
       r.lanchas?.nombre || '', r.planes?.nombre || '', r.canales?.codigo || '',
-      r.adultos, r.ninos, r.total_calculado || 0,
+      r.adultos, r.ninos, cobrado(r),
       r.forma_pago || '', r.impuestos_puerto || '', r.folio_zeus || '',
       r.temporada || '', r.vendida_por || '',
     ])
@@ -528,8 +567,12 @@ export default function Informes() {
               label="Total Pasajeros" value={kpis.totalPax.toLocaleString('es-CO')}
               sub={`${kpis.promPaxDia} pax/día · ${kpis.dias} días`} />
             <KpiCard icon={<TrendingUp size={20} className="text-emerald-600" />} bg="bg-emerald-50"
-              label="Ingresos Proyectados" value={formatCurrency(kpis.totalIngresos)}
-              sub={`${formatCurrency(kpis.ingPorPax)} / pax`} />
+              // «Lo que se cobra» y no «Ingresos proyectados»: el número cambió
+              // de significado y el rótulo tiene que cambiar con él. Dejarlo
+              // igual mientras el número baja es la forma más rápida de que
+              // alguien crea que se cayeron las ventas.
+              label="Lo que se cobra" value={formatCurrency(kpis.totalIngresos)}
+              sub={`${formatCurrency(kpis.ingPorPax)} por pasajero`} />
             <KpiCard icon={<CalendarDays size={20} className="text-purple-600" />} bg="bg-purple-50"
               label="Completados" value={kpis.completadas.toLocaleString('es-CO')}
               sub={`de ${filtrados.length} reservas`} />

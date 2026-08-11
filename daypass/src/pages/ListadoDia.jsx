@@ -8,7 +8,7 @@ import {
 import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError, Esqueleto } from '../components/patrones'
+import { EstadoError, Esqueleto, InsigniaEstado } from '../components/patrones'
 import { usePerfil } from '../hooks/usePerfil'
 import { puedeVer } from '../lib/navegacion'
 import {
@@ -18,7 +18,6 @@ import {
 import { contarPorRegistro } from '../hooks/usePasajeros'
 import { useRegistrosEnVivo, useDiaOperativo, cambiarEstadoManual } from '../hooks/useDiaOperativo'
 import FranjaDia from '../components/layout/FranjaDia'
-import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
@@ -385,7 +384,7 @@ export default function ListadoDia() {
                                 className="w-32"
                               />
                             ) : (
-                              <Badge estado={r.estado} />
+                              <InsigniaEstado estado={r.estado} />
                             )}
                           </td>
                           <td className="px-3 py-3">
@@ -470,7 +469,7 @@ export default function ListadoDia() {
                             {r.agencia_nombre && <p className="text-[13px] text-tinta-2 truncate">{r.agencia_nombre}</p>}
                           </div>
                           <div className="flex flex-col items-end gap-1.5 shrink-0">
-                            <Badge estado={r.estado} />
+                            <InsigniaEstado estado={r.estado} />
                             <MarcaCambioTardio registro={r} />
                           </div>
                         </div>
@@ -537,7 +536,7 @@ export default function ListadoDia() {
                               </button>
                             </>
                           ) : (
-                            <Badge estado={r.estado} />
+                            <InsigniaEstado estado={r.estado} />
                           )}
                         </div>
                       </div>

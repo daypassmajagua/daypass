@@ -233,6 +233,18 @@ function generateHistorico() {
         precio_nino:   prices.pn,
         precio_lancha: 0,
         forma_pago: pick(PAGOS_H, seed),
+        /**
+         * El tipo de ingreso, que **ninguna reserva de muestra traía**.
+         *
+         * Sin él las tres banderas de la regla 11 no se ejercitaban y
+         * `valor_a_cobrar()` cobraba todo, así que la demo no podía mostrar la
+         * diferencia entre lo vendido y lo que de verdad entra. Una de cada
+         * doce es cortesía y una de cada veinte es huésped de alojamiento,
+         * que es más o menos la proporción real.
+         */
+        tipo_ingreso_id: seed % 12 === 0 ? 'ti-cortesia'
+          : seed % 20 === 0 ? 'ti-aloj'
+            : 'ti-pasadia',
         impuestos_puerto: seed % 7 === 0 ? 'no' : 'si',
         voucher_os: null,
         folio_zeus: ['completada'].includes(estado) ? `F-24-0${600 + d * 3 + i}` : null,
@@ -305,6 +317,8 @@ function buildRegistros() {
       agencia_nombre: null, adultos: 1, ninos: 0, infantes: 0, cortesias: 1,
       precio_adulto: 317937, precio_nino: 0, precio_lancha: 0,
       forma_pago: 'cortesia', impuestos_puerto: 'exe',
+      // Cortesía de gerencia: consume cupo y tiquete, pero no genera ingreso.
+      tipo_ingreso_id: 'ti-cortesia',
       voucher_os: null, folio_zeus: null,
       observaciones: 'Huésped VIP. Cortesía de gerencia.',
       telefono: '3004471209', email: 'mfrios@outlook.com',

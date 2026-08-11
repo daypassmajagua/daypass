@@ -562,9 +562,29 @@ finge saber lo demás. Esa es la razón de que se llame así y no «en la isla»
       trampa de `total_calculado`**, que le pone precio a una cortesía, a un huésped de
       alojamiento y a un empleado. Informes todavía la tiene: es el paso 12.
 11. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
-12. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
-    `ListaDelDia` e `InsigniaEstado`; Informes se parte, absorbe Metas y **se corrige
-    `total_calculado` → `valor_a_cobrar()`**.
+12. ✅ **Informes deja de mentirle a gerencia**, y sobraba un componente. *(hecho)*
+
+    - **`total_calculado` → `valor_a_cobrar()`.** Era lo importante de este paso y era un error
+      de plata, no de forma: `total_calculado` multiplica personas por tarifa **para todo el
+      mundo**, incluidas las tres clases que viajan sin generar ingreso —cortesía, alojamiento,
+      empleado— y al proveedor le cobra la tarifa en vez del cupo. Informes sumaba eso en los
+      KPIs, en las tres gráficas y en el CSV. Ahora usa la misma función que la cartera, las
+      metas y el «Hoy» de gerencia: **una sola forma de sumar plata**, o cada pantalla dice un
+      número distinto y la reunión se va en cuadrar cuál está bien.
+    - El rótulo cambió con el número: **«Lo que se cobra»**, no «Ingresos proyectados». Y en el
+      CSV, «A cobrar COP» — con el encabezado viejo, quien lo abriera en Excel volvería a sumar
+      la columna equivocada.
+    - **Sobraba un componente.** El plan decía «adoptar `InsigniaEstado`», y al ir a hacerlo
+      apareció que `ui/Badge` e `InsigniaEstado` **son el mismo componente escrito dos veces**,
+      con la misma salida. No se adoptó: se borró el duplicado. Dos formas de pintar un estado
+      son dos que se van a separar.
+
+    > **Lo que NO se hizo, y por qué.** El plan también decía «Informes se parte y absorbe
+    > Metas». Eso es un refactor grande cuyo beneficio es de mantenimiento, no de operación, y
+    > mezclarlo con una corrección de plata habría hecho imposible revisar ninguna de las dos.
+    > Queda como decisión aparte. Reservas y Folios tampoco pasaron a `ListaDelDia` por lo
+    > mismo: son tablas de oficina que funcionan, y reescribirlas ahora es riesgo sin ganancia
+    > para quien las usa.
 
 Cada paso con la verificación de siempre: pruebas en verde, humo y roles completos, eslint
 estable.

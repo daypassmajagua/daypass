@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, formatDateShort, hoyLocal, ESTADO_LABELS, FORMA_PAGO_LABELS } from '../lib/utils'
-import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
-import { EstadoError, Esqueleto } from '../components/patrones'
+import { EstadoError, Esqueleto, InsigniaEstado } from '../components/patrones'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
 import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -211,7 +210,7 @@ export default function Historial() {
                       <td className="px-3 py-3 text-right font-medium text-gray-900">
                         {formatCurrency(r.total_calculado)}
                       </td>
-                      <td className="px-3 py-3"><Badge estado={r.estado} /></td>
+                      <td className="px-3 py-3"><InsigniaEstado estado={r.estado} /></td>
                       <td className="px-3 py-3 text-xs font-mono text-emerald-700">{r.folio_zeus || '—'}</td>
                       <td className="px-3 py-3">
                         {/* Gerencia consulta el historial pero no edita reservas:
