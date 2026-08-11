@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Anchor, Pencil, Plus, Ship, UserCheck, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Anchor, ChevronRight, Plus, Ship, UserCheck, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { classNames, plural } from '../lib/utils'
+import { classNames } from '../lib/utils'
 import { opcionesDePais } from '../lib/paisesISO'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
@@ -156,13 +157,13 @@ export default function Equipo() {
                 </span>
                 <Interruptor activo={l.activa} etiqueta={l.nombre}
                   onChange={() => alternarActiva('lanchas', l)} />
-                <button
-                  onClick={() => setEditando({ tabla: 'lanchas', fila: l })}
+                <Link
+                  to={`/equipo/lanchas/${l.id}`}
                   className="icono-tactil w-10 h-10 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-blue-50 hover:text-blue-700"
-                  aria-label={`Editar ${l.nombre}`}
+                  aria-label={`Abrir ${l.nombre}`}
                 >
-                  <Pencil size={16} />
-                </button>
+                  <ChevronRight size={18} />
+                </Link>
               </li>
             ))}
           </ul>
@@ -192,13 +193,13 @@ export default function Equipo() {
                 </span>
                 <Interruptor activo={p.activo} etiqueta={p.nombre}
                   onChange={() => alternarActiva('pilotos', p, 'activo')} />
-                <button
-                  onClick={() => setEditando({ tabla: 'pilotos', fila: p })}
+                <Link
+                  to={`/equipo/pilotos/${p.id}`}
                   className="icono-tactil w-10 h-10 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-blue-50 hover:text-blue-700"
-                  aria-label={`Editar a ${p.nombre}`}
+                  aria-label={`Abrir a ${p.nombre}`}
                 >
-                  <Pencil size={16} />
-                </button>
+                  <ChevronRight size={18} />
+                </Link>
               </li>
             ))}
             {!pilotos.length && (
@@ -218,10 +219,17 @@ export default function Equipo() {
               Se cargan una sola vez. Después solo marcas con un toque quiénes
               van en cada zarpe, y entran al manifiesto.
             </p>
-            <Button size="sm" onClick={() => setEditando({ tabla: 'empleados', fila: { nombre: '', tipo_documento: 'cc', documento: '', // 'CO' es el código ISO y 'COL' el que traía la demo. Se aceptan los dos
-// porque hasta la 028 no eran el mismo, y un empleado nuevo nacía sin país
-// en producción sin que nadie lo notara.
-pais_id: paises.find(p => p.codigo === 'CO' || p.codigo === 'COL')?.id || null, activo: true } })}>
+            {/* `CO` es el código ISO y `COL` el que traía la demo hasta la 028.
+                Se aceptan los dos: con solo `COL`, un empleado nuevo nacía sin
+                país en producción y en la demo se veía bien. */}
+            <Button size="sm" onClick={() => setEditando({
+              tabla: 'empleados',
+              fila: {
+                nombre: '', tipo_documento: 'cc', documento: '',
+                pais_id: paises.find(p => p.codigo === 'CO' || p.codigo === 'COL')?.id || null,
+                activo: true,
+              },
+            })}>
               <Plus size={16} /> Nuevo empleado
             </Button>
           </div>
@@ -239,13 +247,13 @@ pais_id: paises.find(p => p.codigo === 'CO' || p.codigo === 'COL')?.id || null, 
                 </span>
                 <Interruptor activo={e.activo} etiqueta={e.nombre}
                   onChange={() => alternarActiva('empleados', e, 'activo')} />
-                <button
-                  onClick={() => setEditando({ tabla: 'empleados', fila: e })}
+                <Link
+                  to={`/equipo/empleados/${e.id}`}
                   className="icono-tactil w-10 h-10 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-blue-50 hover:text-blue-700"
-                  aria-label={`Editar a ${e.nombre}`}
+                  aria-label={`Abrir a ${e.nombre}`}
                 >
-                  <Pencil size={16} />
-                </button>
+                  <ChevronRight size={18} />
+                </Link>
               </li>
             ))}
             {!empleados.length && (

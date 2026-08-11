@@ -92,6 +92,9 @@ const CATALOGOS = {
     articulo: 'Nueva',
     crearPrimero: 'Crear la primera temporada',
     tabla: 'temporadas',
+    // Su ficha dice cuántas reservas cayeron en esas fechas — que es lo que
+    // uno quiere saber antes de mover el borde de una temporada.
+    ficha: t => `/config/temporadas/${t.id}`,
     orden: 'fecha_inicio',
     campoActivo: null,   // una temporada no se desactiva: se le cambian las fechas
     vacio: {

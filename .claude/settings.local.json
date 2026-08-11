@@ -264,7 +264,8 @@
       "Read(//c/Users/ragui/AppData/Local/Temp/**)",
       "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length\\)console.log\\(f.filePath.split\\('src'\\)[1], f.messages.map\\(m=>m.ruleId+':'+m.line+' '+\\(m.message||''\\).slice\\(0,60\\)\\).join\\(' | '\\)\\)}}\\)\")",
       "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length&&/Turnos/.test\\(f.filePath\\)\\)console.log\\(f.messages.map\\(m=>m.ruleId+':'+m.line\\).join\\(' '\\)\\)}}\\)\")",
-      "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length&&/Actividad|FichaPlan|Mensajes/.test\\(f.filePath\\)\\)console.log\\(f.filePath.split\\('src'\\)[1], f.messages.map\\(m=>m.ruleId+':'+m.line\\).join\\(' '\\)\\)}}\\)\")"
+      "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length&&/Actividad|FichaPlan|Mensajes/.test\\(f.filePath\\)\\)console.log\\(f.filePath.split\\('src'\\)[1], f.messages.map\\(m=>m.ruleId+':'+m.line\\).join\\(' '\\)\\)}}\\)\")",
+      "Bash(node -e \"let s='';process.stdin.on\\('data',d=>s+=d\\).on\\('end',\\(\\)=>{const r=JSON.parse\\(s\\);for\\(const f of r\\){if\\(f.messages.length&&/FichaCatalogo|Equipo/.test\\(f.filePath\\)\\)console.log\\(f.filePath.split\\('src'\\)[1], f.messages.map\\(m=>m.ruleId+':'+m.line\\).join\\(' '\\)\\)}}\\)\")"
     ]
   }
 }

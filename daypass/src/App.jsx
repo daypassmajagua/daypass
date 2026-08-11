@@ -53,6 +53,7 @@ const FichaPlan = lazy(() => import('./pages/FichaPlan'))
 const Turnos = lazy(() => import('./pages/Turnos'))
 const Mensajes = lazy(() => import('./pages/Mensajes'))
 const Actividad = lazy(() => import('./pages/Actividad'))
+const FichaCatalogo = lazy(() => import('./pages/FichaCatalogo'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -333,6 +334,29 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Mensajes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* Las fichas de lancha, piloto y empleado cuelgan de Equipo, que es
+            donde viven; la de temporada, de su sección. La pantalla es la
+            misma: lo que cambia entre ellas está en `lib/fichasCatalogo.js`. */}
+        <Route
+          path="/equipo/:tipo/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <FichaCatalogo />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/config/temporadas/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <FichaCatalogo />
               </AppLayout>
             </ProtectedRoute>
           }

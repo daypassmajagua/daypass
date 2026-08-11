@@ -461,7 +461,20 @@ globalmente y se queda así.
        migración les puso columnas, pero `bitacora.nombre` es NOT NULL desde la 015. Inventarle
        una laguna a un dato completo es peor que no explicar nada. El corte sí es real en
        `cambios_estado`, y ahí se sigue diciendo.
-   - Falta: las fichas de lancha, empleado y temporada.
+   - ✅ **Las fichas de lancha, piloto, empleado y temporada** *(hecho)*. **Una sola pantalla
+     para los cuatro**, con lo que cambia entre ellos en un descriptor: son la misma forma —unos
+     campos, un estado que dice su consecuencia y un «dónde se usa»—, y escribir cuatro
+     pantallas casi iguales es garantizar que en seis meses sean cuatro pantallas distintas. La
+     del plan se queda aparte porque además administra platos.
+     - Lo nuevo no son los campos, que ya estaban en el modal: es **saber a cuántas reservas les
+       importa antes de desactivar**. Majagua 1 dice «37 reservas, 4 de hoy en adelante»; una
+       temporada dice cuántas cayeron entre sus fechas, que es lo que uno quiere saber antes de
+       mover el borde de una.
+     - En la temporada «dónde se usa» no es una llave foránea: una reserva no apunta a una
+       temporada, **cae dentro de sus fechas**. Se cuenta por rango, que es exactamente como el
+       sistema decide qué precio aplicar.
+
+   Con esto el paso 7 queda cerrado.
 8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
