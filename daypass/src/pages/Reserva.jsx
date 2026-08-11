@@ -39,24 +39,64 @@ import { InsigniaEstado } from '../components/patrones'
  */
 const MANUALES = ['confirmada', 'tentativa']
 
+/**
+ * Un texto que puede no estar — y que en la base **está en null**, no ausente.
+ *
+ * ── El error que rompía la edición entera ───────────────────────────────────
+ *
+ * `z.string().optional()` acepta `undefined`, **no `null`**. Y al abrir una
+ * reserva guardada, `reset(data)` mete en el formulario exactamente lo que hay
+ * en la base: `nombre_grupo`, `identificacion`, `pais_id`, `agencia_nombre`,
+ * `forma_pago`, `voucher_os`, `folio_zeus`, `observaciones`, `vendida_por` —
+ * casi todos null en casi toda reserva.
+ *
+ * Resultado: la validación fallaba antes de intentar guardar, con un mensaje
+ * de Zod en inglés («Expected string, received null») en campos que quizá ni
+ * se ven en pantalla. **Desde afuera se veía como que el botón no hacía
+ * nada.** Y no era una reserva rara: era casi cualquiera.
+ *
+ * El `''` de salida no llega así a la base: `limpiarVacios` lo vuelve null
+ * antes del guardado, que es lo que Postgres necesita en una columna uuid.
+ */
+const textoOpcional = z.string().nullish().transform(v => (v ?? '').trim())
+
 const schema = z.object({
   fecha: z.string().min(1),
   tipo: z.enum(['individual', 'grupo']),
   estado: z.string().default('confirmada'),
   nombre_pasajero: z.string().min(1, 'Falta el nombre'),
-  nombre_grupo: z.string().optional(),
-  identificacion: z.string().optional(),
+  nombre_grupo: textoOpcional,
+  identificacion: textoOpcional,
   lancha_id: z.string().min(1, 'Elige una lancha'),
-  pais_id: z.string().optional(),
+  pais_id: textoOpcional,
   plan_id: z.string().min(1, 'Elige un plan'),
   canal_id: z.string().min(1, 'Falta el canal'),
-  agencia_nombre: z.string().optional(),
-  // El check-in remoto y el recordatorio viajan por aquí: sin contacto no hay link.
-  telefono: z.string().min(7, 'Falta el teléfono'),
-  email: z.string().email('Ese correo no se ve bien'),
-  tipo_ingreso_id: z.string().min(1),
-  cobra_cupo: z.boolean().optional(),
-  valor_cupo: z.coerce.number().min(0).optional(),
+  agencia_nombre: textoOpcional,
+  /**
+   * El contacto: se pide, pero no se exige.
+   *
+   * Era obligatorio, y eso rompía la edición de un modo que costaba ver: una
+   * reserva vieja —o de agencia, donde el contacto es la agencia y no el
+   * pasajero— tiene `telefono` y `email` en null. Al abrirla, `reset(data)`
+   * mete esos null en el formulario, `z.string()` los rechaza con «Expected
+   * string, received null» y **el guardado nunca llega a salir**. Desde afuera
+   * se ve como que el botón no hace nada.
+   *
+   * Sin contacto no hay enlace de check-in, que es real y hay que decirlo —lo
+   * dice la pantalla, debajo del campo— pero eso no puede impedir corregir la
+   * lancha de un grupo a las siete de la mañana.
+   */
+  telefono: z.string().nullish().transform(v => v?.trim() || '')
+    .refine(v => !v || v.length >= 7, 'Ese teléfono se ve corto'),
+  email: z.string().nullish().transform(v => v?.trim() || '')
+    .refine(v => !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), 'Ese correo no se ve bien'),
+  // `tipo_ingreso_id` es nullable en la base: la 007 lo agregó a una tabla que
+  // ya tenía reservas. Exigirlo aquí dejaba sin editar todo lo anterior a esa
+  // migración. Se pide al crear —el efecto lo pone en «pasadía»— pero no se
+  // bloquea al corregir una vieja.
+  tipo_ingreso_id: textoOpcional,
+  cobra_cupo: z.boolean().nullish().transform(v => v ?? false),
+  valor_cupo: z.coerce.number().min(0).nullish().transform(v => v ?? 0),
   adultos: z.coerce.number().min(1, 'Mínimo 1 adulto'),
   ninos: z.coerce.number().min(0).default(0),
   infantes: z.coerce.number().min(0).default(0),
@@ -64,12 +104,14 @@ const schema = z.object({
   precio_adulto: z.coerce.number().min(0),
   precio_nino: z.coerce.number().min(0).default(0),
   precio_lancha: z.coerce.number().min(0).default(0),
-  forma_pago: z.string().optional(),
+  forma_pago: textoOpcional,
+  // Con `default` basta: la columna es NOT NULL en la base, así que nunca
+  // llega null desde una reserva guardada.
   impuestos_puerto: z.enum(['si', 'no', 'exe']).default('si'),
-  voucher_os: z.string().optional(),
-  folio_zeus: z.string().optional(),
-  observaciones: z.string().optional(),
-  vendida_por: z.string().optional(),
+  voucher_os: textoOpcional,
+  folio_zeus: textoOpcional,
+  observaciones: textoOpcional,
+  vendida_por: textoOpcional,
 }).refine(d => !(d.tipo === 'grupo' && !d.nombre_grupo), {
   message: 'Falta el nombre del grupo', path: ['nombre_grupo'],
 })
@@ -275,6 +317,28 @@ export default function Reserva() {
   const totalLancha = Number(valores.precio_lancha) || 0
   const total = totalAdultos + totalNinos + totalLancha
 
+  /**
+   * Cuando el formulario no pasa la validación.
+   *
+   * React Hook Form enfoca el primer campo con error, pero si ese campo está
+   * fuera de la pantalla —o peor, si el error es de un campo que ella nunca
+   * tocó— el efecto visible es ninguno. Se nombra el campo y se dice qué pasa.
+   */
+  function noSePudoValidar(errores) {
+    const nombres = {
+      fecha: 'la fecha', nombre_pasajero: 'el nombre', nombre_grupo: 'el nombre del grupo',
+      lancha_id: 'la lancha', plan_id: 'el plan', canal_id: 'el canal',
+      telefono: 'el teléfono', email: 'el correo', adultos: 'los adultos',
+    }
+    const cuales = Object.keys(errores).map(k => nombres[k] || k)
+    toast.error(
+      cuales.length === 1
+        ? `Falta revisar ${cuales[0]}.`
+        : `Falta revisar ${cuales.slice(0, -1).join(', ')} y ${cuales[cuales.length - 1]}.`,
+      { description: 'La reserva no se guardó.' }
+    )
+  }
+
   async function onSubmit(data) {
     setGuardando(true)
     const { data: sesion } = await supabase.auth.getSession()
@@ -409,7 +473,13 @@ export default function Reserva() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      {/**
+        * Si la validación falla, se dice. Antes no: el formulario simplemente
+        * no salía y el botón parecía muerto. Un fallo silencioso en el paso de
+        * guardar es la peor clase de fallo — quien lo sufre no sabe si el
+        * sistema está lento, roto, o si ya guardó.
+        */}
+      <form onSubmit={handleSubmit(onSubmit, noSePudoValidar)} className="flex flex-col gap-4">
         {/* Cuándo y qué tipo de ingreso: cambian precios, cupo y tiquetes */}
         <Card className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Controller name="fecha" control={control} render={({ field }) => (

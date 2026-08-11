@@ -76,11 +76,25 @@ export async function guardarPasajeros(registroId, lista) {
     if (error) return { error }
   }
 
-  for (const p of conNombre.filter(p => p.id)) {
-    const { error } = await supabase
-      .from('pasajeros')
-      .update(aFilaDeBase(p, registroId))
-      .eq('id', p.id)
+  /**
+   * Los que ya existían, en **una sola llamada**.
+   *
+   * Antes era un `update` por persona dentro de un `for`, y en serie: guardar
+   * un grupo de veintiocho eran veintiocho viajes al servidor, uno detrás de
+   * otro, cada vez que se tocaba «Guardar» — aunque no hubiera cambiado un
+   * solo nombre. En la oficina eso son segundos; con la señal de La Bodeguita,
+   * bastante más.
+   *
+   * `upsert` sobre la llave primaria hace lo mismo que hacían los updates:
+   * choca por `id` y actualiza. No puede crear nada por accidente, porque
+   * todos estos ids salieron de la base.
+   */
+  const existentes = conNombre
+    .filter(p => p.id)
+    .map(p => ({ id: p.id, ...aFilaDeBase(p, registroId) }))
+
+  if (existentes.length) {
+    const { error } = await supabase.from('pasajeros').upsert(existentes, { onConflict: 'id' })
     if (error) return { error }
   }
 
