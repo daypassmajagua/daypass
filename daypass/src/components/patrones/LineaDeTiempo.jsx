@@ -73,7 +73,9 @@ export default function LineaDeTiempo({
                       )}
                       aria-hidden="true"
                     />
-                    <time className="text-[13px] text-tinta-2 tabular shrink-0 w-14 pt-0.5">
+                    {/* 4.5rem y no 3.5: «9:05 a. m.» se partía en dos líneas y
+                        el texto de al lado quedaba descuadrado. */}
+                    <time className="text-[13px] text-tinta-2 tabular shrink-0 w-[4.5rem] pt-0.5">
                       {momento(e.cuando, agruparPor)}
                     </time>
                     <div className="min-w-0 flex-1">
@@ -163,7 +165,11 @@ function momento(cuando, por) {
     if (!conHora) return ''
     const d = new Date(s)
     if (Number.isNaN(d.getTime())) return ''
+    // `es-CO` escribe «9:05 a. m.» con espacios adentro. Se juntan: en una
+    // columna estrecha esos dos espacios son una línea de más.
     return d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+      .replace(/\s+/g, ' ')
+      .replace(/(\d)\s?([ap])\.\s?m\./i, '$1 $2.m.')
   }
 
   const [, m, dia] = s.slice(0, 10).split('-')

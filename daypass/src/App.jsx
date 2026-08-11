@@ -52,6 +52,7 @@ const Metas = lazy(() => import('./pages/Metas'))
 const FichaPlan = lazy(() => import('./pages/FichaPlan'))
 const Turnos = lazy(() => import('./pages/Turnos'))
 const Mensajes = lazy(() => import('./pages/Mensajes'))
+const Actividad = lazy(() => import('./pages/Actividad'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -332,6 +333,18 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Mensajes />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* La bitácora entera. Es la vista general de lo que las fichas
+            muestran por registro. */}
+        <Route
+          path="/config/actividad"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Actividad />
               </AppLayout>
             </ProtectedRoute>
           }

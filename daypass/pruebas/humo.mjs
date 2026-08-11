@@ -45,6 +45,7 @@ const RUTAS = [
   ['/config/operacion', 'Config · Operación', /Canales|Países/i],
   ['/config/turnos', 'Turnos',              /Turnos[\s\S]*lun/i],
   ['/config/mensajes', 'Mensajes',          /Así le llega[\s\S]*manifiesto/i],
+  ['/config/actividad', 'Actividad',        /Actividad[\s\S]*tarifa/i],
   ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/metas',     'Metas',               /meta|comisi/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],

@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Plus, Trash2, UtensilsCrossed } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { formatCurrency, classNames, hoyLocal } from '../lib/utils'
+import { fraseDe, esSensible } from '../lib/bitacora'
 import { Ficha, DondeSeUsa, LineaDeTiempo, Esqueleto, EstadoError } from '../components/patrones'
 import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
@@ -36,9 +37,6 @@ const CATEGORIAS = [
   'corporativo', 'grupo_neto', 'almuerzo_sin_transporte', 'guia',
   'solo_transporte', 'blue_dive',
 ].map(c => ({ value: c, label: c.replace(/_/g, ' ') }))
-
-/** Desde cuándo la base guarda quién hizo cada cosa (migración 024). */
-const HAY_FIRMA_DESDE = '2026-08-10'
 
 export default function FichaPlan() {
   const { id } = useParams()
@@ -182,12 +180,14 @@ export default function FichaPlan() {
         <LineaDeTiempo
           eventos={historia.map(b => ({
             cuando: b.ocurrido_at,
-            texto: textoDeBitacora(b),
+            texto: fraseDe(b),
             quien: b.nombre,
-            destacado: b.accion === 'cambiar_tarifa',
+            destacado: esSensible(b.accion),
           }))}
           agruparPor="mes"
-          desdeCuandoHayFirma={HAY_FIRMA_DESDE}
+          // Sin aviso de «antes no se guardaba quién»: eso vale para las
+          // tablas a las que la 024 les puso columnas, no para la bitácora,
+          // que lleva el nombre desde la 015 y no lo deja en null.
           vacio={{
             titulo: 'Sin cambios registrados',
             detalle: 'Cuando alguien cambie el precio de este plan, queda aquí con su nombre y la hora.',
@@ -353,15 +353,5 @@ function Platos({ planId, platos, nivel, onCambio }) {
   )
 }
 
-/** La bitácora guarda el qué; aquí se cuenta como frase. */
-function textoDeBitacora(b) {
-  if (b.accion === 'cambiar_tarifa') {
-    const antes = b.detalle?.antes || {}
-    const ahora = b.detalle?.ahora || {}
-    const cambios = Object.keys(ahora)
-      .filter(k => String(antes[k]) !== String(ahora[k]))
-      .map(k => `${k.replace(/_/g, ' ')}: ${formatCurrency(Number(antes[k] || 0))} → ${formatCurrency(Number(ahora[k] || 0))}`)
-    return cambios.length ? `Cambió la tarifa — ${cambios.join(' · ')}` : 'Cambió la tarifa'
-  }
-  return b.accion.replace(/_/g, ' ')
-}
+// La traducción de la bitácora vive en `lib/bitacora.js`: la usan esta ficha y
+// la pantalla de Actividad, y estaba escrita dos veces.

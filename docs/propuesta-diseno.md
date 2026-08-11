@@ -452,8 +452,16 @@ globalmente y se queda así.
      - Los correos se agrupan **por propósito y no por organización**, porque la pregunta real
        es «¿a dónde sale el manifiesto?». Sin correo de manifiesto la sección lo dice en coral:
        es lo único de aquí que puede detener un zarpe.
-   - Falta: **actividad** (la bitácora completa, filtrable) y las fichas de lancha, empleado y
-     temporada.
+   - ✅ **Actividad** *(hecho)*. La bitácora entera, filtrable por acción y por persona con
+     `FiltroBarra`, que existía desde que se extrajeron los diez patrones y solo usaba Config.
+     Se destaca solo lo que mueve plata o cambia las reglas —tarifas, ajustes, pagos anulados—;
+     un cierre de zarpe es la operación funcionando.
+     - Y una corrección: la línea de tiempo **anunciaba un corte de firma que ahí no existe**.
+       El aviso de «antes de la 024 no se guardaba quién» vale para las tablas a las que esa
+       migración les puso columnas, pero `bitacora.nombre` es NOT NULL desde la 015. Inventarle
+       una laguna a un dato completo es peor que no explicar nada. El corte sí es real en
+       `cambios_estado`, y ahí se sigue diciendo.
+   - Falta: las fichas de lancha, empleado y temporada.
 8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).

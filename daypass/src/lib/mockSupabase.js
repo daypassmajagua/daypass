@@ -649,7 +649,38 @@ const STORE = {
       { fecha: d(3), tipo: 'isla',         user_id: 'mock-isla' },
     ]
   })(),
-  bitacora: [],
+  /**
+   * Unas cuantas anotaciones, para que Actividad se pueda ver.
+   *
+   * Con `nombre` congelado, que es como lo guarda la 015: si la persona cambia
+   * de nombre —o se va— la línea sigue diciendo quién fue. La última dice
+   * «alguien», que es el respaldo real de `nombre_de_quien_actua()` cuando la
+   * cuenta no tenía perfil: no es un hueco, es lo que la base guardó.
+   */
+  bitacora: (() => {
+    const cuando = (dias, hora) => `${daysAgo(dias)}T${hora}:00Z`
+    return [
+      { id: 1, ocurrido_at: cuando(0, '14:05'), nombre: 'Andrés Villamizar', rol: 'gerencia',
+        accion: 'cambiar_tarifa', entidad: 'planes', entidad_id: 'p-rack-g', fecha_op: null,
+        detalle: { plan: 'Rack Gold',
+          antes: { adulto_baja: 398889, adulto_alta: 443444, nino_baja: 214009, nino_alta: 224422 },
+          ahora: { adulto_baja: 415000, adulto_alta: 443444, nino_baja: 214009, nino_alta: 224422 } } },
+      { id: 2, ocurrido_at: cuando(1, '09:12'), nombre: 'Daniela Restrepo', rol: 'asesora',
+        accion: 'cerrar_zarpe', entidad: 'zarpes', entidad_id: 'z-1', fecha_op: daysAgo(1), detalle: {} },
+      { id: 3, ocurrido_at: cuando(1, '08:40'), nombre: 'Daniela Restrepo', rol: 'asesora',
+        accion: 'mover_tiquetes', entidad: 'tiquetes_lotes', entidad_id: 'l-1', fecha_op: daysAgo(1),
+        detalle: { cantidad: 200, motivo: 'compra al parque' } },
+      { id: 4, ocurrido_at: cuando(3, '16:30'), nombre: 'Camila Pedraza', rol: 'asesora_comercial',
+        accion: 'anular_pago', entidad: 'pagos', entidad_id: 'pg-9', fecha_op: null,
+        detalle: { valor: 830000 } },
+      { id: 5, ocurrido_at: cuando(6, '11:02'), nombre: 'Andrés Villamizar', rol: 'gerencia',
+        accion: 'cambiar_ajuste', entidad: 'ajustes', entidad_id: 'hora_regreso', fecha_op: null,
+        detalle: { clave: 'hora_regreso', antes: '15:00', ahora: '15:30' } },
+      // De antes de la 024, cuando el nombre salía del correo de la cuenta.
+      { id: 6, ocurrido_at: '2026-08-02T10:15:00Z', nombre: 'alguien', rol: null,
+        accion: 'cerrar_zarpe', entidad: 'zarpes', entidad_id: 'z-0', fecha_op: '2026-08-02', detalle: {} },
+    ]
+  })(),
   // Las constantes de la operación (regla 22). Sin esta tabla la demo mostraba
   // siempre los valores de respaldo y cambiar un ajuste no hacía nada.
   ajustes: [

@@ -117,6 +117,12 @@ export const SECCIONES_CONFIG = {
     ruta: '/usuarios',
     icono: 'UserCog',
   },
+  actividad: {
+    etiqueta: 'Actividad',
+    porque: 'Quién cambió qué y cuándo. Consultar no deja rastro; cambiar una tarifa, sí.',
+    ruta: '/config/actividad',
+    icono: 'History',
+  },
   reportes: {
     etiqueta: 'Reportes al sistema',
     porque: 'Lo que el equipo reporta cuando algo no sirve.',
@@ -138,14 +144,14 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'actividad', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
   directora: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'actividad', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
@@ -155,7 +161,9 @@ export const POR_ROL = {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
     // Los mensajes son suyos: es ella quien los manda sesenta veces al mes.
-    config: ['equipo', 'turnos', 'agencias', 'mensajes', 'operacion', 'reportes'],
+    // Actividad porque la 024 le abrió la bitácora: cierra días y mueve
+    // inventario, y no poder ver su propio rastro es un candado sin puerta.
+    config: ['equipo', 'turnos', 'agencias', 'mensajes', 'operacion', 'actividad', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
@@ -173,7 +181,7 @@ export const POR_ROL = {
   gerencia: {
     home: '/informes',
     menu: ['/cartera', '/informes'],
-    config: ['turnos', 'planes', 'temporadas', 'usuarios', 'reportes'],
+    config: ['turnos', 'planes', 'temporadas', 'usuarios', 'actividad', 'reportes'],
     extra: ['/historial', '/clientes', '/metas'],
   },
 
