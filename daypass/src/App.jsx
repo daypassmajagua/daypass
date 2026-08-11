@@ -54,6 +54,7 @@ const Turnos = lazy(() => import('./pages/Turnos'))
 const Mensajes = lazy(() => import('./pages/Mensajes'))
 const Actividad = lazy(() => import('./pages/Actividad'))
 const FichaCatalogo = lazy(() => import('./pages/FichaCatalogo'))
+const Estilo = lazy(() => import('./pages/Estilo'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -357,6 +358,18 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <FichaCatalogo />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* El sistema visual, en una página. No cuelga de Configuración
+            porque no configura nada: describe. */}
+        <Route
+          path="/estilo"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Estilo />
               </AppLayout>
             </ProtectedRoute>
           }

@@ -123,6 +123,14 @@ export const SECCIONES_CONFIG = {
     ruta: '/config/actividad',
     icono: 'History',
   },
+  // Solo super_admin: es herramienta de quien mantiene el sistema, no de quien
+  // lo usa. A Daniela una página de muestrarios solo le ocuparía sitio.
+  estilo: {
+    etiqueta: 'El sistema',
+    porque: 'Los tokens, los primitivos y los patrones. Antes de inventar algo, mirar si ya está.',
+    ruta: '/estilo',
+    icono: 'Palette',
+  },
   reportes: {
     etiqueta: 'Reportes al sistema',
     porque: 'Lo que el equipo reporta cuando algo no sirve.',
@@ -144,7 +152,7 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'actividad', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'actividad', 'estilo', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 

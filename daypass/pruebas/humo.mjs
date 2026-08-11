@@ -46,6 +46,9 @@ const RUTAS = [
   ['/config/turnos', 'Turnos',              /Turnos[\s\S]*lun/i],
   ['/config/mensajes', 'Mensajes',          /Así le llega[\s\S]*manifiesto/i],
   ['/config/actividad', 'Actividad',        /Actividad[\s\S]*tarifa/i],
+  // `/estilo` es de super_admin y el humo corre como directora: se comprueba
+  // que rebote a Hoy, que es lo que tiene que hacer con quien no es.
+  ['/estilo',    'El sistema (rebota)',  /Hoy|reserva/i],
   ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/metas',     'Metas',               /meta|comisi/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],

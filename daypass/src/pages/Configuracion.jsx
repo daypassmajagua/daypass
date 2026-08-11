@@ -1,6 +1,7 @@
 import { Link, useParams, Navigate } from 'react-router-dom'
 import {
-  Ship, Building2, Tag, CalendarDays, Mail, History, Settings, UserCog, LifeBuoy, ChevronRight,
+  Ship, Building2, Tag, CalendarDays, Mail, History, Palette,
+  Settings, UserCog, LifeBuoy, ChevronRight,
 } from 'lucide-react'
 import { usePerfil } from '../hooks/usePerfil'
 import { seccionesDe } from '../lib/navegacion'
@@ -26,7 +27,7 @@ import Config from './Config'
  * restringido.
  */
 
-const ICONOS = { Ship, Building2, Tag, CalendarDays, Mail, History, Settings, UserCog, LifeBuoy }
+const ICONOS = { Ship, Building2, Tag, CalendarDays, Mail, History, Palette, Settings, UserCog, LifeBuoy }
 
 /**
  * Qué catálogos trae cada sección, y con qué encabezado.

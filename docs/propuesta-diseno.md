@@ -561,7 +561,28 @@ finge saber lo demás. Esa es la razón de que se llame así y no «en la isla»
     - Y los ingresos salen de `avance_metas`, que suma con `valor_a_cobrar()`. **Nace sin la
       trampa de `total_calculado`**, que le pone precio a una cortesía, a un huésped de
       alojamiento y a un empleado. Informes todavía la tiene: es el paso 12.
-11. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
+11. ✅ **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin. *(hecho)*
+
+    > **No cambia cómo se ve nada.** Sirve para una sola pregunta, la que aparece al construir
+    > una pantalla nueva: *«¿esto ya existe, y cómo se llama?»*. Sin un sitio donde mirar, la
+    > respuesta es inventarlo — y así fue como Config e Informes acumularon juntas 99 clases
+    > `gray-*` y 20 colores escritos a mano.
+
+    - **Los tokens se leen del CSS, no se copian.** Una guía con la lista a mano envejece
+      —alguien agrega un color, nadie lo agrega aquí— y una guía que miente es peor que ninguna:
+      la gente deja de creerle y vuelve a inventar. Salen 55 tokens en 11 familias.
+    - Dos cosas que solo se vieron al mirarla:
+      - La primera versión leía **cero tokens**. Tailwind 4 compila `@theme` dentro de un
+        `@layer`, y el recorrido se quedaba en las reglas de primer nivel. Ahora baja por los
+        grupos.
+      - Y después salían **doscientos**: la paleta de fábrica de Tailwind vive en el mismo
+        `:root`. Enterraba el sistema del hotel entre morados y fucsias, y eso no es solo ruido
+        — **una guía que enseña `purple-400` está invitando a usarlo**. Se filtran las escalas
+        de fábrica, menos `blue`, que este sistema sobreescribe a propósito.
+    - **El selector de modo cambia el modo de verdad**, no una simulación: es el mismo
+      `data-modo` del iPad del muelle. Así se ve si algo se rompe a 20 px antes de que se rompa
+      en la isla. Un `scale` habría mentido justo en lo que importa: cómo se reparte el texto
+      cuando crece.
 12. ✅ **Informes deja de mentirle a gerencia**, y sobraba un componente. *(hecho)*
 
     - **`total_calculado` → `valor_a_cobrar()`.** Era lo importante de este paso y era un error
