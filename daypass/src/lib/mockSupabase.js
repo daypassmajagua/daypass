@@ -606,8 +606,40 @@ const STORE = {
       })(),
       activo: true,
     },
+    /**
+     * El resto del equipo. No estaban, y sin ellos los turnos no se podían
+     * probar: un desplegable de «quién cubre el embarque» con una sola opción
+     * no es una decisión. Los nombres son los que ya aparecían en
+     * `vendida_por` de las reservas de muestra, así que la demo cuadra
+     * consigo misma.
+     */
+    { user_id: 'mock-dani',  nombre: 'Daniela Restrepo',  rol: 'asesora',           activo: true },
+    { user_id: 'mock-vale',  nombre: 'Valentina Ospina',  rol: 'asesora_comercial', activo: true },
+    { user_id: 'mock-cami',  nombre: 'Camila Pedraza',    rol: 'asesora_comercial', activo: true },
+    { user_id: 'mock-isla',  nombre: 'Yeison Padilla',    rol: 'admin_isla',        activo: true },
+    { user_id: 'mock-geren', nombre: 'Andrés Villamizar', rol: 'gerencia',          activo: true },
   ],
-  guardias: [],
+
+  /**
+   * Unos turnos puestos y otros no, a propósito: el calendario solo se
+   * entiende cuando se ven las dos cosas al tiempo — los días repartidos y los
+   * huecos de los días que sí tienen gente.
+   */
+  guardias: (() => {
+    const d = n => {
+      const [a, m, dd] = hoyLocal().split('-').map(Number)
+      return aFechaLocal(new Date(a, m - 1, dd + n))
+    }
+    return [
+      { fecha: d(0), tipo: 'embarque',     user_id: 'mock-dani' },
+      { fecha: d(0), tipo: 'recibimiento', user_id: 'mock-vale' },
+      { fecha: d(0), tipo: 'isla',         user_id: 'mock-isla' },
+      { fecha: d(1), tipo: 'embarque',     user_id: 'mock-cami' },
+      { fecha: d(1), tipo: 'isla',         user_id: 'mock-isla' },
+      // d(2) queda vacío a propósito: es el hueco que el calendario marca.
+      { fecha: d(3), tipo: 'isla',         user_id: 'mock-isla' },
+    ]
+  })(),
   bitacora: [],
   // Las constantes de la operación (regla 22). Sin esta tabla la demo mostraba
   // siempre los valores de respaldo y cambiar un ajuste no hacía nada.
@@ -1962,6 +1994,12 @@ class QB {
         if (!['bitacora', 'cambios_estado', 'embarques', 'firmas', 'tickets'].includes(this._table)) {
           row.creado_por = MOCK_SESSION.user.id
           row.actualizado_por = MOCK_SESSION.user.id
+        }
+
+        // Y el de la 030, con el nombre del negocio: quién repartió el turno.
+        if (this._table === 'guardias') {
+          row.asignada_por = MOCK_SESSION.user.id
+          row.asignada_at = new Date().toISOString()
         }
         if (this._table === 'registros') {
           row.generada_por = MOCK_SESSION.user.id

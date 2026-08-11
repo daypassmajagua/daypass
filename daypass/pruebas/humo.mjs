@@ -43,6 +43,7 @@ const RUTAS = [
   // pide el nombre y también «Platos», que es la parte que solo existe aquí.
   ['/config/planes/p-rack-g', 'Ficha · plan', /Rack Gold[\s\S]*Platos/i],
   ['/config/operacion', 'Config · Operación', /Canales|Países/i],
+  ['/config/turnos', 'Turnos',              /Turnos[\s\S]*lun/i],
   ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/metas',     'Metas',               /meta|comisi/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],

@@ -423,7 +423,25 @@ globalmente y se queda así.
      no tenía estado, y el primer clic la habría sacado de la isla desde un formulario. Ahora,
      cuando el estado lo puso la operación, se muestra como dato y se dice quién lo mueve.
 7. **El resto del CMS** — lancha, empleado y temporada con la misma ficha, y las tres secciones
-   que faltan: **turnos primero**, porque sin ellos la Fase 6 no arranca.
+   que faltan.
+
+   - ✅ **Turnos y guardias** *(hecho)*. Un calendario del mes, un toque por día, y el día abre
+     en el panel lateral con sus tres turnos. **Cada turno se guarda al elegirlo**: asignar es
+     una decisión suelta, no un formulario, y quien reparte el mes hace veinte seguidas — la
+     barra de guardado es para lo que se edita en conjunto.
+     - **Coral solo donde hay algo que hacer**: gente confirmada y nadie en embarque, porque sin
+       quien embarque la lancha no sale. Un día sin reservas se queda en gris, y **lo que ya pasó
+       nunca se marca** — el 4 de agosto no se puede repartir, y un mes en coral por días
+       cerrados enseña a ignorar el coral.
+     - Los permisos de la pantalla son los de la 015, dichos otra vez: la isla la asigna la
+       dirección; embarque y recibimiento se los reparten las asesoras.
+   - Y una trampa del esquema que cerró la **030**: `guardias` tenía **dos columnas de autoría**
+     —`asignada_por`, con el nombre del negocio y siempre vacía, y `creado_por`, sellada por la
+     024 pero con el nombre del sistema—. Una columna que se llama como la pregunta y siempre
+     responde null es peor que no tenerla. Ahora el servidor sella la que mejor se llama, y el
+     panel dice quién puso a cada quien.
+   - Falta: **destinatarios y mensajes** (`organizacion_correos`, de la 020) y **actividad** (la
+     bitácora completa, filtrable).
 8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).

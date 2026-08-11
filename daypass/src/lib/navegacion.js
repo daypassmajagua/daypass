@@ -72,6 +72,15 @@ export const SECCIONES_CONFIG = {
     ruta: '/equipo',
     icono: 'Ship',
   },
+  // Va de segundas, justo detrás del equipo: es la sección que se toca cada
+  // semana, no cada temporada. Y sin ella la Fase 6 no arranca — las
+  // notificaciones se enrutan al turno, no a la persona.
+  turnos: {
+    etiqueta: 'Turnos y guardias',
+    porque: 'Quién está en el muelle y en la isla cada día. El turno habilita, el rol no cambia.',
+    ruta: '/config/turnos',
+    icono: 'CalendarDays',
+  },
   agencias: {
     etiqueta: 'Agencias y organizaciones',
     porque: 'Con quién trata el hotel: agencias, operadores, aliados e instituciones.',
@@ -123,14 +132,14 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
   directora: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
@@ -139,7 +148,7 @@ export const POR_ROL = {
   asesora: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'agencias', 'operacion', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'operacion', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
@@ -157,7 +166,7 @@ export const POR_ROL = {
   gerencia: {
     home: '/informes',
     menu: ['/cartera', '/informes'],
-    config: ['planes', 'temporadas', 'usuarios', 'reportes'],
+    config: ['turnos', 'planes', 'temporadas', 'usuarios', 'reportes'],
     extra: ['/historial', '/clientes', '/metas'],
   },
 
@@ -169,7 +178,9 @@ export const POR_ROL = {
   asesora_comercial: {
     home: '/',
     menu: ['/', '/reservas', '/embarque'],
-    config: ['agencias', 'reportes'],
+    // Turnos porque puede tomar y ceder los de muelle: es su propia agenda,
+    // no la de otro (la política `guardias_escritura` de la 015 la deja).
+    config: ['turnos', 'agencias', 'reportes'],
     extra: ['/nuevo', '/editar', '/historial', '/clientes'],
   },
 

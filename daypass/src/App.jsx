@@ -50,6 +50,7 @@ const Cartera = lazy(() => import('./pages/Cartera'))
 const Clientes = lazy(() => import('./pages/Clientes'))
 const Metas = lazy(() => import('./pages/Metas'))
 const FichaPlan = lazy(() => import('./pages/FichaPlan'))
+const Turnos = lazy(() => import('./pages/Turnos'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -294,6 +295,29 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Configuracion />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* Los turnos son un calendario, no un catálogo: no pasan por `Config`.
+            El mes va en la dirección para que «los turnos de septiembre» sea
+            un enlace que se pueda mandar. */}
+        <Route
+          path="/config/turnos"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Turnos />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/config/turnos/:mes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Turnos />
               </AppLayout>
             </ProtectedRoute>
           }
