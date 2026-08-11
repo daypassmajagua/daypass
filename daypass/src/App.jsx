@@ -51,6 +51,7 @@ const Clientes = lazy(() => import('./pages/Clientes'))
 const Metas = lazy(() => import('./pages/Metas'))
 const FichaPlan = lazy(() => import('./pages/FichaPlan'))
 const Turnos = lazy(() => import('./pages/Turnos'))
+const Mensajes = lazy(() => import('./pages/Mensajes'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -318,6 +319,19 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Turnos />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* Destinatarios y mensajes: tampoco es un catálogo. Son dos textos y
+            una lista de correos, y comparten pantalla porque responden la
+            misma pregunta — a quién le llega qué. */}
+        <Route
+          path="/config/mensajes"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Mensajes />
               </AppLayout>
             </ProtectedRoute>
           }

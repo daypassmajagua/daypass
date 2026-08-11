@@ -567,7 +567,16 @@ const STORE = {
   vinculos:   [],
   etiquetas:  [],
   persona_etiquetas: [],
-  organizacion_correos: [],
+  /**
+   * A dónde salen los correos. El de la Capitanía es el que importa: es a
+   * donde va el manifiesto, y sin él no se zarpa. Los otros dos están para que
+   * se vean los tres propósitos en la pantalla.
+   */
+  organizacion_correos: [
+    { id: 'oc-1', organizacion_id: 'or-1', correo: 'manifiestos@dimar.mil.co', proposito: 'manifiesto', activo: true },
+    { id: 'oc-2', organizacion_id: 'ag-1', correo: 'facturacion@aviatur.com', proposito: 'facturacion', activo: true },
+    { id: 'oc-3', organizacion_id: 'ag-6', correo: 'scarter@hotelbeds.com', proposito: 'general', activo: true },
+  ],
   clientes:   [],
   registros:  buildRegistros(),
   pasajeros:  [],
@@ -649,6 +658,28 @@ const STORE = {
     { clave: 'cocina_cierra_hora',  valor: '08:30', descripcion: 'Hora en que cocina revisa.' },
     { clave: 'hora_regreso',        valor: '15:30', descripcion: 'Hora del zarpe de regreso.' },
     { clave: 'edad_max_infante',    valor: '3',     descripcion: 'Hasta qué edad cuenta como infante.' },
+
+    // Los mensajes al cliente (031). Estaban escritos en `enlaceReserva.js`,
+    // que es lo que la regla 22 prohíbe: cambiar una coma era un despliegue.
+    { clave: 'hotel_nombre',  valor: 'Hotel San Pedro de Majagua', descripcion: 'Cómo se nombra el hotel en los mensajes.' },
+    { clave: 'muelle_nombre', valor: 'muelle de La Bodeguita',     descripcion: 'De dónde sale la lancha.' },
+    {
+      clave: 'mensaje_invitacion',
+      valor: '¡Hola {nombre}! 🌊\n\n' +
+        'Tu Day Tour en el Hotel San Pedro de Majagua es el {fecha}.\n\n' +
+        'Antes de venir necesitamos el nombre y el documento de cada persona: la Capitanía de Puerto lo exige para poder zarpar. ' +
+        'Ahí mismo eliges el almuerzo y confirmas tu asistencia:\n{enlace}\n\n' +
+        'Al terminar recibes tu pase para el muelle. ¡Nos vemos en las Islas del Rosario!',
+      descripcion: 'El WhatsApp que se manda al crear la reserva.',
+    },
+    {
+      clave: 'mensaje_pase',
+      valor: '¡Hola {nombre}! 🌊\n\n' +
+        'Todo listo para tu Day Tour del {fecha}.\n\n' +
+        'Aquí está tu pase para presentar en el muelle:\n{enlace}\n\n' +
+        'Te esperamos en el muelle de La Bodeguita. ¡Nos vemos!',
+      descripcion: 'El WhatsApp que se manda después del cierre, con el pase.',
+    },
   ],
   documentos_legales: [
     { id: 'doc-es-1', tipo: 'exoneracion', version: 1, idioma: 'es',
@@ -1697,6 +1728,7 @@ class QB {
     this._insertPayload = null
     this._updatePayload = null
     this._selectCalled = false
+    this._onConflict = null
   }
 
   select(_, opts = {}) {
@@ -1717,10 +1749,20 @@ class QB {
     return this
   }
 
-  /** Reenviar la cola del iPad no debe duplicar hechos. */
-  upsert(data, _opciones) {
+  /**
+   * Reenviar la cola del iPad no debe duplicar hechos.
+   *
+   * Con `onConflict` se comporta como en Postgres: si ya hay una fila con esas
+   * columnas, se actualiza en vez de agregar otra. Sin esto, guardar dos veces
+   * el mismo ajuste dejaba dos filas con la misma clave y la demo empezaba a
+   * mentir despacio — que es la peor forma de mentir.
+   */
+  upsert(data, opciones = {}) {
     this._op = 'insert'
     this._insertPayload = Array.isArray(data) ? data : [data]
+    this._onConflict = opciones.onConflict
+      ? String(opciones.onConflict).split(',').map(c => c.trim())
+      : null
     return this
   }
 
@@ -1976,6 +2018,20 @@ class QB {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
+        // `upsert(..., { onConflict })`: si ya existe la fila con esas
+        // columnas, se actualiza. Va antes que la comprobación del id porque
+        // el conflicto que importa es el que declaró quien llamó.
+        if (this._onConflict) {
+          const choca = (STORE[this._table] || []).find(
+            x => this._onConflict.every(c => String(x[c]) === String(item[c]))
+          )
+          if (choca) {
+            Object.assign(choca, item, { updated_at: new Date().toISOString() })
+            emitirCambio(this._table, 'UPDATE', choca)
+            return choca
+          }
+        }
+
         // Y la clave primaria sigue siendo única. Reenviar la cola dos veces
         // devuelve la fila que ya estaba, igual que hace arriba con el
         // client_id de los embarques: no duplica y no falla.

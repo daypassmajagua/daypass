@@ -440,8 +440,20 @@ globalmente y se queda así.
      024 pero con el nombre del sistema—. Una columna que se llama como la pregunta y siempre
      responde null es peor que no tenerla. Ahora el servidor sella la que mejor se llama, y el
      panel dice quién puso a cada quien.
-   - Falta: **destinatarios y mensajes** (`organizacion_correos`, de la 020) y **actividad** (la
-     bitácora completa, filtrable).
+   - ✅ **Destinatarios y mensajes** *(hecho)*. Y lo que apareció al ir a construirla es más
+     grave que la sección que faltaba: **los dos mensajes que se le mandan al cliente estaban
+     escritos en el código**, con el nombre del hotel y el del muelle adentro. Es la regla 22
+     textual, y no por purismo — cambiarle una coma al WhatsApp que se manda sesenta veces al
+     mes era una tarea de programación y un despliegue. La **031** los mueve a `ajustes` con el
+     texto idéntico, palabra por palabra: cambia quién los puede cambiar, no lo que recibe el
+     cliente.
+     - **Se editan con el resultado a la vista.** Una plantilla con marcas entre llaves es
+       código para quien la ve por primera vez; al lado va el mensaje ya armado.
+     - Los correos se agrupan **por propósito y no por organización**, porque la pregunta real
+       es «¿a dónde sale el manifiesto?». Sin correo de manifiesto la sección lo dice en coral:
+       es lo único de aquí que puede detener un zarpe.
+   - Falta: **actividad** (la bitácora completa, filtrable) y las fichas de lancha, empleado y
+     temporada.
 8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
 9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).

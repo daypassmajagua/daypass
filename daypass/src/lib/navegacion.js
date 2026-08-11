@@ -99,6 +99,12 @@ export const SECCIONES_CONFIG = {
     ruta: '/config/temporadas',
     icono: 'CalendarDays',
   },
+  mensajes: {
+    etiqueta: 'Destinatarios y mensajes',
+    porque: 'Lo que el cliente recibe por WhatsApp y a dónde salen los correos del hotel.',
+    ruta: '/config/mensajes',
+    icono: 'Mail',
+  },
   operacion: {
     etiqueta: 'Ajustes de la operación',
     porque: 'Hora de zarpe, cierre de cocina, modo del aparato, canales y países.',
@@ -132,14 +138,14 @@ export const POR_ROL = {
   super_admin: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
   directora: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'operacion', 'usuarios', 'reportes'],
+    config: ['equipo', 'turnos', 'agencias', 'planes', 'temporadas', 'mensajes', 'operacion', 'usuarios', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
@@ -148,7 +154,8 @@ export const POR_ROL = {
   asesora: {
     home: '/',
     menu: ['/', '/reservas', '/embarque', '/isla', '/folios', '/cartera', '/informes'],
-    config: ['equipo', 'turnos', 'agencias', 'operacion', 'reportes'],
+    // Los mensajes son suyos: es ella quien los manda sesenta veces al mes.
+    config: ['equipo', 'turnos', 'agencias', 'mensajes', 'operacion', 'reportes'],
     extra: ['/nuevo', '/editar', '/cerrar', '/historial', '/cocina', '/clientes', '/metas'],
   },
 
