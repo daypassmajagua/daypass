@@ -46,7 +46,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   const [programando, setProgramando] = useState(false)
   const [preparando, setPreparando] = useState(null)
 
-  if (cargando) return <p className="text-[18px] text-sol-tinta-2 p-6">Buscando los zarpes del día…</p>
+  if (cargando) return <p className="text-[1.125rem] text-sol-tinta-2 p-6">Buscando los zarpes del día…</p>
 
   // Antes de decir "no hay zarpes": si la consulta falló y tampoco hay copia
   // local, decirlo. "No hay" y "no pude cargar" llevan a decisiones opuestas.
@@ -55,10 +55,10 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   if (!zarpes.length) {
     return (
       <div className="p-6 flex flex-col items-start gap-4">
-        <p className="text-[20px] font-bold text-sol-tinta">
+        <p className="text-[1.25rem] font-bold text-sol-tinta">
           Todavía no hay zarpes programados para {fraseFecha(fecha).toLowerCase()}.
         </p>
-        <p className="text-[17px] text-sol-tinta-2">
+        <p className="text-[1.0625rem] text-sol-tinta-2">
           Se crea uno por cada lancha que tenga gente ese día.
         </p>
         <button
@@ -69,7 +69,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
             if (error) toast.error('No se pudieron programar. ' + error.message)
           }}
           disabled={programando}
-          className="rounded-2xl bg-blue-600 text-white text-[18px] font-bold px-6 min-h-[64px] disabled:opacity-50"
+          className="rounded-2xl bg-blue-600 text-white text-[1.125rem] font-bold px-6 min-h-[4rem] disabled:opacity-50"
         >
           {programando ? 'Programando…' : 'Programar los zarpes del día'}
         </button>
@@ -80,10 +80,10 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4 flex-wrap">
-        <h1 className="text-[24px] font-bold text-sol-tinta tracking-[-.02em]">
+        <h1 className="text-[1.5rem] font-bold text-sol-tinta tracking-[-.02em]">
           ¿Qué lancha vas a embarcar?
         </h1>
-        <Link to="/" className="text-[16px] font-bold text-blue-700 underline min-h-[44px] flex items-center">
+        <Link to="/" className="text-[1rem] font-bold text-blue-700 underline min-h-[2.75rem] flex items-center">
           Volver a la oficina
         </Link>
       </div>
@@ -95,16 +95,16 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
             <button
               onClick={() => onElegir(z)}
               className={classNames(
-                'flex-1 flex items-center gap-4 rounded-2xl px-5 min-h-[80px] text-left ring-2 transition-colors',
+                'flex-1 flex items-center gap-4 rounded-2xl px-5 min-h-[5rem] text-left ring-2 transition-colors',
                 cerrado ? 'bg-white ring-sol-linea-2' : 'bg-white ring-sol-tinta'
               )}
             >
               <Ship size={28} className={cerrado ? 'text-sol-tinta-3' : 'text-blue-700'} />
               <span className="flex-1 min-w-0">
-                <span className="block text-[20px] font-bold text-sol-tinta">
+                <span className="block text-[1.25rem] font-bold text-sol-tinta">
                   {z.lanchas?.nombre || 'Lancha'}
                 </span>
-                <span className="block text-[16px] text-sol-tinta-2">
+                <span className="block text-[1rem] text-sol-tinta-2">
                   {z.sentido === 'ida' ? 'Ida' : 'Regreso'}
                   {z.hora_programada ? ` · ${z.hora_programada.slice(0, 5)}` : ''}
                   {preparado && z.pilotos?.nombre ? ` · ${z.pilotos.nombre}` : ''}
@@ -114,7 +114,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
                 </span>
               </span>
               {cerrado
-                ? <span className="text-[16px] font-bold text-verde-600 shrink-0">Cerrado</span>
+                ? <span className="text-[1rem] font-bold text-verde-600 shrink-0">Cerrado</span>
                 : <ChevronLeft size={26} className="rotate-180 text-sol-tinta-3 shrink-0" />}
             </button>
 
@@ -122,7 +122,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
               <button
                 onClick={() => setPreparando(z)}
                 className={classNames(
-                  'shrink-0 w-[92px] rounded-2xl ring-2 text-[14px] font-bold flex flex-col items-center justify-center gap-1 transition-colors',
+                  'shrink-0 w-[5.75rem] rounded-2xl ring-2 text-[0.875rem] font-bold flex flex-col items-center justify-center gap-1 transition-colors',
                   preparado
                     ? 'bg-verde-50 ring-verde-500 text-verde-600'
                     : 'bg-white ring-sol-linea text-sol-tinta-2'
@@ -148,7 +148,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
             else toast.success('Regreso programado')
           }}
           disabled={programando}
-          className="self-start mt-2 flex items-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold px-6 min-h-[64px] disabled:opacity-50"
+          className="self-start mt-2 flex items-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[1.0625rem] font-bold px-6 min-h-[4rem] disabled:opacity-50"
         >
           <Anchor size={22} />
           {programando ? 'Programando…' : 'Programar el regreso'}
@@ -197,23 +197,23 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[22px] font-bold text-sol-tinta">{titulo}</h2>
+          <h2 className="text-[1.375rem] font-bold text-sol-tinta">{titulo}</h2>
           <button onClick={onCerrar} className="w-12 h-12 flex items-center justify-center rounded-xl text-sol-tinta-2">
             <X size={26} />
           </button>
         </div>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[16px] font-bold text-sol-tinta">Nombre</span>
+          <span className="text-[1rem] font-bold text-sol-tinta">Nombre</span>
           <input
             value={nombre} onChange={e => setNombre(e.target.value)} autoFocus
-            className="rounded-xl border-2 border-sol-linea px-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            className="rounded-xl border-2 border-sol-linea px-4 min-h-[3.75rem] text-[1.125rem] focus:outline-none focus:border-blue-600"
           />
         </label>
 
         <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3">
           <div className="flex flex-col gap-1.5 min-w-0">
-            <span className="text-[16px] font-bold text-sol-tinta">Tipo</span>
+            <span className="text-[1rem] font-bold text-sol-tinta">Tipo</span>
             <Select
               size="sol"
               value={tipoDocumento}
@@ -222,16 +222,16 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
             />
           </div>
           <label className="flex flex-col gap-1.5 min-w-0">
-            <span className="text-[16px] font-bold text-sol-tinta">Documento</span>
+            <span className="text-[1rem] font-bold text-sol-tinta">Documento</span>
             <input
               value={documento} onChange={e => setDocumento(e.target.value)} inputMode="numeric"
-              className="rounded-xl border-2 border-sol-linea px-4 min-h-[60px] text-[18px] tabular focus:outline-none focus:border-blue-600"
+              className="rounded-xl border-2 border-sol-linea px-4 min-h-[3.75rem] text-[1.125rem] tabular focus:outline-none focus:border-blue-600"
             />
           </label>
         </div>
 
         <div className="flex flex-col gap-1.5 min-w-0">
-          <span className="text-[16px] font-bold text-sol-tinta">País</span>
+          <span className="text-[1rem] font-bold text-sol-tinta">País</span>
           <Select
             size="sol"
             value={paisElegido}
@@ -245,7 +245,7 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <span className="text-[16px] font-bold text-sol-tinta">Categoría</span>
+          <span className="text-[1rem] font-bold text-sol-tinta">Categoría</span>
           <div className="grid grid-cols-2 gap-2">
             {/* Solo edades. `cortesia` estaba aquí y era el solapamiento que
                 deshizo la 020: por qué entró alguien lo dice el tipo de
@@ -258,7 +258,7 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
               <button
                 key={o.v} type="button" onClick={() => setCategoria(o.v)}
                 className={classNames(
-                  'rounded-xl min-h-[60px] text-[17px] font-bold ring-2 transition-colors',
+                  'rounded-xl min-h-[3.75rem] text-[1.0625rem] font-bold ring-2 transition-colors',
                   categoria === o.v ? 'bg-blue-600 text-white ring-blue-600' : 'bg-white text-sol-tinta ring-sol-linea'
                 )}
               >
@@ -281,7 +281,7 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
             })
             setGuardando(false)
           }}
-          className="rounded-2xl bg-blue-600 text-white text-[19px] font-bold min-h-[64px] disabled:opacity-40"
+          className="rounded-2xl bg-blue-600 text-white text-[1.1875rem] font-bold min-h-[4rem] disabled:opacity-40"
         >
           {cta}
         </button>
@@ -498,13 +498,13 @@ export default function Embarque() {
             <ChevronLeft size={28} />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-[20px] font-bold text-sol-tinta truncate">
+            <p className="text-[1.25rem] font-bold text-sol-tinta truncate">
               {zarpe.lanchas?.nombre}
               {esRegreso && <span className="text-blue-700"> · Regreso</span>}
               {zarpe.hora_programada && <span className="text-sol-tinta-2 font-normal"> · {zarpe.hora_programada.slice(0, 5)}</span>}
             </p>
             {cerrado && (
-              <p className="text-[15px] text-sol-tinta-2">
+              <p className="text-[0.9375rem] text-sol-tinta-2">
                 {esRegreso
                   ? `Regresó a las ${hora12(zarpe.hora_real_regreso) || ''}`
                   : `Zarpó a las ${hora12(zarpe.hora_real_salida) || ''}`}
@@ -518,11 +518,11 @@ export default function Embarque() {
               En el regreso "faltan" quiere decir que se quedaron en la isla,
               que es otra cosa muy distinta y por eso se pinta en rojo. */}
           <div className="text-right shrink-0">
-            <p className="text-[34px] leading-none font-bold text-sol-tinta tabular">
+            <p className="text-[2.125rem] leading-none font-bold text-sol-tinta tabular">
               {contador.embarcados}<span className="text-sol-tinta-3">/{contador.esperados}</span>
             </p>
             <p className={classNames(
-              'text-[15px] font-bold',
+              'text-[0.9375rem] font-bold',
               esRegreso && contador.faltan > 0 ? 'text-alarma-700' : 'text-sol-tinta-2'
             )}>
               {contador.faltan > 0
@@ -538,7 +538,7 @@ export default function Embarque() {
         {grupoResaltado && (
           <button
             onClick={() => setGrupoResaltado(null)}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-blue-50 ring-2 ring-blue-600 text-blue-700 text-[17px] font-bold min-h-[56px]"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-blue-50 ring-2 ring-blue-600 text-blue-700 text-[1.0625rem] font-bold min-h-[3.5rem]"
           >
             <X size={20} />
             Ver toda la lancha otra vez
@@ -552,7 +552,7 @@ export default function Embarque() {
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             placeholder="Buscar por nombre o documento"
-            className="w-full rounded-2xl border-2 border-sol-linea bg-white pl-13 pr-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            className="w-full rounded-2xl border-2 border-sol-linea bg-white pl-13 pr-4 min-h-[3.75rem] text-[1.125rem] focus:outline-none focus:border-blue-600"
             style={{ paddingLeft: '3.25rem' }}
           />
           {busqueda && (
@@ -571,7 +571,7 @@ export default function Embarque() {
         {!cerrado && (
           <button
             onClick={() => setLectorAbierto(true)}
-            className="shrink-0 w-[72px] min-h-[60px] rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta flex items-center justify-center"
+            className="shrink-0 w-[4.5rem] min-h-[3.75rem] rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta flex items-center justify-center"
             aria-label="Leer el pase con la cámara"
           >
             <QrCode size={28} />
@@ -592,15 +592,15 @@ export default function Embarque() {
           return (
             <section key={g.registro.id}>
               <div className="flex items-center gap-3 flex-wrap mb-2">
-                <h2 className="text-[18px] font-bold text-sol-tinta flex-1 min-w-0 truncate">{quien}</h2>
-                <span className="text-[16px] font-bold tabular text-sol-tinta-2 shrink-0">
+                <h2 className="text-[1.125rem] font-bold text-sol-tinta flex-1 min-w-0 truncate">{quien}</h2>
+                <span className="text-[1rem] font-bold tabular text-sol-tinta-2 shrink-0">
                   {g.embarcados}/{g.filas.length}
                 </span>
                 {!cerrado && pendientes > 0 && (
                   <button
                     onClick={() => embarcarTodos(g)}
                     disabled={marcandoGrupo}
-                    className="shrink-0 rounded-xl bg-sol-tinta text-white text-[15px] font-bold px-4 min-h-[48px] disabled:opacity-40"
+                    className="shrink-0 rounded-xl bg-sol-tinta text-white text-[0.9375rem] font-bold px-4 min-h-[3rem] disabled:opacity-40"
                   >
                     {esRegreso
                       ? `Bajar los ${pendientes} que faltan`
@@ -632,7 +632,7 @@ export default function Embarque() {
                         onClick={() => alTocar(f)}
                         disabled={cerrado}
                         className={classNames(
-                          'flex-1 min-w-0 flex items-center gap-4 rounded-2xl px-5 min-h-[64px] text-left ring-2 transition-colors',
+                          'flex-1 min-w-0 flex items-center gap-4 rounded-2xl px-5 min-h-[4rem] text-left ring-2 transition-colors',
                           embarcado ? 'bg-verde-500 ring-verde-500'
                             : noLlego ? 'bg-white ring-sol-linea opacity-60'
                             : 'bg-white ring-sol-tinta'
@@ -647,14 +647,14 @@ export default function Embarque() {
 
                         <span className="flex-1 min-w-0">
                           <span className={classNames(
-                            'block text-[18px] font-bold truncate',
+                            'block text-[1.125rem] font-bold truncate',
                             embarcado ? 'text-white' : 'text-sol-tinta'
                           )}>
                             {f.nombre}
                           </span>
                           {(f.documento || f.categoria) && (
                             <span className={classNames(
-                              'block text-[15px] tabular truncate',
+                              'block text-[0.9375rem] tabular truncate',
                               embarcado ? 'text-white/85' : 'text-sol-tinta-2'
                             )}>
                               {[f.documento, f.categoria !== 'adulto' ? f.categoria : null]
@@ -664,12 +664,12 @@ export default function Embarque() {
                         </span>
 
                         {reciente && (
-                          <span className="shrink-0 flex items-center gap-1.5 text-white text-[15px] font-bold">
+                          <span className="shrink-0 flex items-center gap-1.5 text-white text-[0.9375rem] font-bold">
                             <Undo2 size={18} /> Toca para deshacer
                           </span>
                         )}
                         {noLlego && (
-                          <span className="shrink-0 text-[15px] font-bold text-sol-tinta-2">No llegó</span>
+                          <span className="shrink-0 text-[0.9375rem] font-bold text-sol-tinta-2">No llegó</span>
                         )}
                       </button>
 
@@ -679,11 +679,11 @@ export default function Embarque() {
                       {puedeNombrarse && (
                         <button
                           onClick={() => setNombrando(f)}
-                          className="shrink-0 w-[76px] rounded-2xl bg-white ring-2 ring-sol-linea text-sol-tinta-2 flex flex-col items-center justify-center gap-0.5"
+                          className="shrink-0 w-[4.75rem] rounded-2xl bg-white ring-2 ring-sol-linea text-sol-tinta-2 flex flex-col items-center justify-center gap-0.5"
                           aria-label={`Ponerle nombre a la ${f.nombre.toLowerCase()}`}
                         >
                           <UserPlus size={20} />
-                          <span className="text-[13px] font-bold">Nombre</span>
+                          <span className="text-[0.8125rem] font-bold">Nombre</span>
                         </button>
                       )}
                     </li>
@@ -696,15 +696,15 @@ export default function Embarque() {
 
         {walkIns.length > 0 && (
           <section>
-            <h2 className="text-[18px] font-bold text-sol-tinta mb-2">
+            <h2 className="text-[1.125rem] font-bold text-sol-tinta mb-2">
               Sin reserva ({walkIns.length})
             </h2>
             <ul className="flex flex-col gap-1.5">
               {walkIns.map(w => (
                 <li key={w.client_id}
-                  className="flex items-center gap-4 rounded-2xl px-5 min-h-[64px] bg-verde-500 ring-2 ring-verde-500">
+                  className="flex items-center gap-4 rounded-2xl px-5 min-h-[4rem] bg-verde-500 ring-2 ring-verde-500">
                   <Check size={22} className="text-white shrink-0" strokeWidth={3.5} />
-                  <span className="text-[18px] font-bold text-white truncate">{w.nombre}</span>
+                  <span className="text-[1.125rem] font-bold text-white truncate">{w.nombre}</span>
                 </li>
               ))}
             </ul>
@@ -712,7 +712,7 @@ export default function Embarque() {
         )}
 
         {grupos.every(g => !g.filas.filter(coincide).length) && (
-          <p className="text-[18px] text-sol-tinta-2 py-8 text-center">
+          <p className="text-[1.125rem] text-sol-tinta-2 py-8 text-center">
             {busqueda ? 'Nadie coincide con esa búsqueda.' : 'Esta lancha no tiene gente asignada.'}
           </p>
         )}
@@ -725,7 +725,7 @@ export default function Embarque() {
         {!cerrado && (
           <button
             onClick={() => setWalkInAbierto(true)}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold min-h-[64px]"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[1.0625rem] font-bold min-h-[4rem]"
           >
             <UserPlus size={22} />
             Sin reserva
@@ -734,17 +734,17 @@ export default function Embarque() {
         <button
           onClick={imprimirManifiesto}
           disabled={manifiesto.total === 0}
-          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[17px] font-bold min-h-[64px] disabled:opacity-40"
+          className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-white ring-2 ring-sol-tinta text-sol-tinta text-[1.0625rem] font-bold min-h-[4rem] disabled:opacity-40"
         >
           <FileText size={22} />
           <span>Manifiesto</span>
-          <span className="tabular text-[15px] font-black">{manifiesto.total}</span>
+          <span className="tabular text-[0.9375rem] font-black">{manifiesto.total}</span>
         </button>
         {!cerrado && (
           <button
             onClick={cerrarZarpe}
             disabled={cerrando}
-            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 text-white text-[17px] font-bold min-h-[64px] disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-blue-600 text-white text-[1.0625rem] font-bold min-h-[4rem] disabled:opacity-50"
           >
             <Anchor size={22} />
             {cerrando ? 'Cerrando…' : esRegreso ? 'Cerrar el regreso' : 'Cerrar el zarpe'}
@@ -761,24 +761,24 @@ export default function Embarque() {
       {confirmandoFaltantes && contador.faltan > 0 && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
-            <h2 className="text-[24px] font-bold text-alarma-700">
+            <h2 className="text-[1.5rem] font-bold text-alarma-700">
               {plural(contador.faltan, 'persona no ha bajado', 'personas no han bajado')}
             </h2>
-            <p className="text-[17px] text-sol-tinta">
+            <p className="text-[1.0625rem] text-sol-tinta">
               Si cierras ahora quedan registradas como que se quedaron en la isla.
               Revisa la lista antes: es lo único del día que no se arregla después.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setConfirmandoFaltantes(false)}
-                className="flex-1 rounded-2xl bg-blue-600 text-white text-[18px] font-bold min-h-[64px]"
+                className="flex-1 rounded-2xl bg-blue-600 text-white text-[1.125rem] font-bold min-h-[4rem]"
               >
                 Volver a revisar
               </button>
               <button
                 onClick={cerrarZarpe}
                 disabled={cerrando}
-                className="flex-1 rounded-2xl bg-white ring-2 ring-alarma-700 text-alarma-700 text-[18px] font-bold min-h-[64px] disabled:opacity-50"
+                className="flex-1 rounded-2xl bg-white ring-2 ring-alarma-700 text-alarma-700 text-[1.125rem] font-bold min-h-[4rem] disabled:opacity-50"
               >
                 {cerrando ? 'Cerrando…' : 'Cerrar así'}
               </button>
@@ -792,7 +792,7 @@ export default function Embarque() {
       {!cerrado && faltasDelManifiesto.length > 0 && (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+92px)] inset-x-0 z-20 px-4">
           <p className={classNames(
-            'mx-auto max-w-2xl rounded-xl px-4 py-2 text-[15px] font-bold text-center ring-2',
+            'mx-auto max-w-2xl rounded-xl px-4 py-2 text-[0.9375rem] font-bold text-center ring-2',
             manifiesto.piloto
               ? 'bg-aviso-50 ring-aviso-300 text-aviso-700'
               : 'bg-alarma-50 ring-alarma-300 text-alarma-900'

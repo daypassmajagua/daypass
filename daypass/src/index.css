@@ -123,6 +123,36 @@
   box-sizing: border-box;
 }
 
+/**
+ * El modo del aparato se vuelve tamaño, aquí y no en cada pantalla.
+ *
+ * `ProveedorModo` marca `<html data-modo="…">`. Estas dos líneas son todo lo
+ * que hace falta para que cambiar el modo cambie de verdad lo que se ve:
+ * **16 px en oficina, 18 en el muelle, 20 en la isla**, que es lo que
+ * `lib/modo.js` viene declarando desde que existe y que hasta ahora no movía
+ * un pixel.
+ *
+ * ── Por qué en la raíz y no pantalla por pantalla ───────────────────────────
+ *
+ * Porque así escala **todo junto**: texto, alturas de fila, separaciones y
+ * radios, que en Tailwind ya van en `rem`. Ajustar solo el texto deja botones
+ * de 44 px con letra de 20, que es peor que no ajustar nada — la letra crece y
+ * el objetivo del dedo no.
+ *
+ * Lo único que no escala solo son los tamaños escritos en píxeles a mano. Por
+ * eso las tres pantallas de afuera —Embarque, Isla y Almuerzos— pasaron a
+ * `rem`: estaban dimensionadas a mano antes de que el modo existiera.
+ *
+ * ── Por qué en porcentaje ───────────────────────────────────────────────────
+ *
+ * `112.5%` es 18 px sobre los 16 de fábrica, pero si alguien subió el tamaño
+ * de letra del navegador, sube con él. Un `font-size: 18px` fijo le pisaría
+ * esa decisión, y en un iPad a pleno sol esa decisión suele estar tomada por
+ * algo.
+ */
+html[data-modo='muelle'] { font-size: 112.5%; }
+html[data-modo='isla']   { font-size: 125%; }
+
 body {
   margin: 0;
   background: var(--color-fondo);

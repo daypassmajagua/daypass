@@ -45,17 +45,17 @@ function Linea({ nombre, detalle, cantidad, tono = 'normal' }) {
       (coral ? 'bg-coral-50' : 'odd:bg-fondo')
     }>
       <span className="min-w-0">
-        <span className={'block text-[19px] font-bold ' + (coral ? 'text-coral-700' : 'text-tinta')}>
+        <span className={'block text-[1.1875rem] font-bold ' + (coral ? 'text-coral-700' : 'text-tinta')}>
           {nombre}
         </span>
         {detalle && (
-          <span className={'block text-[14px] ' + (coral ? 'text-coral-700/80' : 'text-tinta-2')}>
+          <span className={'block text-[0.875rem] ' + (coral ? 'text-coral-700/80' : 'text-tinta-2')}>
             {detalle}
           </span>
         )}
       </span>
       <span className={
-        'shrink-0 tabular text-[34px] leading-none font-bold ' +
+        'shrink-0 tabular text-[2.125rem] leading-none font-bold ' +
         (coral ? 'text-coral-700' : 'text-tinta')
       }>
         {cantidad}
@@ -150,7 +150,7 @@ export default function Cocina() {
         <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-tinta-2 text-[17px]">No hay pasadía este día.</p>
+          <p className="text-tinta-2 text-[1.0625rem]">No hay pasadía este día.</p>
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
@@ -161,11 +161,11 @@ export default function Cocina() {
 
           <Card className="p-5">
             <div className="flex items-center justify-between gap-3 mb-4">
-              <h2 className="flex items-center gap-2 text-[17px] font-bold text-tinta">
+              <h2 className="flex items-center gap-2 text-[1.0625rem] font-bold text-tinta">
                 <ChefHat size={20} className="text-blue-700" />
                 Almuerzos
               </h2>
-              <span className="tabular text-[40px] leading-none font-bold text-tinta">
+              <span className="tabular text-[2.5rem] leading-none font-bold text-tinta">
                 {cocina.totalAlmuerzos}
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function Cocina() {
               )}
             </ul>
 
-            <p className="flex items-center gap-2 text-[14px] text-tinta-2 mt-4">
+            <p className="flex items-center gap-2 text-[0.875rem] text-tinta-2 mt-4">
               <Users size={15} className="shrink-0" />
               {cocina.totalAdultos} adultos · {cocina.totalNinos} niños · {cocina.totalCortesias} cortesías
               {cocina.totalInfantes > 0 &&
@@ -205,7 +205,7 @@ export default function Cocina() {
           </Card>
 
           <Card className="p-5">
-            <h2 className="flex items-center gap-2 text-[17px] font-bold text-tinta mb-3">
+            <h2 className="flex items-center gap-2 text-[1.0625rem] font-bold text-tinta mb-3">
               <TriangleAlert size={20} className={cocina.restricciones.length ? 'text-coral-600' : 'text-tinta-2'} />
               Restricciones alimentarias
             </h2>
@@ -213,8 +213,8 @@ export default function Cocina() {
               <ul className="flex flex-col gap-2">
                 {cocina.restricciones.map(p => (
                   <li key={p.id} className="rounded-xl bg-coral-50 px-4 py-3">
-                    <p className="text-[19px] font-bold text-coral-700">{p.nota}</p>
-                    <p className="text-[14px] text-coral-700/80">
+                    <p className="text-[1.1875rem] font-bold text-coral-700">{p.nota}</p>
+                    <p className="text-[0.875rem] text-coral-700/80">
                       {p.nombre}
                       {p.plato && ` · pidió ${p.plato}`}
                     </p>
@@ -222,13 +222,13 @@ export default function Cocina() {
                 ))}
               </ul>
             ) : (
-              <p className="text-[15px] text-tinta-2">
+              <p className="text-[0.9375rem] text-tinta-2">
                 Ninguna reportada. Solo aparecen las de pasajeros con nombre cargado.
               </p>
             )}
           </Card>
 
-          <p className="text-[13px] text-tinta-2 text-center">
+          <p className="text-[0.8125rem] text-tinta-2 text-center">
             Se actualiza solo · última lectura {hora12(actualizado)}
           </p>
         </div>

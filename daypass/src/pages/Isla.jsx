@@ -57,8 +57,8 @@ function Fila({ registro, tiposIngreso }) {
   return (
     <li className={classNames('rounded-2xl px-5 py-4 ring-2 flex flex-wrap items-center gap-x-5 gap-y-3', estilo.caja)}>
       <div className="min-w-0 flex-1">
-        <p className="text-[20px] font-bold text-sol-tinta truncate">{quien}</p>
-        <p className="text-[16px] text-sol-tinta-2">
+        <p className="text-[1.25rem] font-bold text-sol-tinta truncate">{quien}</p>
+        <p className="text-[1rem] text-sol-tinta-2">
           {plural(pax, 'persona', 'personas')}
           {registro.lanchas?.nombre ? ` · ${registro.lanchas.nombre}` : ''}
           {registro.nombre_grupo ? ` · ${registro.nombre_pasajero}` : ''}
@@ -66,7 +66,7 @@ function Fila({ registro, tiposIngreso }) {
         {/* Quien todavía no aparece embarcado casi siempre es que el muelle no
             cerró el zarpe, no que no vino. Se dice, sin alarmar. */}
         {!llego && (
-          <p className="text-[15px] text-aviso-700 flex items-center gap-1.5 mt-0.5">
+          <p className="text-[0.9375rem] text-aviso-700 flex items-center gap-1.5 mt-0.5">
             <AlertTriangle size={15} className="shrink-0" />
             El muelle todavía no confirmó que embarcó
           </p>
@@ -76,18 +76,18 @@ function Fila({ registro, tiposIngreso }) {
       <div className="shrink-0 text-right">
         {cobro.folio ? (
           <>
-            <p className="text-[13px] font-bold uppercase tracking-wide text-sol-tinta-3">
+            <p className="text-[0.8125rem] font-bold uppercase tracking-wide text-sol-tinta-3">
               {cobro.titulo}
             </p>
-            <p className="text-[30px] leading-tight font-black font-mono text-sol-tinta">
+            <p className="text-[1.875rem] leading-tight font-black font-mono text-sol-tinta">
               {cobro.folio}
             </p>
           </>
         ) : (
           <>
-            <p className={classNames('text-[19px] font-bold', estilo.texto)}>{cobro.titulo}</p>
+            <p className={classNames('text-[1.1875rem] font-bold', estilo.texto)}>{cobro.titulo}</p>
             {cobro.nota && (
-              <p className={classNames('text-[14px] max-w-[15rem]', estilo.texto, 'opacity-85')}>
+              <p className={classNames('text-[0.875rem] max-w-[15rem]', estilo.texto, 'opacity-85')}>
                 {cobro.nota}
               </p>
             )}
@@ -130,7 +130,7 @@ function EnLaIslaAhora({ conteo, mirado }) {
         tamano="lg"
       />
       {aparte.length > 0 && (
-        <p className="text-[13px] text-sol-tinta-2">{aparte.join(' · ')}, aparte</p>
+        <p className="text-[0.8125rem] text-sol-tinta-2">{aparte.join(' · ')}, aparte</p>
       )}
     </div>
   )
@@ -211,8 +211,8 @@ export default function Isla() {
       <header className="sticky top-0 z-30 bg-sol-fondo border-b-2 border-sol-linea-2 px-4 py-3 flex flex-col gap-3">
         <div className="flex items-center gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
-            <h1 className="text-[22px] font-bold text-sol-tinta">¿A qué cuenta va?</h1>
-            <p className="text-[16px] text-sol-tinta-2 first-letter:uppercase">
+            <h1 className="text-[1.375rem] font-bold text-sol-tinta">¿A qué cuenta va?</h1>
+            <p className="text-[1rem] text-sol-tinta-2 first-letter:uppercase">
               {fraseFecha(fechaActiva)}
             </p>
           </div>
@@ -231,7 +231,7 @@ export default function Isla() {
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             placeholder="Buscar por nombre, grupo o folio"
-            className="w-full rounded-2xl border-2 border-sol-linea bg-white pr-4 min-h-[60px] text-[18px] focus:outline-none focus:border-blue-600"
+            className="w-full rounded-2xl border-2 border-sol-linea bg-white pr-4 min-h-[3.75rem] text-[1.125rem] focus:outline-none focus:border-blue-600"
             style={{ paddingLeft: '3.25rem' }}
           />
           {busqueda && (
@@ -249,7 +249,7 @@ export default function Isla() {
             Zeus. Se avisa para que el mesero sepa por qué falta, no para
             alarmarlo. */}
         {sinFolio > 0 && (
-          <p className="text-[15px] font-bold text-aviso-700">
+          <p className="text-[0.9375rem] font-bold text-aviso-700">
             {plural(sinFolio, 'reserva todavía sin folio', 'reservas todavía sin folio')}
             {' — '}Daniela los va creando en Zeus durante la mañana.
           </p>
@@ -258,11 +258,11 @@ export default function Isla() {
 
       <main className="flex-1 px-4 py-4">
         {cargando ? (
-          <p className="text-[18px] text-sol-tinta-2 py-8">Buscando la lista del día…</p>
+          <p className="text-[1.125rem] text-sol-tinta-2 py-8">Buscando la lista del día…</p>
         ) : error ? (
           <EstadoError error={error} onReintentar={cargar} />
         ) : !lista.length ? (
-          <p className="text-[18px] text-sol-tinta-2 py-8 text-center">
+          <p className="text-[1.125rem] text-sol-tinta-2 py-8 text-center">
             {busqueda
               ? 'Nadie coincide con esa búsqueda.'
               : (

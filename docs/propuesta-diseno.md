@@ -352,6 +352,27 @@ globalmente y se queda así.
 > una duda porque dejó de ser una elección. Al absorberse en «Hoy» no hay pantalla nueva que
 > justificar ni ruta que mantener.
 
+### 6.4 · Lo que el regreso todavía no sabe hacer — **pendiente con Daniela**
+
+Salió al construir «en la isla ahora» (paso 8), y no es una decisión de diseño: **es una regla de
+operación que no está definida**. El regreso de hoy solo sabe registrar `desembarque` de quien
+subió por la mañana. Le faltan dos cosas, y las dos hay que preguntarlas antes de construirlas:
+
+- **Los empleados no salen igual que como entraron.** El zarpe de ida lleva su lista de equipo,
+  pero quién se devuelve esa tarde no tiene por qué ser la misma gente: alguien se queda de
+  guardia, alguien sube en el regreso. Hoy `zarpe_empleados` es una lista por zarpe y el regreso
+  hereda la de la ida sin confirmarla.
+- **En el regreso puede subir gente que no estaba en la ida.** Huéspedes de alojamiento que
+  terminan su estadía, sobre todo. Eso hoy no tiene dónde registrarse: `zarpe_alojamiento` existe
+  por zarpe, pero nadie lo llena en el muelle de vuelta.
+
+Las dos tienen la misma forma —**el regreso necesita su propia confirmación, no la copia de la
+ida**— y las dos afectan el manifiesto que exige la Capitanía, así que no se pueden resolver a
+ojo. Van con Daniela.
+
+Mientras tanto el número de la isla dice exactamente lo que puede afirmar —«de pasadía»— y no
+finge saber lo demás. Esa es la razón de que se llame así y no «en la isla».
+
 ---
 
 ## 7 · Orden de construcción (después del visto bueno)
@@ -496,8 +517,27 @@ globalmente y se queda así.
      es cero por definición, y una franja que arrastra un cero todo el día enseña a no mirarla.
    - `ContadorVivo` ganó su versión para fondo oscuro: sobre el navy de la franja los tonos de
      tinta dejaban la cifra invisible y la etiqueta legible, que es justo al revés.
-9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
-   pantallas del día a día).
+9. ✅ **El modo llega a Embarque e Isla** (unidades relativas). *(hecho)*
+
+   > **Resultó menos delicado de lo que temía, y por una razón que vale anotar:** el arreglo no
+   > estaba en las pantallas, estaba en la raíz. `lib/modo.js` venía declarando 16 · 18 · 20 px
+   > desde que existe y **no movía un pixel**; dos líneas de CSS sobre `html[data-modo]` lo
+   > conectan todo de una vez.
+
+   - **Escala desde la raíz y no pantalla por pantalla**, porque así crece todo junto: texto,
+     alturas de fila, separaciones y radios, que en Tailwind ya van en `rem`. Ajustar solo el
+     texto deja botones de 44 px con letra de 20 — la letra crece y el objetivo del dedo no, que
+     es peor que no ajustar nada.
+   - Lo único que no escalaba solo eran los **96 tamaños escritos a mano en píxeles** en
+     Embarque, Isla y Almuerzos: estaban puestos antes de que el modo existiera. Pasaron a `rem`.
+   - **En porcentaje y no en píxeles fijos**: `112.5%` es 18 px sobre los 16 de fábrica, pero si
+     alguien subió el tamaño de letra del navegador, sube con él. En un iPad a pleno sol esa
+     decisión suele estar tomada por algo.
+   - Y dos pruebas, porque esto se rompe en silencio: una estática que falla si vuelve a aparecer
+     un tamaño en píxeles en esas tres pantallas, y `npm run modos`, que mide la raíz y una fila
+     real en los tres modos y comprueba que **crezcan de verdad** — 105 → 118 → 131 px.
+   - Falta la otra mitad, que es del paso 10: `useMuestraDinero` sigue sin un solo uso. Cuando el
+     iPad del muelle abra «Hoy», los números de plata no se deberían pintar.
 10. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
 11. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
 12. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
