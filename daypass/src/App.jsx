@@ -49,6 +49,7 @@ const Reportes = lazy(() => import('./pages/Reportes'))
 const Cartera = lazy(() => import('./pages/Cartera'))
 const Clientes = lazy(() => import('./pages/Clientes'))
 const Metas = lazy(() => import('./pages/Metas'))
+const FichaPlan = lazy(() => import('./pages/FichaPlan'))
 
 // Desde el arranque: un error que ocurre antes de que alguien piense en
 // reportarlo es justamente el que hay que poder contar después.
@@ -281,6 +282,19 @@ export default function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Configuracion />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        {/* La ficha de un plan: un registro con dirección propia, no una
+            ventana emergente. Es el primero; van a seguir lancha, agencia y
+            persona por el mismo camino. */}
+        <Route
+          path="/config/planes/:id"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <FichaPlan />
               </AppLayout>
             </ProtectedRoute>
           }

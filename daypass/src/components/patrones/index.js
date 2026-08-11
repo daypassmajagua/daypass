@@ -39,3 +39,10 @@ export { default as EstadoError } from './EstadoError'
 // parecido porque no había ningún dato que cambiara solo. Lo estrena «en la
 // isla ahora» y lo van a usar la franja del día y el panorama.
 export { default as ContadorVivo } from './ContadorVivo'
+
+// Un registro deja de ser una fila y pasa a ser una página con historia. Los
+// dos van juntos: la ficha es dónde vive un registro, la línea de tiempo es lo
+// que le ha pasado. Los estrena el plan y los heredan persona, agencia,
+// reserva, lancha y empleado.
+export { default as Ficha, DondeSeUsa } from './Ficha'
+export { default as LineaDeTiempo } from './LineaDeTiempo'

@@ -222,7 +222,13 @@ export function puedeVer(rol, ruta) {
   const config = POR_ROL[rol]
   if (!config) return false
   // `/editar/:id` llega con el id pegado; `/config/planes` cuelga de `/config`.
-  const base = ruta.startsWith('/editar') ? '/editar' : ruta
+  // Y la ficha de un plan —`/config/planes/:id`— es la misma sección con un
+  // registro adentro: quien puede ver la sección puede ver sus fichas.
+  const base = ruta.startsWith('/editar')
+    ? '/editar'
+    : ruta.startsWith('/config/')
+      ? '/config/' + ruta.split('/')[2]
+      : ruta
   const permitidas = rutasDe(rol)
   if (permitidas.includes(base)) return true
   // Una sección de Configuración vale si su rol la tiene.

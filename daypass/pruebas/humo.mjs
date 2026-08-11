@@ -39,6 +39,9 @@ const RUTAS = [
   ['/cartera',   'Cartera',             /cobrar|Cartera/i],
   ['/config',    'Configuración',       /Configuraci/i],
   ['/config/agencias', 'Config · Agencias', /Agencias/i],
+  // La ficha de un plan: `p-rack-g` es Rack Gold en los datos de muestra. Se
+  // pide el nombre y también «Platos», que es la parte que solo existe aquí.
+  ['/config/planes/p-rack-g', 'Ficha · plan', /Rack Gold[\s\S]*Platos/i],
   ['/clientes',  'Clientes',            /cliente|venido/i],
   ['/metas',     'Metas',               /meta|comisi/i],
   ['/r/tokenquenoexiste0000000000000000000000000000', 'Check-in público', /./],

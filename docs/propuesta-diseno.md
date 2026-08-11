@@ -362,24 +362,38 @@ globalmente y se queda así.
 > deja ver enseguida si la estructura nueva aguanta.
 
 1. ✅ **La capa de respuesta** — sonidos WebAudio + las 4 animaciones + `ContadorVivo`. *(hecho)*
-2. **El lector QR continuo** con los cuatro veredictos. Va aquí porque estrena la capa anterior y
-   no depende de nada de lo demás.
-3. **La navegación nueva** (§9) — siete sustantivos, Configuración con secciones, y los siete
+2. ✅ **El lector QR continuo** con los cuatro veredictos. Va aquí porque estrena la capa anterior
+   y no depende de nada de lo demás. *(hecho)*
+3. ✅ **La navegación nueva** (§9) — siete sustantivos, Configuración con secciones, y los siete
    menús por rol. Es el paso que reacomoda las pantallas que ya existen; después de esto nada
-   vuelve a cambiar de sitio.
-4. **La búsqueda global** (§10) — sin ella el menú corto queda a medias. Encuentra también planes,
-   lanchas y empleados, así que de paso es la primera pieza del CMS.
-5. **Los perfiles y `LineaDeTiempo`** (§11) — primero reserva y persona, que son los dos que se
-   abren todos los días; agencia después.
-5b. **El CMS con fichas** (§10.5) — el mismo patrón aplicado a plan, lancha, empleado y temporada,
-   con «dónde se usa» y su historia. Y las tres secciones que faltan: **turnos primero**, porque
-   sin ellos la Fase 6 no arranca.
-6. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
-7. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
+   vuelve a cambiar de sitio. *(hecho)*
+> **La ficha se adelantó a la búsqueda, y no por gusto.** Buscar «Gold» tiene que llevar a algún
+> lado, y ese lado es la ficha del plan. Construir el buscador antes sería construir una puerta
+> antes que el cuarto. Además el patrón `Ficha` + `LineaDeTiempo` sirve para los seis casos —
+> persona, agencia, reserva, plan, lancha, empleado— así que se hace una vez y se usa seis.
+
+4. ✅ **`Ficha` y `LineaDeTiempo`** (§10.5, §11) — el patrón, estrenado en el plan: dos columnas,
+   dirección propia, barra de guardado que aparece sola, «dónde se usa» y su historia. *(hecho)*
+   Tres cosas aparecieron al construirlo y quedan anotadas:
+   - **Los platos no tenían pantalla.** `opciones_plato` existe desde la 007 y solo se podía
+     tocar por SQL — la regla 9 vivía en la base y en ninguna interfaz. Van en la ficha del plan
+     y no en una sección aparte: el plato pertenece al plan, y la estructura tiene que decirlo.
+   - **La historia de tarifas tampoco.** La 024 anota `cambiar_tarifa` con el antes y el después
+     de los cuatro precios; nadie lo mostraba. Ahora se lee como frases, no como JSON.
+   - **`puedeVer` no sabía de fichas.** Daba falso para `/config/planes/:id` porque comparaba la
+     ruta completa. Ahora una ficha hereda el permiso de su sección — quien puede ver planes
+     puede ver un plan.
+5. **La búsqueda global** (§10) — ya con dónde aterrizar. Encuentra personas, reservas, agencias,
+   planes, lanchas y empleados.
+6. **Los perfiles** (§11) — persona y reserva con el patrón ya hecho; agencia después.
+7. **El resto del CMS** — lancha, empleado y temporada con la misma ficha, y las tres secciones
+   que faltan: **turnos primero**, porque sin ellos la Fase 6 no arranca.
+8. **En la isla ahora** (isla + franja + su prueba con eventos derivados).
+9. **El modo llega a Embarque e Isla** (unidades relativas — el paso más delicado: son las
    pantallas del día a día).
-8. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
-9. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
-10. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
+10. **Hoy, en sus tres formas** — la de Daniela retocada y la de gerencia/directora (§3.3).
+11. **`/estilo`** — tokens, primitivos y patrones en los tres modos, solo super_admin.
+12. **Las tablas viejas adoptan los patrones** — Reservas (ya con Historial adentro) y Folios con
     `ListaDelDia` e `InsigniaEstado`; Informes se parte, absorbe Metas y **se corrige
     `total_calculado` → `valor_a_cobrar()`**.
 
@@ -596,6 +610,45 @@ volumen; nosotros necesitamos herramientas de consecuencia porque cada dato muev
 Lo que sí tomo de un SaaS grande, porque sirve a cualquier escala: **buscar dentro de cada lista**
 (útil desde diez elementos), **la ficha por registro**, **el rastro de cambios** y **«dónde se
 usa» antes de desactivar algo**.
+
+### Qué se toma de Shopify, en concreto
+
+Ya tomamos su estructura de navegación (§9). Para el CMS, lo que sirve es su **modelo de
+profundidad**, que son cinco movidas específicas:
+
+**1. Ficha con dirección propia, nunca un modal.** Shopify jamás edita un producto en una ventana
+emergente: abre `/products/:id`, una página entera que se puede compartir y volver a abrir. Eso es
+lo que hoy nos falta y es lo que más cambia la sensación de «producto pobre» a «producto serio».
+Y tiene una consecuencia práctica: **la búsqueda necesita dónde aterrizar**. Sin ficha con
+dirección, buscar «Gold» no puede llevar a ninguna parte.
+
+**2. Dos columnas: lo que la cosa ES, y en qué estado está.** La columna principal lleva el
+contenido editable; el riel derecho lleva el estado, la clasificación y las consecuencias. Para un
+plan: a la izquierda nombre, nivel, precios y **sus platos**; a la derecha si está activo, a qué
+temporada aplica y **dónde se usa**.
+
+**3. La barra de guardado que aparece sola.** Cuando hay cambios sin guardar, Shopify baja una
+barra arriba: *cambios sin guardar · Descartar · Guardar*. Es exactamente el mismo principio que
+acabamos de aplicar al indicador de sincronización —**el silencio es el estado sano, la barra
+aparece cuando hay algo que decir**— y confirma que ese cambio iba en la dirección correcta.
+
+Y trae una decisión de fondo: **una tarifa no se guarda sola.** Casi todo en DayPASS guarda al
+instante, y está bien: marcar un embarque tiene que ser un toque. Pero cambiar un precio merece un
+acto deliberado, con su descarte a la mano.
+
+**4. El estado dice su consecuencia, no su nombre.** Shopify no dice «Draft»: dice *este producto
+está oculto de todos los canales de venta*. Nuestro interruptor activo/inactivo hoy no dice nada.
+Debería decir: *no se puede elegir en reservas nuevas; las 47 que ya lo usan no cambian*.
+
+**5. Cada fila de la lista dice algo.** Una fila de producto en Shopify trae imagen, título,
+estado, inventario y tipo. Las nuestras traen nombre y una línea. Un plan puede decir: nivel,
+precio de temporada alta, y cuántas reservas lo usan. Eso es densidad con sentido, que es lo
+contrario de una lista pobre.
+
+**Lo que sigue sin entrar** —y esto no cambia con la referencia— son las herramientas de volumen:
+acciones masivas, paginación, importar por CSV, vistas de filtro guardadas. Shopify las tiene
+porque una tienda maneja diez mil productos; nosotros manejamos seis lanchas. Tomar su profundidad
+sin tomar su volumen es lo que hace que la referencia sirva en vez de disfrazar.
 
 ### Las tres secciones que faltan
 

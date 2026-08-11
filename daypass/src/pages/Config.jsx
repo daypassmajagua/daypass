@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Layers } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Layers, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { classNames, formatCurrency } from '../lib/utils'
 import Button from '../components/ui/Button'
@@ -43,6 +44,12 @@ const CATALOGOS = {
     tabla: 'planes',
     orden: 'nombre',
     campoActivo: 'activo',
+    /**
+     * El primer catálogo con ficha propia: la fila lleva a un lugar en vez de
+     * abrir una ventana. Los platos y la historia de precios no caben en un
+     * modal, y una dirección se puede compartir y buscar.
+     */
+    ficha: p => `/config/planes/${p.id}`,
     vacio: {
       titulo: 'Todavía no hay planes',
       detalle: 'El plan da la tarifa de cada reserva y decide qué platos se pueden elegir.',
@@ -180,7 +187,13 @@ function FilaCatalogo({ fila, config, onEditar, onEliminar, onAlternar }) {
       !activo && 'opacity-55'
     )}>
       <div className="min-w-0 flex-1">
-        <p className="font-bold text-[15px] text-tinta truncate">{vista.titulo}</p>
+        {config.ficha ? (
+          <Link to={config.ficha(fila)} className="font-bold text-[15px] text-tinta truncate block hover:text-blue-700">
+            {vista.titulo}
+          </Link>
+        ) : (
+          <p className="font-bold text-[15px] text-tinta truncate">{vista.titulo}</p>
+        )}
         {vista.detalle && <p className="text-[13px] text-tinta-2 truncate">{vista.detalle}</p>}
       </div>
 
@@ -214,13 +227,23 @@ function FilaCatalogo({ fila, config, onEditar, onEliminar, onAlternar }) {
               : <ToggleLeft size={20} className="text-tinta-2" />}
           </button>
         )}
-        <button
-          onClick={() => onEditar(fila)}
-          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"
-          aria-label={`Editar ${vista.titulo}`}
-        >
-          <Edit2 size={16} />
-        </button>
+        {config.ficha ? (
+          <Link
+            to={config.ficha(fila)}
+            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"
+            aria-label={`Abrir ${vista.titulo}`}
+          >
+            <ChevronRight size={18} />
+          </Link>
+        ) : (
+          <button
+            onClick={() => onEditar(fila)}
+            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"
+            aria-label={`Editar ${vista.titulo}`}
+          >
+            <Edit2 size={16} />
+          </button>
+        )}
         <button
           onClick={() => onEliminar(fila)}
           className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-peligro-500 rounded-xl hover:bg-peligro-50"
