@@ -787,6 +787,30 @@ tabla dice a dónde va cada uno; el análisis completo quedó en la conversació
 | 2 | El grueso es agencias, no individuales | **Flujo.** El formulario arranca hoy en individual; si el grueso es agencia, la agencia va primero y el tipo se deduce de ella (regla 23) | Ajuste de formulario, barato |
 | 5 | Daniela necesita ver los impuestos | **Por precisar con ella**: ¿el monto por reserva, el total del día para el muelle, o ambos? El valor del impuesto vive en `ajustes` (regla 22); falta mostrarlo multiplicado donde se cobra | Preguntar → ajuste chico |
 
+## El plan de automatizaciones (12 de agosto)
+
+El principio que lo ordena: **no obligar a nadie a cambiar cómo trabaja — hacer barato digerir lo
+que ya mandan.** En orden sugerido de ejecución: A2 → A1 → A4 → A5 → A3 → A6.
+
+| # | Automatización | Qué hace | Costo |
+|---|---|---|---|
+| **A1** | Pegar el WhatsApp → reserva prellenada | El mensaje de la agencia se pega tal cual y el formulario deduce pax, fecha, plan y agencia contra los catálogos; todo editable y con su «de dónde salió» (regla 23). También digiere el aviso de llegadas de alojamiento | Medio |
+| **A2** | La agencia primero, con memoria | Elegir la agencia deduce canal, tarifa (cuando exista el modelo de tipos), tipo grupo, y plan/forma de pago usuales desde su historial | Bajo |
+| **A3** | Escanear la cédula (PDF417) | Nombre + documento + categoría por fecha de nacimiento en un escaneo, en muelle y oficina. Prueba técnica en el iPad real antes de prometerla | Medio-alto |
+| **A4** | El enlace se manda solo | El servidor manda el enlace al crear la reserva (titular y/o agencia) y recuerda automático si faltan nombres y zarpa mañana. Reabre la decisión de Resend/WhatsApp API | Edge Function + proveedor |
+| **A5** | Walk-ins → reserva en un clic | Los «sin reserva» del día se agrupan y la oficina los convierte en reserva real. Cierra el ciclo de la reserva de las 2 a.m. | Bajo-medio |
+| **A6** | Fotos en los platos | `foto` en opciones_plato + Storage; se sube desde la ficha del plan, el check-in muestra tarjetas con foto. Comprimida al subir, carga tardía | Bajo-medio |
+
+**Sobre conectar el WhatsApp de la asesora a la plataforma — evaluado y descartado, que quede
+escrito por qué.** La app de WhatsApp Business no tiene API legítima: los puentes no oficiales
+arriesgan el número a un baneo, y ese número es el canal de ventas. La API oficial (Cloud API)
+exige migrar el número — dejaría de funcionar en su teléfono — y obligaría a construir un inbox
+completo para ~30 chats diarios. El valor se captura por partes sin riesgo: **A1** (la digitación),
+los deep links `wa.me` que ya existen (el «ver todo», desde DayPASS hacia el chat), y **A4 con un
+número dedicado del sistema** (el envío automático, sin tocar el número de ella). Si algún día el
+volumen lo pide, el camino queda abierto: Cloud API + inbox open source con el contexto de DayPASS.
+Esa decisión se toma ese día, con ese volumen.
+
 # Decisiones que no puedo tomar solo (Rafa)
 
 1. ~~**`mesero`**~~ ✅ **Decidido el 11 de agosto: se retira.** Migración **033 pendiente de
