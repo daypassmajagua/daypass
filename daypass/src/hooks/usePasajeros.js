@@ -9,23 +9,41 @@ import { supabase } from '../lib/supabase'
 export function usePasajeros(registroId) {
   const [pasajeros, setPasajeros] = useState([])
   const [cargando, setCargando] = useState(Boolean(registroId))
+  const [falloCarga, setFalloCarga] = useState(null)
 
-  // Sin setState síncrono: en una reserva nueva no hay nada que traer y el
-  // estado ya arranca vacío.
+  /**
+   * El error de esta consulta NO se puede tragar, y antes se tragaba.
+   *
+   * Si la carga falla, la pantalla pinta la lista **vacía** aunque los nombres
+   * existan en la base — y eso solo ya explica un «se borraron los nombres».
+   * Pero hay algo peor encadenado: `guardarPasajeros` borra lo que está en la
+   * base y no está en la lista. Guardar sobre una lista que se cargó mal
+   * borraría de verdad lo que la pantalla no alcanzó a mostrar. Un fallo de
+   * red se convertiría en pérdida de datos con el gesto más inocente que hay:
+   * tocar «Guardar cambios».
+   *
+   * Por eso el fallo se expone: la pantalla lo muestra y el guardado lo usa
+   * de candado.
+   */
   const recargar = useCallback(async () => {
     if (!registroId) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pasajeros')
       .select('*, paises (id, codigo, nombre)')
       .eq('registro_id', registroId)
       .order('created_at', { ascending: true })
-    setPasajeros(data || [])
+    if (error) {
+      setFalloCarga(error)
+    } else {
+      setFalloCarga(null)
+      setPasajeros(data || [])
+    }
     setCargando(false)
   }, [registroId])
 
   useEffect(() => { recargar() }, [recargar])
 
-  return { pasajeros, setPasajeros, cargando, recargar }
+  return { pasajeros, setPasajeros, cargando, falloCarga, recargar }
 }
 
 /** Campos que acepta la tabla; el resto (marcas del parser) no viaja a la base. */

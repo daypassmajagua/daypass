@@ -769,6 +769,24 @@ habrá un hallazgo que lo justifique, que es lo que este documento exige para to
 
 ---
 
+# Lo que dejó la reunión con Daniela y las asesoras (12 de agosto)
+
+Diez puntos, y conviene separarlos porque piden cosas distintas: **tres son fallas** (6, 9, 10),
+**dos son decisiones de modelo** (1, 4) y **cinco son de flujo y proceso** (2, 3, 5, 7, 8). La
+tabla dice a dónde va cada uno; el análisis completo quedó en la conversación del 12 de agosto.
+
+| # | Lo que dijeron | Qué es | A dónde va |
+|---|---|---|---|
+| 10 | Los nombres se borran al guardar | **Falla.** Dos hipótesis; el diagnóstico las separa. La de lectura ya quedó blindada: la carga de pasajeros tragaba el error y pintaba la lista vacía, y guardar encima **borraba en la base lo que la pantalla no mostró** | Blindaje hecho · `reunion_12ago_diagnostico.sql` bloque A/B/E |
+| 9 | No aparecen los almuerzos en el check-in | **Casi seguro datos, no código**: un plan sin filas en `opciones_plato` no pregunta plato (por diseño, para Diamond) — y un Gold sin platos cargados se ve idéntico. Los platos se cargan en la ficha del plan | Diagnóstico bloque C · catálogos (umbral A) |
+| 6 | No permite hacer el check-in, no envía el QR | **Cadena**: el QR aparece al completar, completar exige firmar, firmar exige `documentos_legales` vigente (regla 12). La otra mitad —«no envía»— es la decisión pendiente: el envío server-side (Resend/WhatsApp) se pospuso; hoy el enlace se manda a mano con el botón | Diagnóstico bloque D · revisar la prioridad de Resend |
+| 1 | Las agencias tienen tipos de precio (fidelidad, rack…) | **Decisión de modelo.** Propuesta: `tarifas` versionadas por plan × tipo de tarifa × temporada; la agencia apunta a su tipo (o convenio). La regla 4 queda intacta: el precio se congela al crear. La deducción de la regla 23 se completa: agencia → canal → **tarifa** | Migración nueva + E4; diseñar con la lista real de tipos que use el hotel |
+| 4 | La lancha se decide en el embarque, no antes | **Decisión de modelo chica.** La asignación al crear pasa a ser *plan*, no contrato: en el muelle, **«Mover a otra lancha»** por grupo (1 toque + elegir). El manifiesto refleja la lancha real — regla 3: la operación manda | E3 (embarque) |
+| 3, 8 | Agencias mandan «Rafael (x4)» sin nombres; llevar eso es complicado | **Flujo.** El mecanismo existe (plazas sin nombre + enlace + contador 3/24 + pendientes); lo que falta es el **tubo**: mandar el enlace de nombres **a la agencia** (no solo al titular), y la métrica de cumplimiento por agencia (perfil de agencia, E7) para la conversación con datos | E7 + enlace a agencia |
+| 7 | Alojamiento sin datos; ¿QR al llegar? «no llevan cel», «la tablet es tediosa» | **Flujo.** La lista la tiene quien ya la tiene: **recepción la saca de Zeus** y se **pega** en la preparación del zarpe (el pegado de lista ya existe para pasajeros; se extiende a alojados). El QR del lobby queda como camino opcional, nunca requisito — la misma regla 14 del muelle | E3 (pegar lista en PrepararZarpe) |
+| 2 | El grueso es agencias, no individuales | **Flujo.** El formulario arranca hoy en individual; si el grueso es agencia, la agencia va primero y el tipo se deduce de ella (regla 23) | Ajuste de formulario, barato |
+| 5 | Daniela necesita ver los impuestos | **Por precisar con ella**: ¿el monto por reserva, el total del día para el muelle, o ambos? El valor del impuesto vive en `ajustes` (regla 22); falta mostrarlo multiplicado donde se cobra | Preguntar → ajuste chico |
+
 # Decisiones que no puedo tomar solo (Rafa)
 
 1. ~~**`mesero`**~~ ✅ **Decidido el 11 de agosto: se retira.** Migración **033 pendiente de

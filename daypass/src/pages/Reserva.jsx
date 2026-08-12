@@ -188,7 +188,7 @@ export default function Reserva() {
   const [borradorRecuperado, setBorradorRecuperado] = useState(false)
   const yaRestaure = useRef(false)
 
-  const { pasajeros, setPasajeros } = usePasajeros(id)
+  const { pasajeros, setPasajeros, falloCarga: falloPasajeros, recargar: recargarPasajeros } = usePasajeros(id)
 
   const {
     register, handleSubmit, watch, setValue, control, reset,
@@ -397,14 +397,32 @@ export default function Reserva() {
     }
 
     if (registroId) {
-      // Solo al crear: en una edición, si ella quitó al titular de la lista
-      // fue a propósito y volver a meterlo sería pelear con ella.
-      const res = await guardarPasajeros(
-        registroId,
-        isEdit ? pasajeros : conTitular(data, pasajeros)
-      )
-      if (res.error) {
-        toast.error('La reserva quedó guardada, pero los nombres no. Vuelve a intentarlo desde la reserva.')
+      /**
+       * El candado del guardado a ciegas.
+       *
+       * Si la lista de pasajeros nunca llegó del servidor, la pantalla está
+       * vacía **sin que eso signifique que la reserva no tiene nombres** — y
+       * `guardarPasajeros` borra lo que no esté en la lista. Guardar en ese
+       * estado convertiría un fallo de red en una pérdida real de nombres.
+       * La reserva sí se guarda (arriba); lo que se congela es la lista.
+       */
+      if (isEdit && falloPasajeros) {
+        toast.error('La reserva se guardó, pero los nombres no se tocaron: la lista no había cargado.', {
+          description: 'Vuelve a abrir la reserva para verlos.',
+        })
+      } else {
+        // Solo al crear se siembra el titular: en una edición, si ella quitó
+        // al titular de la lista fue a propósito y volver a meterlo sería
+        // pelear con ella.
+        const res = await guardarPasajeros(
+          registroId,
+          isEdit ? pasajeros : conTitular(data, pasajeros)
+        )
+        if (res.error) {
+          toast.error('La reserva quedó guardada, pero los nombres no: ' + res.error.message, {
+            duration: 12000,
+          })
+        }
       }
     }
 
@@ -788,6 +806,19 @@ export default function Reserva() {
           <p className="text-sm text-tinta-2 -mt-2">
             Los nombres de quienes viajan. Puedes dejarlos para cuando la agencia te los mande.
           </p>
+          {/* Una lista que no cargó NO es una lista vacía, y confundirlas es
+              grave: sobre la vacía se puede trabajar; sobre la que no cargó,
+              cualquier guardado borraría nombres que sí existen. */}
+          {isEdit && falloPasajeros && (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-coral-50 px-4 py-3">
+              <p className="text-sm font-bold text-coral-700">
+                Los nombres de esta reserva no cargaron. Lo que ves abajo no es la lista real.
+              </p>
+              <Button type="button" variant="secondary" size="sm" onClick={recargarPasajeros}>
+                Volver a intentar
+              </Button>
+            </div>
+          )}
           <SeccionPasajeros
             plan={{
               adultos: Number(valores.adultos) || 0, ninos: Number(valores.ninos) || 0,
