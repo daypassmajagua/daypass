@@ -10,6 +10,9 @@ import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import Modal from '../components/ui/Modal'
 import DatePicker from '../components/ui/DatePicker'
+import BotonIcono from '../components/ui/BotonIcono'
+import Pestanas from '../components/ui/Pestanas'
+import Casilla from '../components/ui/Casilla'
 import PageHeader from '../components/layout/PageHeader'
 import HoraDeZarpe from '../components/config/HoraDeZarpe'
 import ModoDelAparato from '../components/config/ModoDelAparato'
@@ -226,41 +229,28 @@ function FilaCatalogo({ fila, config, onEditar, onEliminar, onAlternar }) {
 
       <div className="flex items-center gap-1 shrink-0">
         {config.campoActivo && (
-          <button
+          <BotonIcono
             onClick={() => onAlternar(fila)}
-            className="icono-tactil w-10 h-10 inline-flex items-center justify-center rounded-xl hover:bg-fondo"
-            aria-label={activo ? `Desactivar ${vista.titulo}` : `Activar ${vista.titulo}`}
-            title={activo ? 'Activo — tócalo para desactivar' : 'Desactivado'}
+            etiqueta={activo ? `Desactivar ${vista.titulo}` : `Activar ${vista.titulo}`}
+            titulo={activo ? 'Activo — tócalo para desactivar' : 'Desactivado'}
           >
             {activo
               ? <ToggleRight size={20} className="text-verde-500" />
               : <ToggleLeft size={20} className="text-tinta-2" />}
-          </button>
+          </BotonIcono>
         )}
         {config.ficha ? (
-          <Link
-            to={config.ficha(fila)}
-            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"
-            aria-label={`Abrir ${vista.titulo}`}
-          >
+          <BotonIcono as={Link} to={config.ficha(fila)} etiqueta={`Abrir ${vista.titulo}`}>
             <ChevronRight size={18} />
-          </Link>
+          </BotonIcono>
         ) : (
-          <button
-            onClick={() => onEditar(fila)}
-            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 rounded-xl hover:bg-blue-50"
-            aria-label={`Editar ${vista.titulo}`}
-          >
+          <BotonIcono onClick={() => onEditar(fila)} etiqueta={`Editar ${vista.titulo}`}>
             <Edit2 size={16} />
-          </button>
+          </BotonIcono>
         )}
-        <button
-          onClick={() => onEliminar(fila)}
-          className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-peligro-500 rounded-xl hover:bg-peligro-50"
-          aria-label={`Eliminar ${vista.titulo}`}
-        >
+        <BotonIcono tono="peligro" onClick={() => onEliminar(fila)} etiqueta={`Eliminar ${vista.titulo}`}>
           <Trash2 size={16} />
-        </button>
+        </BotonIcono>
       </div>
     </div>
   )
@@ -375,26 +365,12 @@ export default function Config({
 
       {/* Los catálogos. No es un filtro —no se puede "limpiar"— así que no usa
           FiltroBarra: sería forzar un patrón donde no encaja. */}
-      <div className={classNames(
-        'flex gap-1 bg-brand-50 rounded-xl p-1 mb-5 w-fit max-w-full overflow-x-auto',
-        claves.length < 2 && 'hidden'   // una pestaña sola no es una elección
-      )}>
-        {claves.map(k => (
-          <button
-            key={k}
-            onClick={() => setClave(k)}
-            aria-current={clave === k ? 'page' : undefined}
-            className={classNames(
-              'px-4 min-h-[40px] text-sm font-bold rounded-lg transition-colors whitespace-nowrap',
-              clave === k
-                ? 'bg-white text-tinta shadow-[0_1px_2px_rgba(22,24,44,.08)]'
-                : 'text-tinta-2 hover:text-tinta'
-            )}
-          >
-            {CATALOGOS[k].etiqueta}
-          </button>
-        ))}
-      </div>
+      <Pestanas
+        className="mb-5"
+        valor={clave}
+        onCambiar={setClave}
+        opciones={claves.map(k => ({ id: k, etiqueta: CATALOGOS[k].etiqueta }))}
+      />
 
       {conBuscador && (
         <div className="flex items-center gap-2 bg-white rounded-xl border border-linea px-3 mb-4">
@@ -520,20 +496,6 @@ const CATEGORIAS_PLAN = [
   'solo_transporte', 'blue_dive',
 ]
 
-function Casilla({ etiqueta, valor, onChange }) {
-  return (
-    <label className="flex items-center gap-2.5 text-[15px] text-tinta cursor-pointer min-h-[44px]">
-      <input
-        type="checkbox"
-        checked={valor !== false}
-        onChange={e => onChange(e.target.checked)}
-        className="w-5 h-5 accent-blue-600"
-      />
-      {etiqueta}
-    </label>
-  )
-}
-
 function CamposDe({ tabla, form, set }) {
   if (tabla === 'planes') {
     return (
@@ -566,7 +528,10 @@ function CamposDe({ tabla, form, set }) {
             <Input label="Niño · baja" type="number" value={form.precio_nino_baja ?? 0} onChange={e => set('precio_nino_baja', +e.target.value)} />
             <Input label="Niño · alta" type="number" value={form.precio_nino_alta ?? 0} onChange={e => set('precio_nino_alta', +e.target.value)} />
           </div>
-          <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activo} onChange={v => set('activo', v)} />
+          {/* `!== false` y no `!!`: un registro nuevo trae el campo en
+              `undefined` y nace **activo**. Con la comparación simple, cada
+              plan creado saldría desactivado sin que nadie lo pidiera. */}
+          <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activo !== false} onChange={v => set('activo', v)} />
         </SeccionFormulario>
       </>
     )
@@ -578,7 +543,7 @@ function CamposDe({ tabla, form, set }) {
         <Input label="Código" value={form.codigo || ''} onChange={e => set('codigo', e.target.value)} />
         <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
         <Input label="Capacidad" type="number" value={form.capacidad || ''} onChange={e => set('capacidad', +e.target.value)} />
-        <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activa} onChange={v => set('activa', v)} />
+        <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activa !== false} onChange={v => set('activa', v)} />
       </SeccionFormulario>
     )
   }
@@ -646,7 +611,7 @@ function CamposDe({ tabla, form, set }) {
       <Input label="Nombre" value={form.nombre || ''} onChange={e => set('nombre', e.target.value)} />
       <Input label="Contacto" value={form.contacto || ''} onChange={e => set('contacto', e.target.value)} />
       <Input label="Correo" type="email" value={form.email || ''} onChange={e => set('email', e.target.value)} />
-      <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activa} onChange={v => set('activa', v)} />
+      <Casilla etiqueta="Se puede elegir en reservas nuevas" valor={form.activa !== false} onChange={v => set('activa', v)} />
     </SeccionFormulario>
   )
 }

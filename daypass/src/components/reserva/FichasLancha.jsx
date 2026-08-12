@@ -7,6 +7,13 @@ import { classNames } from '../../lib/utils'
  * Asignar lancha es repartir cupo. Si va llena tiene que verse antes de
  * elegirla, no después de guardar. Elegir una llena no se bloquea —a veces
  * hay que sobrevender a propósito y ya se sabe— pero se avisa.
+ *
+ * **No usa `ui/TarjetaOpcion` a propósito**, aunque es el mismo gesto de elegir
+ * una entre pocas. Esa tarjeta lleva un dato secundario en una línea; esta
+ * lleva una barra de ocupación con tres estados de color —con cupo, justa,
+ * sobrecupo—, que es exactamente la información por la que existe. Meterla
+ * dentro del primitivo obligaría a abrirle un hueco de contenido libre, y un
+ * primitivo con hueco libre deja de ser un primitivo.
  */
 export default function FichasLancha({ lanchas, ocupacion, value, onChange, paxNuevos = 0, error }) {
   return (

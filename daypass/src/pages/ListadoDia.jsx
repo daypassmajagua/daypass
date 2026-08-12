@@ -23,6 +23,7 @@ import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
 import Select from '../components/ui/Select'
 import DateNav from '../components/ui/DateNav'
+import BotonIcono from '../components/ui/BotonIcono'
 import PageHeader from '../components/layout/PageHeader'
 import { useMuestraDinero } from '../lib/modo'
 
@@ -510,22 +511,21 @@ export default function ListadoDia() {
                             <div className="flex items-center gap-2">
                               {puedeEditar && (
                                 <>
-                                  <button
+                                  <BotonIcono
                                     onClick={() => navigate(`/editar/${r.id}`)}
-                                    className="w-11 h-11 flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
-                                    aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
-                                    title="Editar"
+                                    etiqueta={`Editar la reserva de ${r.nombre_pasajero}`}
+                                    titulo="Editar"
                                   >
                                     <Edit2 size={16} />
-                                  </button>
-                                  <button
+                                  </BotonIcono>
+                                  <BotonIcono
+                                    tono="peligro"
                                     onClick={() => setDeletingId(r.id)}
-                                    className="w-11 h-11 flex items-center justify-center text-tinta-3 hover:text-peligro-500 hover:bg-peligro-50 rounded-xl transition-colors"
-                                    aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
-                                    title="Eliminar"
+                                    etiqueta={`Eliminar la reserva de ${r.nombre_pasajero}`}
+                                    titulo="Eliminar"
                                   >
                                     <Trash2 size={16} />
-                                  </button>
+                                  </BotonIcono>
                                 </>
                               )}
                             </div>
@@ -600,20 +600,21 @@ export default function ListadoDia() {
                           />
                           {puedeEditar && (
                             <>
-                              <button
+                              <BotonIcono
                                 onClick={() => navigate(`/editar/${r.id}`)}
-                                className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-blue-700 bg-blue-50 rounded-xl"
-                                aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
+                                etiqueta={`Editar la reserva de ${r.nombre_pasajero}`}
+                                className="text-blue-700 bg-blue-50"
                               >
                                 <Edit2 size={18} />
-                              </button>
-                              <button
+                              </BotonIcono>
+                              <BotonIcono
+                                tono="peligro"
                                 onClick={() => setDeletingId(r.id)}
-                                className="icono-tactil w-11 h-11 flex items-center justify-center shrink-0 text-tinta-2 bg-fondo rounded-xl"
-                                aria-label={`Eliminar la reserva de ${r.nombre_pasajero}`}
+                                etiqueta={`Eliminar la reserva de ${r.nombre_pasajero}`}
+                                className="bg-fondo"
                               >
                                 <Trash2 size={18} />
-                              </button>
+                              </BotonIcono>
                             </>
                           )}
                         </div>

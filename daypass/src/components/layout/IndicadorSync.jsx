@@ -3,6 +3,7 @@ import { Check, CloudUpload, RefreshCw, WifiOff, X } from 'lucide-react'
 import { useOffline } from '../../lib/offline/useOffline'
 import { descartar } from '../../lib/offline/cola'
 import { classNames, hora12, plural } from '../../lib/utils'
+import BotonIcono from '../ui/BotonIcono'
 
 /**
  * El estado de lo que falta por subir. **Solo cuando hay algo que decir.**
@@ -126,13 +127,9 @@ export default function IndicadorSync({ muelle = false }) {
                   {detalle || (enLinea ? 'La conexión está bien.' : 'Sin conexión en este momento.')}
                 </p>
               </div>
-              <button
-                onClick={() => setAbierto(false)}
-                className="icono-tactil w-11 h-11 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-fondo shrink-0"
-                aria-label="Cerrar"
-              >
+              <BotonIcono onClick={() => setAbierto(false)} etiqueta="Cerrar">
                 <X size={22} />
-              </button>
+              </BotonIcono>
             </div>
 
             {lista.length > 0 && (

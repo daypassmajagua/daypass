@@ -1,13 +1,28 @@
 import { classNames } from '../../lib/utils'
 
+/**
+ * Cuatro pesos, y ni uno más.
+ *
+ * Había seis y solo cinco se usaban: `pendiente` (coral) **nunca**, y `success`
+ * (verde) una sola vez, en «Marcar completados» de Folios. Las dos se
+ * retiraron, y la razón es la misma para ambas:
+ *
+ * **El color del botón dice su peso, no su estado.** Verde en este sistema
+ * quiere decir «cerrado y guardado» y coral «pendiente o tardío» — son estados
+ * de una reserva, de un día, de un folio. Un botón no es ninguna de esas cosas:
+ * es lo que uno toca para llegar a ellas. Un botón verde promete que la acción
+ * ya está hecha antes de hacerla, y ese verde se lo roba a la insignia de al
+ * lado, que sí lo necesita.
+ *
+ * Con cuatro, mirar un botón y saber su peso no cuesta pensar: relleno azul =
+ * la acción de esta pantalla · azul claro = alternativa real · sin fondo = de
+ * paso · rojo = no se deshace.
+ */
 const variants = {
   primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-[0_2px_8px_rgba(74,90,232,.28)]',
   secondary: 'bg-blue-50 text-blue-700 hover:bg-blue-100',
-  danger: 'bg-peligro-500 text-white hover:bg-peligro-600',
   ghost: 'text-tinta-2 hover:bg-blue-50 hover:text-blue-700',
-  success: 'bg-verde-500 text-white hover:bg-verde-600',
-  // Coral: reservado para acciones sobre lo pendiente y lo tardío.
-  pendiente: 'bg-coral-600 text-white hover:bg-coral-700',
+  danger: 'bg-peligro-500 text-white hover:bg-peligro-600',
 }
 
 const sizes = {

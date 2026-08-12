@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
-import { Anchor, ChevronRight, Plus, Ship, UserCheck, Users } from 'lucide-react'
+import { ChevronRight, Plus, UserCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { classNames } from '../lib/utils'
 import { opcionesDePais } from '../lib/paisesISO'
@@ -10,6 +10,7 @@ import Card from '../components/ui/Card'
 import Input from '../components/ui/Input'
 import Modal from '../components/ui/Modal'
 import Select from '../components/ui/Select'
+import Pestanas from '../components/ui/Pestanas'
 import PageHeader from '../components/layout/PageHeader'
 import { EstadoError } from '../components/patrones'
 
@@ -23,9 +24,9 @@ import { EstadoError } from '../components/patrones'
  */
 
 const PESTANAS = [
-  { clave: 'lanchas', etiqueta: 'Lanchas', icono: Ship },
-  { clave: 'pilotos', etiqueta: 'Pilotos', icono: Anchor },
-  { clave: 'empleados', etiqueta: 'Empleados', icono: Users },
+  { clave: 'lanchas', etiqueta: 'Lanchas' },
+  { clave: 'pilotos', etiqueta: 'Pilotos' },
+  { clave: 'empleados', etiqueta: 'Empleados' },
 ]
 
 const TIPOS_DOC = [
@@ -111,21 +112,12 @@ export default function Equipo() {
         subtitle="Tus lanchas, pilotos y empleados. Nada se borra: se desactiva."
       />
 
-      <div className="flex gap-1.5 p-1.5 bg-white rounded-2xl shadow-[0_1px_2px_rgba(22,24,44,.05)] w-fit mb-5">
-        {PESTANAS.map(p => (
-          <button
-            key={p.clave}
-            onClick={() => setPestana(p.clave)}
-            className={classNames(
-              'flex items-center gap-2 px-4 min-h-[44px] rounded-xl text-[15px] font-bold transition-colors',
-              pestana === p.clave ? 'bg-blue-600 text-white' : 'text-tinta-2 hover:bg-blue-50 hover:text-blue-700'
-            )}
-          >
-            <p.icono size={17} />
-            {p.etiqueta}
-          </button>
-        ))}
-      </div>
+      <Pestanas
+        className="mb-5"
+        valor={pestana}
+        onCambiar={setPestana}
+        opciones={PESTANAS.map(p => ({ id: p.clave, etiqueta: p.etiqueta }))}
+      />
 
       {/* ── Lanchas ── */}
       {pestana === 'lanchas' && (

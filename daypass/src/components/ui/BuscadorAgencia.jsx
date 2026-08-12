@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Check, Search, X } from 'lucide-react'
 import { classNames } from '../../lib/utils'
 import useClickOutside from '../../hooks/useClickOutside'
+import BotonIcono from './BotonIcono'
 
 /**
  * Escribir y filtrar, no un desplegable de cincuenta.
@@ -53,14 +54,9 @@ export default function BuscadorAgencia({
       {value && !abierto ? (
         <div className="flex items-center gap-2 rounded-xl border border-linea bg-white px-3 py-2.5 min-h-[44px]">
           <span className="flex-1 truncate text-sm font-bold text-tinta">{value}</span>
-          <button
-            type="button"
-            onClick={() => onChange('')}
-            className="icono-tactil w-8 h-8 flex items-center justify-center rounded-lg text-tinta-2 hover:bg-fondo"
-            aria-label="Quitar la agencia"
-          >
+          <BotonIcono onClick={() => onChange('')} etiqueta="Quitar la agencia" className="-mr-1.5">
             <X size={16} />
-          </button>
+          </BotonIcono>
         </div>
       ) : (
         <div className="relative">

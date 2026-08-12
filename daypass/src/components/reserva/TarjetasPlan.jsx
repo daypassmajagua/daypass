@@ -1,10 +1,14 @@
-import { Check } from 'lucide-react'
-import { classNames, formatCurrency } from '../../lib/utils'
+import { formatCurrency } from '../../lib/utils'
+import TarjetaOpcion from '../ui/TarjetaOpcion'
 
 /**
  * El plan como tarjetas con el precio a la vista, no un desplegable.
  * Elegir plan es elegir precio: esconderlo obliga a elegir a ciegas y
  * después verificar.
+ *
+ * La tarjeta en sí es `ui/TarjetaOpcion` — el mismo gesto que elegir el modo
+ * del aparato o activar un plan desde su ficha. Lo que vive aquí es lo único
+ * propio del plan: de qué precio se habla según la temporada.
  */
 export default function TarjetasPlan({ planes, temporada, value, onChange, error }) {
   const precioDe = p => (temporada === 'alta' ? p.precio_adulto_alta : p.precio_adulto_baja)
@@ -17,52 +21,18 @@ export default function TarjetasPlan({ planes, temporada, value, onChange, error
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {planes.map(p => {
-          const elegido = p.id === value
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onChange(p.id)}
-              className={classNames(
-                'flex items-center justify-between gap-3 rounded-xl px-4 py-3 min-h-[64px] text-left transition-colors',
-                elegido
-                  ? 'bg-blue-600 text-white'
-                  : classNames(
-                      'bg-white ring-1 hover:ring-blue-300',
-                      error ? 'ring-coral-300' : 'ring-linea'
-                    )
-              )}
-            >
-              <span className="min-w-0">
-                <span className={classNames(
-                  'block font-bold text-[15px] truncate',
-                  elegido ? 'text-white' : 'text-tinta'
-                )}>
-                  {p.nombre}
-                </span>
-                <span className={classNames(
-                  'block text-[13px]',
-                  elegido ? 'text-white/75' : 'text-tinta-2'
-                )}>
-                  {p.incluye_transporte === false ? 'Sin transporte' : 'Con transporte'}
-                </span>
-              </span>
-
-              <span className="shrink-0 flex items-center gap-2">
-                <span className={classNames(
-                  'font-bold tabular text-[15px] text-right',
-                  elegido ? 'text-white'
-                    : precioDe(p) > 0 ? 'text-tinta' : 'text-tinta-2 font-normal text-[13px]'
-                )}>
-                  {/* Un plan sin tarifa en esta temporada no vale $0: no aplica. */}
-                  {precioDe(p) > 0 ? formatCurrency(precioDe(p)) : 'Sin tarifa'}
-                </span>
-                {elegido && <Check size={18} />}
-              </span>
-            </button>
-          )
-        })}
+        {planes.map(p => (
+          <TarjetaOpcion
+            key={p.id}
+            titulo={p.nombre}
+            detalle={p.incluye_transporte === false ? 'Sin transporte' : 'Con transporte'}
+            // Un plan sin tarifa en esta temporada no vale $0: no aplica.
+            secundario={precioDe(p) > 0 ? formatCurrency(precioDe(p)) : 'Sin tarifa'}
+            elegida={p.id === value}
+            error={Boolean(error)}
+            onClick={() => onChange(p.id)}
+          />
+        ))}
       </div>
 
       <p className="text-[13px] text-tinta-2">

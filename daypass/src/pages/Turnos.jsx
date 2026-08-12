@@ -177,7 +177,7 @@ export default function Turnos() {
             {Array.from({ length: huecosAntes(mes) }, (_, i) => <div key={`hueco-${i}`} />)}
 
             {dias.map(fecha => (
-              <Casilla
+              <DiaDelMes
                 key={fecha}
                 fecha={fecha}
                 esHoy={fecha === hoy}
@@ -249,7 +249,12 @@ const COLOR = {
   pasado: 'bg-fondo ring-transparent opacity-60',
 }
 
-function Casilla({ fecha, esHoy, pax, turnos, onAbrir }) {
+/**
+ * Un día del calendario. Se llamaba `Casilla` y colisionaba de nombre con la
+ * casilla de marcar de Config: dos componentes homónimos que no se parecen en
+ * nada son un `import` equivocado esperando a pasar.
+ */
+function DiaDelMes({ fecha, esHoy, pax, turnos, onAbrir }) {
   const estado = estadoDelDia({ fecha, pax, turnos })
   const dia = Number(fecha.slice(8, 10))
 

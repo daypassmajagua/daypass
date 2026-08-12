@@ -109,18 +109,22 @@ export default function Folios() {
               <Copy size={14} />
               Copiar
             </Button>
+            {/* La acción principal se mueve con el trabajo: antes de imprimir
+                la de esta pantalla es imprimir; después de imprimir es marcar.
+                Antes las dos eran primarias a la vez —y una con un verde
+                esmeralda inyectado a mano que no existe en el sistema—, así que
+                a las siete de la mañana había que leer para saber cuál seguía. */}
             <Button
+              variant={listadoImpreso ? 'secondary' : 'primary'}
               size="sm"
               onClick={imprimirListado}
               disabled={activos.length === 0}
-              className={listadoImpreso ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
             >
               <Printer size={14} />
-              {listadoImpreso ? 'Reimprimir' : 'Imprimir Listado'}
+              {listadoImpreso ? 'Reimprimir' : 'Imprimir listado'}
             </Button>
             <div className="relative group">
               <Button
-                variant="success"
                 size="sm"
                 onClick={marcarCompletados}
                 disabled={activos.length === 0 || !listadoImpreso}

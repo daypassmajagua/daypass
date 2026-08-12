@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { classNames } from '../../lib/utils'
+import BotonIcono from '../ui/BotonIcono'
 
 /**
  * El panel lateral: un perfil que se abre al lado sin soltar la lista.
@@ -101,13 +102,9 @@ export default function PanelLateral({
             </div>
             {subtitulo && <p className="text-[15px] text-tinta-2 mt-0.5">{subtitulo}</p>}
           </div>
-          <button
-            onClick={onCerrar}
-            aria-label="Cerrar"
-            className="shrink-0 w-11 h-11 -mr-2 -mt-1.5 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-fondo hover:text-tinta"
-          >
+          <BotonIcono onClick={onCerrar} etiqueta="Cerrar" className="-mr-2 -mt-1.5">
             <X size={20} />
-          </button>
+          </BotonIcono>
         </header>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 pb-[calc(env(safe-area-inset-bottom)+20px)]">

@@ -4,6 +4,7 @@ import { Check, MessageCircle, PhoneOff, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { abrirWhatsApp, copiarEnlace, telefonoWhatsApp } from '../../lib/enlaceReserva'
 import { classNames, plural } from '../../lib/utils'
+import BotonIcono from '../ui/BotonIcono'
 
 /**
  * Los enlaces de un día, con el estado de cada uno.
@@ -70,13 +71,9 @@ export default function EnviarTarjetas({ registros, cerrado = false, onCerrar })
               {sinTelefono > 0 && ` · ${plural(sinTelefono, 'reserva sin teléfono', 'reservas sin teléfono')}`}
             </p>
           </div>
-          <button
-            onClick={onCerrar}
-            className="icono-tactil w-11 h-11 flex items-center justify-center rounded-xl text-tinta-2 hover:bg-fondo shrink-0"
-            aria-label="Cerrar"
-          >
+          <BotonIcono onClick={onCerrar} etiqueta="Cerrar">
             <X size={22} />
-          </button>
+          </BotonIcono>
         </div>
 
         {cargando ? (

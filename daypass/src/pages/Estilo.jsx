@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Anchor, Palmtree, Building2 } from 'lucide-react'
+import { Anchor, Palmtree, Building2, X, Edit2, Trash2 } from 'lucide-react'
 import { usePerfil } from '../hooks/usePerfil'
 import { classNames, formatCurrency } from '../lib/utils'
 import { coloresPorFamilia } from '../lib/tokens'
@@ -10,6 +10,10 @@ import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import Card from '../components/ui/Card'
+import BotonIcono from '../components/ui/BotonIcono'
+import Pestanas from '../components/ui/Pestanas'
+import TarjetaOpcion from '../components/ui/TarjetaOpcion'
+import Casilla from '../components/ui/Casilla'
 import {
   BloqueDato, InsigniaEstado, TarjetaPendiente, EstadoVacio, FiltroBarra,
   ContadorVivo, LineaDeTiempo, Esqueleto, EstadoError, DondeSeUsa,
@@ -46,6 +50,11 @@ export default function Estilo() {
   const { rol, cargando } = usePerfil()
   const modo = useModo()
   const [familias, setFamilias] = useState([])
+  // Los primitivos que se eligen solo se entienden tocándolos: una muestra
+  // muerta no dice cómo se ve lo elegido, que es la mitad de su trabajo.
+  const [pestanaDemo, setPestanaDemo] = useState('lanchas')
+  const [opcionDemo, setOpcionDemo] = useState('gold')
+  const [casillaDemo, setCasillaDemo] = useState(true)
 
   // Los tokens se leen después de montar: en el primer render las hojas de
   // estilo pueden no estar listas todavía.
@@ -122,30 +131,96 @@ export default function Estilo() {
       </Seccion>
 
       <Seccion titulo="Primitivos" porque="Los ladrillos. Ninguna pantalla debería usar un <select> ni un <input> del navegador.">
-        <div className="flex flex-wrap items-end gap-3">
-          <Button>Guardar</Button>
-          <Button variant="secondary">Segundo</Button>
-          <Button variant="ghost">Cancelar</Button>
-          <Button variant="danger">Eliminar</Button>
-          <Button loading>Guardando</Button>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <Input label="Un campo" placeholder="Escribe algo" />
-          <Input label="Con error" error="Falta el nombre" />
-          <Select
-            label="Un desplegable"
-            value=""
-            onChange={() => {}}
-            options={[{ value: 'a', label: 'Una opción' }, { value: 'b', label: 'Otra' }]}
+        <Muestra nombre="Button" que="Cuatro pesos. Mirar un botón y saber cuál manda no puede costar pensar.">
+          <div className="flex flex-wrap items-end gap-3">
+            <Button>Guardar</Button>
+            <Button variant="secondary">Segundo</Button>
+            <Button variant="ghost">Cancelar</Button>
+            <Button variant="danger">Eliminar</Button>
+            <Button loading>Guardando</Button>
+          </div>
+          <p className="text-[0.8125rem] text-tinta-2 mt-3">
+            Eran seis. <b>Verde y coral salieron</b>: son colores de estado —cerrado, pendiente— y
+            un botón no es un estado. Un botón verde promete que la acción ya está hecha antes de
+            hacerla, y ese verde se lo roba a la insignia de al lado, que sí lo necesita.
+          </p>
+        </Muestra>
+
+        <Muestra nombre="BotonIcono" que="Los 44 botones que son solo un ícono. `etiqueta` no es opcional: sin ella el lector de pantalla dice «botón» y ya.">
+          <div className="flex flex-wrap items-center gap-3">
+            <BotonIcono etiqueta="Cerrar"><X size={20} /></BotonIcono>
+            <BotonIcono etiqueta="Editar la reserva"><Edit2 size={18} /></BotonIcono>
+            <BotonIcono tono="peligro" etiqueta="Eliminar la reserva"><Trash2 size={18} /></BotonIcono>
+            <BotonIcono tamano="sol" etiqueta="Cerrar (muelle)"><X size={24} /></BotonIcono>
+            <BotonIcono tamano="camara" etiqueta="Silenciar el lector"><X size={26} /></BotonIcono>
+          </div>
+          <p className="text-[0.8125rem] text-tinta-2 mt-3">
+            Tres tamaños y salen del modo, no del gusto: <b>44</b> en oficina, <b>48</b> en el
+            muelle, <b>56</b> sobre la cámara. El peligro no se tiñe en reposo —aparece al tocarlo—
+            para que no compita con la acción de al lado en una fila que se recorre de un vistazo.
+          </p>
+        </Muestra>
+
+        <Muestra nombre="Pestanas" que="Cambiar qué se mira sin cambiar de pantalla. No es un filtro: siempre hay una elegida y no se puede limpiar.">
+          <Pestanas
+            valor={pestanaDemo}
+            onCambiar={setPestanaDemo}
+            opciones={[
+              { id: 'lanchas', etiqueta: 'Lanchas', conteo: 6 },
+              { id: 'pilotos', etiqueta: 'Pilotos', conteo: 4 },
+              { id: 'empleados', etiqueta: 'Empleados', conteo: 11 },
+            ]}
           />
-          <Select
-            label="De afuera (sol)"
-            size="sol"
-            value=""
-            onChange={() => {}}
-            options={[{ value: 'a', label: 'Una opción' }]}
+          <p className="text-[0.8125rem] text-tinta-2 mt-3">
+            Con una sola opción <b>no se dibuja</b>: una pestaña sola no es una elección.
+          </p>
+        </Muestra>
+
+        <Muestra nombre="TarjetaOpcion" que="Elegir una entre pocas, viéndolas todas. Lo elegido se rellena, no se contornea.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <TarjetaOpcion
+              titulo="Day Tour Gold" detalle="Con transporte" secundario="$ 398.889"
+              elegida={opcionDemo === 'gold'} onClick={() => setOpcionDemo('gold')}
+            />
+            <TarjetaOpcion
+              titulo="Day Tour Silver" detalle="Con transporte" secundario="$ 310.000"
+              elegida={opcionDemo === 'silver'} onClick={() => setOpcionDemo('silver')}
+            />
+          </div>
+          <p className="text-[0.8125rem] text-tinta-2 mt-3">
+            `secundario` es la consecuencia de elegir —el precio, el cupo—, no el nombre otra vez.
+            Y lleva el ✓ porque al sol el color solo no alcanza.
+          </p>
+        </Muestra>
+
+        <Muestra nombre="Casilla" que="La etiqueta entera es el objetivo, no el cuadrito: apuntarle a 20 px en un iPad es apuntarle a nada.">
+          <Casilla
+            etiqueta="Se puede elegir en reservas nuevas"
+            porque="Las reservas que ya lo usan no cambian."
+            valor={casillaDemo}
+            onChange={setCasillaDemo}
           />
-        </div>
+        </Muestra>
+
+        <Muestra nombre="Input · Select" que="Nunca los del navegador: no se pueden vestir ni crecen con el modo.">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input label="Un campo" placeholder="Escribe algo" />
+            <Input label="Con error" error="Falta el nombre" />
+            <Select
+              label="Un desplegable"
+              value=""
+              onChange={() => {}}
+              options={[{ value: 'a', label: 'Una opción' }, { value: 'b', label: 'Otra' }]}
+            />
+            <Select
+              label="De afuera (sol)"
+              size="sol"
+              value=""
+              onChange={() => {}}
+              options={[{ value: 'a', label: 'Una opción' }]}
+            />
+          </div>
+        </Muestra>
       </Seccion>
 
       <Seccion titulo="Patrones" porque="Páginas a medio armar. Si algo se parece a uno de estos, es ese y no uno nuevo.">
