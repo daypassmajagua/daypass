@@ -30,7 +30,7 @@ import HistoriaDeLaReserva from '../components/reserva/HistoriaDeLaReserva'
 import PageHeader from '../components/layout/PageHeader'
 import { RESERVA_CON_DINERO } from '../lib/columnas'
 import { opcionesDePais } from '../lib/paisesISO'
-import { InsigniaEstado } from '../components/patrones'
+import { InsigniaEstado, Esqueleto, EstadoError } from '../components/patrones'
 
 /**
  * Los dos estados que se eligen a mano. El resto —en la isla, completada, no
@@ -182,6 +182,8 @@ export default function Reserva() {
   const [tiposIngreso, setTiposIngreso] = useState([])
   const [opcionesPlato, setOpcionesPlato] = useState([])
   const [cargandoCatalogos, setCargandoCatalogos] = useState(true)
+  const [falloCatalogos, setFalloCatalogos] = useState(null)
+  const [intento, setIntento] = useState(0)
   const [guardando, setGuardando] = useState(false)
   const [borradorRecuperado, setBorradorRecuperado] = useState(false)
   const yaRestaure = useRef(false)
@@ -230,24 +232,53 @@ export default function Reserva() {
     return Object.entries(conteo).sort((a, b) => b[1] - a[1]).map(([n]) => n)
   }, [delDia])
 
+  /**
+   * Los catálogos sin los que esta pantalla no es nada.
+   *
+   * Antes, un error se tragaba con `l.data || []` y el efecto era una de dos
+   * cosas, las dos malas y ninguna dicha: si Supabase respondía con error, el
+   * formulario **aparecía vacío** —sin planes, sin lanchas, sin canales— y no
+   * se podía guardar porque el plan es obligatorio y no había cuál elegir; y
+   * si la promesa rechazaba de plano (la red del hotel), se quedaba en
+   * «Cargando…» para siempre.
+   *
+   * Un formulario vacío parece un formulario; un error parece un error. Ahora
+   * el fallo se ve, dice qué pasó y tiene salida.
+   */
   useEffect(() => {
+    let vigente = true
     async function cargar() {
-      const [l, p, c, pa, a, ti, op] = await Promise.all([
-        supabase.from('lanchas').select('*').eq('activa', true).order('nombre'),
-        supabase.from('planes').select('*').eq('activo', true).order('nombre'),
-        supabase.from('canales').select('*').order('nombre'),
-        supabase.from('paises').select('*').order('nombre'),
-        supabase.from('organizaciones').select('*').eq('activa', true).order('nombre'),
-        supabase.from('tipos_ingreso').select('*').eq('activo', true),
-        supabase.from('opciones_plato').select('*').eq('activo', true),
-      ])
-      setLanchas(l.data || []); setPlanes(p.data || []); setCanales(c.data || [])
-      setPaises(pa.data || []); setAgencias(a.data || [])
-      setTiposIngreso(ti.data || []); setOpcionesPlato(op.data || [])
-      setCargandoCatalogos(false)
+      try {
+        const respuestas = await Promise.all([
+          supabase.from('lanchas').select('*').eq('activa', true).order('nombre'),
+          supabase.from('planes').select('*').eq('activo', true).order('nombre'),
+          supabase.from('canales').select('*').order('nombre'),
+          supabase.from('paises').select('*').order('nombre'),
+          supabase.from('organizaciones').select('*').eq('activa', true).order('nombre'),
+          supabase.from('tipos_ingreso').select('*').eq('activo', true),
+          supabase.from('opciones_plato').select('*').eq('activo', true),
+        ])
+        if (!vigente) return
+
+        const fallo = respuestas.find(r => r.error)
+        if (fallo) { setFalloCatalogos(fallo.error); setCargandoCatalogos(false); return }
+
+        const [l, p, c, pa, a, ti, op] = respuestas
+        setLanchas(l.data || []); setPlanes(p.data || []); setCanales(c.data || [])
+        setPaises(pa.data || []); setAgencias(a.data || [])
+        setTiposIngreso(ti.data || []); setOpcionesPlato(op.data || [])
+        setFalloCatalogos(null)
+        setCargandoCatalogos(false)
+      } catch (e) {
+        if (!vigente) return
+        setFalloCatalogos(e)
+        setCargandoCatalogos(false)
+      }
     }
+    setCargandoCatalogos(true)
     cargar()
-  }, [])
+    return () => { vigente = false }
+  }, [intento])
 
   // Al editar, la fuente de verdad es la base.
   useEffect(() => {
@@ -417,7 +448,19 @@ export default function Reserva() {
   }
 
   if (cargandoCatalogos) {
-    return <p className="max-w-3xl mx-auto px-4 py-10 text-tinta-2">Cargando lanchas, planes y tarifas…</p>
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <Esqueleto filas={4} />
+      </div>
+    )
+  }
+
+  if (falloCatalogos) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <EstadoError error={falloCatalogos} onReintentar={() => setIntento(n => n + 1)} />
+      </div>
+    )
   }
 
   return (
@@ -759,6 +802,9 @@ export default function Reserva() {
             y un bloque vacío ahí sería una promesa sin cumplir. */}
         {isEdit && <HistoriaDeLaReserva registroId={id} />}
 
+        {/* Las dos únicas veces que «Guardar» lleva objeto: cierra una captura
+            larga y quien lo toca lleva diez minutos escribiendo. En modales y
+            barras cortas el sistema dice «Guardar» a secas. */}
         <div className="flex items-center gap-3 flex-wrap sticky bottom-0 bg-fondo/95 backdrop-blur py-3 -mx-4 px-4 border-t border-linea">
           <Button type="submit" size="lg" loading={guardando}>
             {isEdit ? 'Guardar cambios' : 'Guardar la reserva'}

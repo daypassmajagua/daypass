@@ -112,10 +112,22 @@ function HoyDeLaOperacion() {
               Cerrar {fraseFecha(fechaActiva).toLowerCase()}
             </Button>
           )}
-          <Button onClick={() => navigate('/nuevo')}>
-            <PlusCircle size={16} />
-            Nueva reserva
-          </Button>
+          {/**
+            * Un día que ya pasó no ofrece crear.
+            *
+            * Apareció al mirar la pantalla, no el código: con el vacío nuevo
+            * diciendo «ningún día del pasado se puede vender», el botón
+            * primario seguía arriba ofreciendo exactamente eso. Y no era solo
+            * una contradicción de palabras — `/nuevo` arranca en **mañana**,
+            * así que quien lo tocara desde el 3 de julio terminaría con la
+            * reserva creada en otra fecha sin haber visto el cambio.
+            */}
+          {fechaActiva >= hoyLocal() && (
+            <Button onClick={() => navigate('/nuevo')}>
+              <PlusCircle size={16} />
+              Nueva reserva
+            </Button>
+          )}
         </div>
       </div>
 

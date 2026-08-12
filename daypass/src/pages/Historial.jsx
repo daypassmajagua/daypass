@@ -218,7 +218,9 @@ export default function Historial() {
                         {puedeEditar && (
                           <button
                             onClick={() => navigate(`/editar/${r.id}`)}
-                            className="icono-tactil w-10 h-10 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
+                            aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
+                            title="Editar"
+                            className="icono-tactil w-11 h-11 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
                           >
                             <Edit2 size={14} />
                           </button>

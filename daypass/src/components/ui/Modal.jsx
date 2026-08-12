@@ -22,7 +22,8 @@ export default function Modal({ open, onClose, title, children }) {
           <h3 className="text-lg font-semibold text-tinta">{title}</h3>
           <button
             onClick={onClose}
-            className="text-tinta-3 hover:text-tinta-2 transition-colors"
+            aria-label="Cerrar"
+            className="icono-tactil w-11 h-11 -mr-2 inline-flex items-center justify-center text-tinta-3 hover:text-tinta-2 transition-colors"
           >
             <X size={20} />
           </button>

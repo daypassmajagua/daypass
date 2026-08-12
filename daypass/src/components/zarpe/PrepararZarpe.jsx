@@ -263,7 +263,7 @@ export default function PrepararZarpe({ zarpe, onCerrar, onGuardado }) {
 
             <div className="flex justify-end gap-2 border-t border-linea pt-4">
               <Button variant="ghost" onClick={onCerrar}>Cerrar sin guardar</Button>
-              <Button onClick={guardar} loading={guardando}>Guardar la preparación</Button>
+              <Button onClick={guardar} loading={guardando}>Guardar</Button>
             </div>
           </>
         )}

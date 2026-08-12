@@ -93,7 +93,7 @@ function SelectorZarpe({ zarpes, onElegir, onProgramar, onProgramarRegreso, onRe
           disabled={programando}
           className="rounded-2xl bg-blue-600 text-white text-[1.125rem] font-bold px-6 min-h-[4rem] disabled:opacity-50"
         >
-          {programando ? 'Programando…' : 'Programar los zarpes del día'}
+          {programando ? 'Programando…' : 'Programar zarpes'}
         </button>
       </div>
     )
@@ -223,7 +223,11 @@ function FormularioPersona({ titulo, cta, onGuardar, onCerrar, paises = [] }) {
       <div className="w-full max-w-lg bg-white rounded-3xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-[1.375rem] font-bold text-sol-tinta">{titulo}</h2>
-          <button onClick={onCerrar} className="w-12 h-12 flex items-center justify-center rounded-xl text-sol-tinta-2">
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar"
+            className="w-12 h-12 flex items-center justify-center rounded-xl text-sol-tinta-2"
+          >
             <X size={26} />
           </button>
         </div>
@@ -591,7 +595,7 @@ export default function Embarque() {
             className="flex items-center justify-center gap-2 rounded-2xl bg-blue-50 ring-2 ring-blue-600 text-blue-700 text-[1.0625rem] font-bold min-h-[3.5rem]"
           >
             <X size={20} />
-            Ver toda la lancha otra vez
+            Toda la lancha
           </button>
         )}
 

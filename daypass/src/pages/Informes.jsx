@@ -376,7 +376,7 @@ export default function Informes() {
               <Target size={14} />
               Metas
             </Link>
-            <Button variant="secondary" size="sm" onClick={fetchData}>
+            <Button variant="secondary" size="sm" onClick={fetchData} aria-label="Volver a traer los datos" title="Volver a traer los datos">
               <RefreshCw size={14} />
             </Button>
             <Button variant="secondary" size="sm" onClick={exportCSV} disabled={filtrados.length === 0}>
@@ -513,7 +513,11 @@ export default function Informes() {
                     return (
                       <span key={key} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
                         {labels[key] || val}
-                        <button onClick={() => setFiltro(key, '')} className="hover:text-blue-900 ml-0.5">
+                        <button
+                          onClick={() => setFiltro(key, '')}
+                          aria-label={`Quitar el filtro ${labels[key] || val}`}
+                          className="hover:text-blue-900 ml-0.5"
+                        >
                           <X size={11} />
                         </button>
                       </span>
@@ -524,7 +528,7 @@ export default function Informes() {
                   onClick={limpiarFiltros}
                   className="text-xs text-gray-500 hover:text-red-600 font-medium transition-colors flex-none"
                 >
-                  Limpiar todo
+                  Limpiar filtros
                 </button>
               </div>
             )}

@@ -47,11 +47,23 @@ export default function ContadorVivo({
   className = '',
 }) {
   const [reciente, setReciente] = useState(false)
+  /**
+   * El dígito que se está yendo.
+   *
+   * El tic son dos mitades y solo se veía una: la clave de React monta el nodo
+   * nuevo con `tic-entra` pero **desmonta el viejo en seco**, así que el gesto
+   * del contador mecánico quedaba a medias — entraba el número nuevo sin que
+   * saliera el anterior. Se guarda el valor previo el tiempo que dura su
+   * animación (140 ms) y se pinta encima, en `absolute` para que no empuje
+   * nada: la cifra no puede moverse de sitio ni un pixel.
+   */
+  const [saliendo, setSaliendo] = useState(null)
   const previo = useRef(valor)
   const ultimoAviso = useRef(0)
 
   useEffect(() => {
     if (previo.current === valor) return
+    const anterior = previo.current
     previo.current = valor
 
     // Una ráfaga entera se anuncia una vez. `Date.now` va aquí y no en el
@@ -61,8 +73,10 @@ export default function ContadorVivo({
     ultimoAviso.current = ahora
 
     setReciente(true)
-    const t = setTimeout(() => setReciente(false), 700)
-    return () => clearTimeout(t)
+    setSaliendo(anterior)
+    const tDestello = setTimeout(() => setReciente(false), 700)
+    const tTic = setTimeout(() => setSaliendo(null), 140)
+    return () => { clearTimeout(tDestello); clearTimeout(tTic) }
   }, [valor])
 
   const grande = tamano === 'lg'
@@ -82,7 +96,7 @@ export default function ContadorVivo({
   return (
     <div
       className={classNames(
-        'inline-flex flex-col rounded-xl px-3 py-2 transition-colors duration-500',
+        'inline-flex flex-col rounded-xl px-3 py-2 transition-colors duration-300',
         reciente && !enOscuro ? 'bg-mar-50' : '',
         // En oscuro el destello es del color del texto, no un fondo claro que
         // rompería la franja.
@@ -104,17 +118,34 @@ export default function ContadorVivo({
       )}
 
       <span className="flex items-baseline gap-1.5">
-        <span
-          // La clave fuerza el remonte del nodo en cada valor: es lo que hace
-          // que el dígito nuevo entre animado en vez de reemplazarse en seco.
-          key={valor}
-          className={classNames(
-            'tabular font-bold tic-entra',
-            colorCifra,
-            grande ? 'text-[44px] leading-none' : 'text-[20px] leading-none'
+        <span className="relative inline-block">
+          {/* El que se va. `aria-hidden` porque el lector ya anuncia el nuevo
+              por el `role="status"` de arriba: leer los dos diría el cambio
+              dos veces y al revés. */}
+          {saliendo !== null && (
+            <span
+              aria-hidden="true"
+              className={classNames(
+                'tabular font-bold tic-sale absolute inset-0',
+                colorCifra,
+                grande ? 'text-[44px] leading-none' : 'text-[20px] leading-none'
+              )}
+            >
+              {saliendo}
+            </span>
           )}
-        >
-          {valor}
+          <span
+            // La clave fuerza el remonte del nodo en cada valor: es lo que hace
+            // que el dígito nuevo entre animado en vez de reemplazarse en seco.
+            key={valor}
+            className={classNames(
+              'tabular font-bold tic-entra',
+              colorCifra,
+              grande ? 'text-[44px] leading-none' : 'text-[20px] leading-none'
+            )}
+          >
+            {valor}
+          </span>
         </span>
         {sufijo && (
           <span className={classNames(colorApoyo, grande ? 'text-[17px]' : 'text-[13px]')}>

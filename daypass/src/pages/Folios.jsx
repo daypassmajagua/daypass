@@ -102,7 +102,7 @@ export default function Folios() {
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <DateNav value={fechaActiva} onChange={setFechaActiva} />
-            <Button variant="secondary" size="sm" onClick={refetch}>
+            <Button variant="secondary" size="sm" onClick={refetch} aria-label="Volver a traer las reservas" title="Volver a traer las reservas">
               <RefreshCw size={14} />
             </Button>
             <Button variant="secondary" size="sm" onClick={copiarListado} disabled={activos.length === 0}>

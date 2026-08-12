@@ -222,17 +222,16 @@ export const POR_ROL = {
   // tiquete de las cortesías—, pero en la práctica eso lo hace la isla: quien
   // esté de guardia o `admin_isla`. Migración 017.
 
-  // Una pregunta, de pie junto a la mesa: ¿a qué cuenta va esto?
+  // Tampoco hay `mesero`, desde el 11 de agosto (migración 033). No se retiró
+  // por simplificar el menú: **estaba roto**. Su `home` era `/isla` pero su
+  // lista de rutas solo tenía `/cocina`, así que la puerta lo devolvía a
+  // `/isla`, que tampoco podía abrir. Entrar con esa cuenta era rebotar.
   //
-  // Una sola pantalla, y por eso su menú viene vacío: un botón que lleva a
-  // donde ya estás es ruido. El botón de reportar sí lo tiene —está en todas
-  // las pantallas— así que puede contar lo que le pase.
-  mesero: {
-    home: '/isla',
-    menu: [],
-    config: [],
-    extra: ['/cocina'],
-  },
+  // Y al ir a arreglarlo, el arreglo no se sostenía: un rol de una sola
+  // pantalla y sin menú es un rol que nadie sabe mantener. Quien atiende mesas
+  // entra como `admin_isla` y ve Hoy, Isla y Almuerzos — más de lo que el
+  // mesero podía ver. La comanda sigue siendo de Zeus; lo que cambia es la
+  // cuenta con la que se consulta el pronóstico.
 }
 
 /**
@@ -332,8 +331,10 @@ export const ETIQUETA_ROL = {
   // Decía solo «Isla», y nadie lo reconocía en una lista de roles: parecía un
   // lugar y no un cargo.
   admin_isla: 'Administrador de isla',
-  mesero: 'Mesero',
-  // Se conserva la etiqueta por si algún perfil viejo todavía la dice: sin
-  // esto, la pantalla de Usuarios mostraría el valor crudo de la base.
+  // Los dos retirados conservan etiqueta por si un perfil viejo todavía la
+  // dice: sin esto, la pantalla de Usuarios mostraría el valor crudo de la
+  // base. No son asignables — `ROLES` sale de `POR_ROL`, y la restricción
+  // `perfiles_rol_vigente` los rechaza aunque alguien escriba directo.
   recepcion: 'Recepción (ya no se usa)',
+  mesero: 'Mesero (ya no se usa)',
 }

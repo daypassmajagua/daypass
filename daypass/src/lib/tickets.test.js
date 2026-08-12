@@ -147,10 +147,10 @@ describe('quién ve qué', () => {
     )
   })
 
-  it('el mesero solo ve los suyos', async () => {
+  it('la isla solo ve los suyos', async () => {
     const perfil = __store.perfiles[0]
     const previo = perfil.rol
-    perfil.rol = 'mesero'
+    perfil.rol = 'admin_isla'
 
     const { data } = await mockSupabase.from('tickets').select('*')
     expect(data.map(t => t.titulo)).toEqual(['Mío'])

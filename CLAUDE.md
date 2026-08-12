@@ -88,11 +88,17 @@ sencillo posible para todo el mundo.
 
 ## Quién es quién
 
-**Siete roles:** `super_admin` (AISA, el proveedor) · `gerencia` · `directora` · `asesora`
-(Daniela, líder del pasadía) · `asesora_comercial` · `admin_isla` · `mesero`.
+**Seis roles:** `super_admin` (AISA, el proveedor) · `gerencia` · `directora` · `asesora`
+(Daniela, líder del pasadía) · `asesora_comercial` · `admin_isla`.
 **Cocina no tiene perfil** — reciben las comandas en Zeus. **Recepción tampoco**: se
 retiró el 8 de agosto de 2026, porque todo lo de la isla lo hace `admin_isla` o quien
-esté de guardia (migración 017).
+esté de guardia (migración 017). **Ni el mesero**, retirado el 11 de agosto (migración
+033): quien atiende mesas entra como `admin_isla` y ve más de lo que veía antes.
+
+Los dos retirados siguen en el enum `rol_usuario` —PostgreSQL no deja quitar un valor
+sin rehacer las políticas de las 26 tablas— y la restricción `perfiles_rol_vigente` los
+rechaza. **Quien la edite tiene que volver a nombrar a los dos**: si la reemplaza
+pensando en uno solo, reabre el otro sin que nada avise.
 
 **Turnos, no personas fijas.** Al muelle no va siempre Daniela: puede ir cualquier asesora
 comercial o la coordinadora de alojamiento, y puede ser una persona la que embarca en la mañana y

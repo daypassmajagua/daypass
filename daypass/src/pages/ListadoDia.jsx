@@ -478,7 +478,9 @@ export default function ListadoDia() {
                                 />
                                 <button
                                   onClick={() => handleFolioSave(r.id, editingFolio[r.id])}
-                                  className="text-green-600 hover:text-green-700"
+                                  aria-label="Guardar el folio"
+                                  title="Guardar el folio"
+                                  className="icono-tactil w-11 h-11 inline-flex items-center justify-center text-verde-600 hover:text-verde-700 rounded-xl transition-colors"
                                 >
                                   <CheckCircle2 size={16} />
                                 </button>
@@ -673,7 +675,7 @@ export default function ListadoDia() {
               setMotivo('')
             }}
           >
-            Guardar el cambio
+            Guardar
           </Button>
         </div>
       </Modal>

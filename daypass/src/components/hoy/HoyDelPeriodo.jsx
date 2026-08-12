@@ -176,7 +176,7 @@ function Barra({ pct }) {
     <div className="mt-3 h-2 rounded-full bg-fondo overflow-hidden">
       <div
         className={classNames(
-          'h-full rounded-full transition-[width] duration-500',
+          'h-full rounded-full transition-[width] duration-300',
           pct >= 100 ? 'bg-verde-500' : 'bg-blue-600'
         )}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}

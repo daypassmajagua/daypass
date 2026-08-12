@@ -610,11 +610,11 @@ const STORE = {
    * Los perfiles (migración 015). En la demo se puede cambiar de rol desde la
    * consola para ver la app como la ve cada persona:
    *
-   *     window.__daypass_rol('mesero')
+   *     window.__daypass_rol('admin_isla')
    *
-   * Sin eso no habría forma de comprobar que el mesero no ve precios ni que la
-   * isla entra directo a su pantalla — y esas son justamente las dos cosas que
-   * esta fase promete.
+   * Sin eso no habría forma de comprobar que la isla no ve precios ni que
+   * entra directo a su pantalla — y esas son justamente las dos cosas que esta
+   * fase promete.
    */
   perfiles: [
     {
@@ -2025,7 +2025,7 @@ class QB {
     if (this._table === 'estado_embarques') return derivarEstadoEmbarques()
     // Y `reservas` tampoco: es registros con los precios en null para quien no
     // puede verlos. Sin esto en la demo no habría forma de comprobar que el
-    // mesero no ve plata, que es la promesa central de la fase de roles.
+    // la isla no ve plata, que es la promesa central de la fase de roles.
     if (this._table === 'reservas') return derivarReservas()
     // Las vistas de dinero de la 023: se derivan, no se guardan.
     if (this._table === 'clientes_ficha') return derivarClientesFicha()
@@ -2306,7 +2306,7 @@ const MOCK_SESSION = {
 
 /**
  * Cambiar de rol en la demo, para ver la app como la ve cada persona.
- * En la consola:  __daypass_rol('mesero')
+ * En la consola:  __daypass_rol('admin_isla')
  */
 if (typeof window !== 'undefined') {
   window.__daypass_rol = rol => {

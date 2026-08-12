@@ -361,15 +361,15 @@ export default function CerrarDia() {
           <>
             <Button variant="secondary" onClick={imprimirTentativo}>
               <Printer size={16} />
-              Imprimir el tentativo
+              Imprimir tentativo
             </Button>
             <Button variant="secondary" onClick={imprimirCocina}>
               <Printer size={16} />
-              Imprimir el conteo de cocina
+              Imprimir cocina
             </Button>
             <Button variant="secondary" onClick={copiarTexto}>
               <Copy size={16} />
-              Copiar para WhatsApp
+              Copiar mensaje
             </Button>
             <Button onClick={() => setEnviandoTarjetas(true)}>
               <MessageCircle size={16} />
@@ -384,7 +384,7 @@ export default function CerrarDia() {
               }}
             >
               <Download size={16} />
-              Volver a guardar la lista
+              Guardar de nuevo
             </Button>
           </>
         )}

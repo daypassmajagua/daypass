@@ -197,7 +197,7 @@ function Plantilla({ clave, titulo, porque, valor, onGuardado }) {
 
       {cambiado && (
         <div className="flex items-center gap-2 aparecer">
-          <Button onClick={guardar} loading={guardando}>Guardar el mensaje</Button>
+          <Button onClick={guardar} loading={guardando}>Guardar</Button>
           <button
             onClick={() => setTexto(valor)}
             className="min-h-[44px] px-3 text-[15px] font-bold text-tinta-2 hover:text-tinta"

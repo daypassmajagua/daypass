@@ -21,9 +21,11 @@ const BASE = process.argv[2] || process.env.DAYPASS_URL || 'http://localhost:517
  * que se espera en pantalla: si alguien cambia el archivo sin querer, esto lo
  * dice.
  *
- * `dinero` es la promesa central de la fase: la isla, recepción y el mesero no
- * ven precios. No es solo permisos — esa pantalla la ven el pasajero, el guía
- * y la fila entera.
+ * `dinero` es la promesa central de la fase: la isla no ve precios. No es solo
+ * permisos — esa pantalla la ven el pasajero, el guía y la fila entera.
+ *
+ * Son **seis roles**: `recepcion` salió en la 017 y `mesero` en la 033. Quien
+ * atiende mesas entra como `admin_isla`.
  */
 const ESPERADO = {
   directora: {
@@ -54,10 +56,10 @@ const ESPERADO = {
   // reorganizó por sustantivos.
   // «Embarque» le aparece desde la 032, y para ella quiere decir el regreso:
   // es quien lo recibe y lo cierra. La ida no la ve — la base se la rechaza.
+  // Y es también quien atiende mesas desde la 033: el rol de mesero estaba
+  // roto —su home era `/isla` y sus rutas solo `/cocina`, así que rebotaba— y
+  // en vez de arreglarlo se retiró. Aquí ve más de lo que veía allá.
   admin_isla: { inicio: '/isla', menu: ['Isla', 'Almuerzos', 'Hoy', 'Embarque'], dinero: false },
-  // El mesero tiene una sola pantalla, así que NO ve barra: un botón que
-  // lleva a donde ya estás es ruido. Que su menú venga vacío es lo correcto.
-  mesero:     { inicio: '/isla', menu: [],               dinero: false },
 }
 
 function buscarChrome() {

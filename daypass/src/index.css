@@ -295,12 +295,14 @@ input[type="number"] {
 .tic-entra { animation: tic-entra 140ms ease-out; }
 
 /* El eco de un toque en el muelle. Va DESPUÉS del cambio de color, nunca
-   antes: es la confirmación de que el dedo llegó, no el preludio del cambio. */
+   antes: es la confirmación de que el dedo llegó, no el preludio del cambio.
+   240ms es el techo del modo muelle: por encima de eso el eco de una persona
+   todavía se está viendo cuando el pulgar ya va por la siguiente. */
 @keyframes eco {
   from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-verde-500) 55%, transparent); }
   to   { box-shadow: 0 0 0 14px transparent; }
 }
-.eco { animation: eco 300ms ease-out; }
+.eco { animation: eco 240ms ease-out; }
 
 /* Lo que entra en pantalla: modales y tarjetas. Corto, para que no se sienta. */
 @keyframes aparecer {

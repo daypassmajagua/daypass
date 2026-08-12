@@ -84,7 +84,7 @@ export default function Reportes() {
             onClick={() => setSoloPendientes(!soloPendientes)}
             className="text-[14px] font-bold text-tinta-2 px-3 min-h-[40px] rounded-xl hover:bg-fondo"
           >
-            {soloPendientes ? 'Ver también los cerrados' : 'Ver solo los abiertos'}
+            {soloPendientes ? 'Con cerrados' : 'Solo abiertos'}
           </button>
         }
       />

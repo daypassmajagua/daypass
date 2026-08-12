@@ -53,10 +53,9 @@ describe('quién asigna qué', () => {
     expect(puedeAsignar('asesora_comercial', 'recibimiento')).toBe(true)
   })
 
-  it('la isla y el mesero no asignan turnos', () => {
+  it('la isla no asigna turnos', () => {
     for (const tipo of CODIGOS) {
       expect(puedeAsignar('admin_isla', tipo)).toBe(false)
-      expect(puedeAsignar('mesero', tipo)).toBe(false)
     }
   })
 })

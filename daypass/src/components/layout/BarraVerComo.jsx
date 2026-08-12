@@ -71,7 +71,7 @@ export default function BarraVerComo() {
         />
         <button
           onClick={() => verComo(null)}
-          className="flex items-center gap-1.5 text-[14px] font-bold rounded-lg px-3 min-h-[36px] hover:bg-black/10"
+          className="flex items-center gap-1.5 text-[14px] font-bold rounded-lg px-3 min-h-[44px] hover:bg-black/10"
         >
           <X size={16} />
           Volver a lo mío

@@ -109,7 +109,17 @@ describe('los permisos de una ficha', () => {
     expect(puedeVer('asesora_comercial', '/config/planes/abc-123')).toBe(puedePlanes)
   })
 
-  it('el mesero no llega a la ficha de un cliente', () => {
-    expect(puedeVer('mesero', '/clientes/abc-123')).toBe(false)
+  it('la isla no llega a la ficha de un cliente', () => {
+    expect(puedeVer('admin_isla', '/clientes/abc-123')).toBe(false)
+  })
+
+  it('un rol retirado no abre nada', () => {
+    // `mesero` y `recepcion` salieron de `POR_ROL` (033 y 017) pero siguen en
+    // el enum de la base. Si un perfil viejo llegara con uno de esos valores,
+    // la app no puede abrirle media puerta.
+    for (const rol of ['mesero', 'recepcion']) {
+      expect(puedeVer(rol, '/')).toBe(false)
+      expect(puedeVer(rol, '/isla')).toBe(false)
+    }
   })
 })

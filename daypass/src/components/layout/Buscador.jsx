@@ -129,7 +129,11 @@ export default function Buscador() {
       <button
         onClick={() => setAbierto(true)}
         aria-label="Buscar"
-        className="flex items-center gap-2 h-9 px-3 rounded-xl bg-white/10 text-white/80
+        /* 44px y no 36: es la otra mitad de la navegación desde que el menú se
+           redujo a siete sustantivos, y en la tablet de oficina un objetivo
+           por debajo del mínimo del propio sistema convierte la forma
+           principal de moverse en la más difícil de tocar. */
+        className="flex items-center gap-2 min-h-[44px] px-3.5 rounded-xl bg-white/10 text-white/80
                    hover:bg-white/20 hover:text-white transition-colors"
       >
         <Search size={16} />

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
-import { fraseFecha, hora12, plural } from '../../lib/utils'
+import { CalendarOff, CalendarPlus } from 'lucide-react'
+import { fraseFecha, hora12, plural, hoyLocal } from '../../lib/utils'
+import EstadoVacio from '../patrones/EstadoVacio'
 
 /**
  * El día en una frase.
@@ -22,14 +24,32 @@ function Cifra({ children, a }) {
 }
 
 export default function FraseDelDia({ fecha, pax, lanchas, resumen, dia, hayReservas }) {
+  /**
+   * Un día vacío no siempre quiere decir lo mismo.
+   *
+   * Decía «Crea la primera» para **cualquier** día sin reservas, incluido uno
+   * que ya pasó — y un día ido no se puede vender: la fecha ya no existe como
+   * opción. Ofrecer la acción imposible es peor que no ofrecer ninguna, porque
+   * quien la sigue termina con una reserva creada para otro día sin darse
+   * cuenta.
+   *
+   * Un día pasado sin gente **no es un pendiente: es un hecho** — temporada
+   * baja, un domingo cerrado, una bandera roja. Se dice y ya.
+   */
   if (!hayReservas) {
+    const yaPaso = fecha < hoyLocal()
     return (
-      <p className="text-[22px] sm:text-[26px] font-bold tracking-[-.02em] leading-snug text-tinta text-balance">
-        Todavía no hay reservas para {fraseFecha(fecha).toLowerCase()}.{' '}
-        <Link to="/nuevo" className="text-blue-600 underline decoration-2 underline-offset-2">
-          Crea la primera
-        </Link>
-      </p>
+      <EstadoVacio
+        className="py-6"
+        icono={yaPaso ? CalendarOff : CalendarPlus}
+        titulo={
+          yaPaso
+            ? `No hubo operación ${fraseFecha(fecha).toLowerCase()}.`
+            : `Todavía no hay reservas para ${fraseFecha(fecha).toLowerCase()}.`
+        }
+        detalle={yaPaso ? 'Ningún día del pasado se puede vender.' : null}
+        accion={yaPaso ? null : { etiqueta: 'Crear la primera', a: '/nuevo' }}
+      />
     )
   }
 
