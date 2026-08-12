@@ -2,13 +2,13 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
-  PlusCircle, Edit2, Trash2,
+  PlusCircle, Edit2, Trash2, CalendarPlus, SearchX,
   AlertTriangle, CheckCircle2, Filter, MessageCircle, History
 } from 'lucide-react'
 import EnviarTarjetas from '../components/hoy/EnviarTarjetas'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError, Esqueleto, InsigniaEstado } from '../components/patrones'
+import { EstadoError, Esqueleto, InsigniaEstado, EstadoVacio, TablaDatos, Fila } from '../components/patrones'
 import { usePerfil } from '../hooks/usePerfil'
 import { puedeVer } from '../lib/navegacion'
 import {
@@ -197,6 +197,8 @@ export default function ListadoDia() {
     [registros, filtroLancha, filtroEstado, filtroCanal]
   )
 
+  const hayFiltros = Boolean(filtroLancha || filtroEstado || filtroCanal)
+
   const byLancha = useMemo(() => {
     const map = {}
     filtered.forEach(r => {
@@ -298,10 +300,10 @@ export default function ListadoDia() {
       />
 
       {/* Resumen rápido */}
-      <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+      <div className="flex items-center gap-4 mb-4 text-sm text-tinta-2">
         <span><b className="text-tinta">{filtered.length}</b> {filtered.length === 1 ? 'reserva' : 'reservas'}</span>
         <span>·</span>
-        <span><b className="text-gray-900">{totalPax}</b> personas</span>
+        <span><b className="text-tinta tabular">{totalPax}</b> personas</span>
       </div>
 
       {/* Filtros */}
@@ -350,20 +352,26 @@ export default function ListadoDia() {
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : filtered.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-tinta-2">Todavía no hay reservas para este día</p>
-          <Button className="mt-4" onClick={() => navigate('/nuevo')}>
-            <PlusCircle size={16} />
-            Crear la primera
-          </Button>
+        <Card>
+          {/* Con filtros puestos el vacío es «no coincide», no «no hay»: ahí
+              `EstadoVacio` retira la invitación a crear, porque lo que falta es
+              cambiar el filtro y no dar de alta algo que quizá ya existe. */}
+          <EstadoVacio
+            icono={hayFiltros ? SearchX : CalendarPlus}
+            buscando={hayFiltros}
+            titulo={hayFiltros
+              ? 'Ninguna reserva coincide con estos filtros'
+              : 'Todavía no hay reservas para este día'}
+            accion={{ etiqueta: 'Crear la primera', onClick: () => navigate('/nuevo') }}
+          />
         </Card>
       ) : (
         <div className="flex flex-col gap-6">
           {Object.entries(byLancha).map(([nombreLancha, regs]) => (
             <div key={nombreLancha}>
               <div className="flex items-center gap-2 mb-2">
-                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{nombreLancha}</h2>
-                <span className="text-xs text-gray-400">
+                <h2 className="text-sm font-bold text-tinta uppercase tracking-wide">{nombreLancha}</h2>
+                <span className="text-xs text-tinta-2 tabular">
                   {regs.filter(r=>!['cancelada','noshow'].includes(r.estado)).reduce((s,r)=>s+r.adultos+r.ninos,0)} pax
                 </span>
               </div>
@@ -373,53 +381,51 @@ export default function ListadoDia() {
                 {/* Tabla completa solo desde 1280px. En iPad —768 vertical y
                     1024 horizontal— las tarjetas de abajo son más operables
                     que diez columnas apretadas. */}
-                <div className="hidden xl:block overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pasajero</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
-                        <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pax</th>
-                        <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Nombres</th>
-                        <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
-                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pago</th>
-                        {/* «Impuesto», no «Imp.». La columna la lee quien va a
-                            cobrarlo en el muelle: abreviarla ahorra ocho
-                            píxeles y cuesta una pregunta. */}
-                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Impuesto</th>
-                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                        <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Folio Zeus</th>
-                        <th className="px-3 py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
+                <div className="hidden xl:block">
+                  <TablaDatos
+                    columnas={[
+                      { id: 'pasajero', etiqueta: 'Pasajero' },
+                      { id: 'plan', etiqueta: 'Plan' },
+                      { id: 'pax', etiqueta: 'Pax', alinear: 'centro' },
+                      { id: 'nombres', etiqueta: 'Nombres', alinear: 'centro' },
+                      { id: 'total', etiqueta: 'Total', alinear: 'derecha' },
+                      { id: 'pago', etiqueta: 'Pago' },
+                      // «Impuesto», no «Imp.». La columna la lee quien va a
+                      // cobrarlo en el muelle: abreviarla ahorra ocho píxeles
+                      // y cuesta una pregunta.
+                      { id: 'impuesto', etiqueta: 'Impuesto' },
+                      { id: 'estado', etiqueta: 'Estado' },
+                      { id: 'folio', etiqueta: 'Folio Zeus' },
+                      { id: 'acciones', oculta: 'Editar y eliminar' },
+                    ]}
+                  >
                       {regs.map(r => (
-                        <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900 flex items-center gap-1.5 flex-wrap">
+                        <Fila key={r.id}>
+                          <td className="px-3 py-3">
+                            <div className="font-bold text-tinta flex items-center gap-1.5 flex-wrap">
                               {r.tipo === 'grupo' && (
                                 <span className="text-xs bg-arena-100 text-arena-700 px-1.5 py-0.5 rounded font-bold">GRUPO</span>
                               )}
                               {r.nombre_pasajero}
                               <MarcaCambioTardio registro={r} />
                             </div>
-                            {r.nombre_grupo && <div className="text-xs text-gray-400 mt-0.5">{r.nombre_grupo}</div>}
-                            {r.agencia_nombre && <div className="text-xs text-gray-400">{r.agencia_nombre}</div>}
+                            {r.nombre_grupo && <div className="text-xs text-tinta-2 mt-0.5">{r.nombre_grupo}</div>}
+                            {r.agencia_nombre && <div className="text-xs text-tinta-2">{r.agencia_nombre}</div>}
                           </td>
-                          <td className="px-3 py-3 text-gray-600 text-xs">{r.planes?.nombre || '—'}</td>
-                          <td className="px-3 py-3 text-center">
-                            <span className="font-medium">{r.adultos}</span>
-                            {r.ninos > 0 && <span className="text-gray-400 text-xs ml-1">+{r.ninos}n</span>}
+                          <td className="px-3 py-3 text-tinta-2 text-xs">{r.planes?.nombre || '—'}</td>
+                          <td className="px-3 py-3 text-center tabular">
+                            <span className="font-bold text-tinta">{r.adultos}</span>
+                            {r.ninos > 0 && <span className="text-tinta-2 text-xs ml-1">+{r.ninos}n</span>}
                           </td>
                           <td className="px-3 py-3 text-center">
                             <ContadorNombres registro={r} conteo={nombres[r.id] || 0} />
                           </td>
-                          <td className="px-3 py-3 text-right font-medium text-gray-900">
+                          <td className="px-3 py-3 text-right font-bold text-tinta tabular">
                             {muestraDinero ? formatCurrency(r.total_calculado) : '—'}
                           </td>
-                          <td className="px-3 py-3 text-xs text-gray-600">
+                          <td className="px-3 py-3 text-xs text-tinta-2">
                             {r.forma_pago ? FORMA_PAGO_LABELS[r.forma_pago] : (
-                              <span className="text-orange-500 flex items-center gap-1">
+                              <span className="text-coral-600 font-bold flex items-center gap-1">
                                 <AlertTriangle size={12} /> Sin pago
                               </span>
                             )}
@@ -470,7 +476,8 @@ export default function ListadoDia() {
                                   type="text"
                                   value={editingFolio[r.id]}
                                   onChange={e => setEditingFolio(prev => ({ ...prev, [r.id]: e.target.value }))}
-                                  className="w-24 text-xs border border-blue-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                  aria-label={`Folio de ${r.nombre_pasajero}`}
+                                  className="w-24 text-xs border border-blue-300 rounded-lg px-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-400"
                                   autoFocus
                                   onKeyDown={e => {
                                     if (e.key === 'Enter') handleFolioSave(r.id, editingFolio[r.id])
@@ -489,11 +496,13 @@ export default function ListadoDia() {
                             ) : (
                               <button
                                 onClick={() => setEditingFolio(prev => ({ ...prev, [r.id]: r.folio_zeus || '' }))}
-                                className={`text-xs px-2 py-1 rounded transition-colors ${
+                                aria-label={r.folio_zeus ? `Cambiar el folio de ${r.nombre_pasajero}` : `Poner el folio de ${r.nombre_pasajero}`}
+                                className={classNames(
+                                  'text-xs px-2 min-h-[44px] rounded-lg transition-colors',
                                   r.folio_zeus
-                                    ? 'font-mono text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                                    : 'text-orange-500 bg-orange-50 hover:bg-orange-100 flex items-center gap-1'
-                                }`}
+                                    ? 'font-mono text-verde-700 bg-verde-50 hover:bg-verde-100'
+                                    : 'text-coral-600 font-bold bg-coral-50 hover:bg-coral-100 flex items-center gap-1'
+                                )}
                               >
                                 {r.folio_zeus || (
                                   <><AlertTriangle size={11} /> Sin folio</>
@@ -530,10 +539,9 @@ export default function ListadoDia() {
                               )}
                             </div>
                           </td>
-                        </tr>
+                        </Fila>
                       ))}
-                    </tbody>
-                  </table>
+                  </TablaDatos>
                 </div>
 
                 {/* Tarjetas: móvil e iPad. Dos por fila en horizontal. */}

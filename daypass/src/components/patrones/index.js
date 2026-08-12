@@ -31,6 +31,10 @@ export { default as EstadoVacio } from './EstadoVacio'
 export { default as ConfirmarAccion } from './ConfirmarAccion'
 export { default as InsigniaEstado } from './InsigniaEstado'
 
+// La tabla de oficina. Su encabezado estaba copiado 23 veces en tres pantallas
+// y ya había divergido en el fondo y en el color de las líneas.
+export { default as TablaDatos, Fila } from './TablaDatos'
+
 // Los tres estados obligatorios de toda pantalla que traiga datos.
 export { default as Esqueleto, Barra } from './Esqueleto'
 export { default as EstadoError } from './EstadoError'

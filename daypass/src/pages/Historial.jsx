@@ -5,10 +5,11 @@ import { formatCurrency, formatDateShort, hoyLocal, ESTADO_LABELS, FORMA_PAGO_LA
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import PageHeader from '../components/layout/PageHeader'
-import { EstadoError, Esqueleto, InsigniaEstado } from '../components/patrones'
+import { EstadoError, Esqueleto, InsigniaEstado, EstadoVacio, TablaDatos, Fila } from '../components/patrones'
 import Select from '../components/ui/Select'
 import DatePicker from '../components/ui/DatePicker'
-import { Search, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
+import BotonIcono from '../components/ui/BotonIcono'
+import { Search, SearchX, Download, Edit2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { reservaCon } from '../lib/columnas'
 import { usePerfil } from '../hooks/usePerfil'
 import { puedeVer } from '../lib/navegacion'
@@ -113,13 +114,14 @@ export default function Historial() {
       <Card className="p-4 mb-5">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
           <div className="relative lg:col-span-2">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-tinta-3" />
             <input
               type="text"
-              placeholder="Buscar pasajero..."
+              placeholder="Buscar pasajero"
+              aria-label="Buscar pasajero"
               value={filtros.search}
               onChange={e => { setFiltros(f => ({ ...f, search: e.target.value })); setPage(0) }}
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full pl-8 pr-3 min-h-[44px] text-sm border border-linea rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
           </div>
           <DatePicker
@@ -159,7 +161,7 @@ export default function Historial() {
         </div>
         <button
           onClick={() => { setFiltros({ fechaInicio:'', fechaFin:'', estado:'', vendidaPor:'', search:'' }); setFiltroLancha(''); setFiltroCanal(''); setPage(0) }}
-          className="text-xs text-blue-600 hover:underline mt-2"
+          className="text-[13px] font-bold text-blue-700 hover:underline mt-2 min-h-[44px] px-2 -ml-2"
         >
           Limpiar filtros
         </button>
@@ -170,73 +172,72 @@ export default function Historial() {
       ) : error ? (
         <EstadoError error={error} onReintentar={fetchRegistros} />
       ) : registros.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-tinta-2">Ninguna reserva coincide con estos filtros</p>
+        <Card>
+          <EstadoVacio
+            icono={SearchX}
+            buscando
+            titulo="Ninguna reserva coincide con estos filtros"
+            detalle="Prueba con un rango de fechas más amplio."
+          />
         </Card>
       ) : (
         <>
           <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pasajero</th>
-                    <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Lancha</th>
-                    <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Plan</th>
-                    <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Canal</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Pax</th>
-                    <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
-                    <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
-                    <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase">Folio</th>
-                    <th className="px-3 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {registros.map(r => (
-                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-600 text-xs font-mono">{formatDateShort(r.fecha)}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{r.nombre_pasajero}</div>
-                        {r.agencia_nombre && <div className="text-xs text-gray-400">{r.agencia_nombre}</div>}
-                      </td>
-                      <td className="px-3 py-3 text-xs text-gray-600">{r.lanchas?.nombre || '—'}</td>
-                      <td className="px-3 py-3 text-xs text-gray-600">{r.planes?.nombre || '—'}</td>
-                      <td className="px-3 py-3 text-xs text-gray-600">{r.canales?.codigo || '—'}</td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="font-medium">{r.adultos}</span>
-                        {r.ninos > 0 && <span className="text-gray-400 text-xs ml-1">+{r.ninos}n</span>}
-                      </td>
-                      <td className="px-3 py-3 text-right font-medium text-gray-900">
-                        {formatCurrency(r.total_calculado)}
-                      </td>
-                      <td className="px-3 py-3"><InsigniaEstado estado={r.estado} /></td>
-                      <td className="px-3 py-3 text-xs font-mono text-emerald-700">{r.folio_zeus || '—'}</td>
-                      <td className="px-3 py-3">
-                        {/* Gerencia consulta el historial pero no edita reservas:
-                            el lápiz rebotaría en la guardia de rutas. */}
-                        {puedeEditar && (
-                          <button
-                            onClick={() => navigate(`/editar/${r.id}`)}
-                            aria-label={`Editar la reserva de ${r.nombre_pasajero}`}
-                            title="Editar"
-                            className="icono-tactil w-11 h-11 inline-flex items-center justify-center text-tinta-2 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TablaDatos
+              columnas={[
+                { id: 'fecha', etiqueta: 'Fecha' },
+                { id: 'pasajero', etiqueta: 'Pasajero' },
+                { id: 'lancha', etiqueta: 'Lancha' },
+                { id: 'plan', etiqueta: 'Plan' },
+                { id: 'canal', etiqueta: 'Canal' },
+                { id: 'pax', etiqueta: 'Pax', alinear: 'centro' },
+                { id: 'total', etiqueta: 'Total', alinear: 'derecha' },
+                { id: 'estado', etiqueta: 'Estado' },
+                { id: 'folio', etiqueta: 'Folio' },
+                { id: 'acciones', oculta: 'Editar' },
+              ]}
+            >
+              {registros.map(r => (
+                <Fila key={r.id}>
+                  <td className="px-3 py-3 text-tinta-2 text-xs font-mono">{formatDateShort(r.fecha)}</td>
+                  <td className="px-3 py-3">
+                    <div className="font-bold text-tinta">{r.nombre_pasajero}</div>
+                    {r.agencia_nombre && <div className="text-xs text-tinta-2">{r.agencia_nombre}</div>}
+                  </td>
+                  <td className="px-3 py-3 text-xs text-tinta-2">{r.lanchas?.nombre || '—'}</td>
+                  <td className="px-3 py-3 text-xs text-tinta-2">{r.planes?.nombre || '—'}</td>
+                  <td className="px-3 py-3 text-xs text-tinta-2">{r.canales?.codigo || '—'}</td>
+                  <td className="px-3 py-3 text-center tabular">
+                    <span className="font-bold text-tinta">{r.adultos}</span>
+                    {r.ninos > 0 && <span className="text-tinta-2 text-xs ml-1">+{r.ninos}n</span>}
+                  </td>
+                  <td className="px-3 py-3 text-right font-bold text-tinta tabular">
+                    {formatCurrency(r.total_calculado)}
+                  </td>
+                  <td className="px-3 py-3"><InsigniaEstado estado={r.estado} /></td>
+                  <td className="px-3 py-3 text-xs font-mono text-verde-700">{r.folio_zeus || '—'}</td>
+                  <td className="px-3 py-3">
+                    {/* Gerencia consulta el historial pero no edita reservas:
+                        el lápiz rebotaría en la guardia de rutas. */}
+                    {puedeEditar && (
+                      <BotonIcono
+                        onClick={() => navigate(`/editar/${r.id}`)}
+                        etiqueta={`Editar la reserva de ${r.nombre_pasajero}`}
+                        titulo="Editar"
+                      >
+                        <Edit2 size={14} />
+                      </BotonIcono>
+                    )}
+                  </td>
+                </Fila>
+              ))}
+            </TablaDatos>
           </Card>
 
           {/* Paginación */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-tinta-2 tabular">
                 Página {page + 1} de {totalPages} ({total} reservas)
               </p>
               <div className="flex gap-2">

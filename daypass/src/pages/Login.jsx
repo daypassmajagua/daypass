@@ -36,7 +36,7 @@ export default function Login() {
           </div>
 
           {isMock && (
-            <div className="mb-4 rounded-lg bg-amber-50 border border-amber-300 px-3 py-2 text-xs text-amber-800 text-center">
+            <div className="mb-4 rounded-xl bg-aviso-50 px-3 py-2 text-xs text-aviso-700 text-center">
               <span className="font-bold uppercase">Modo demo</span> — datos de muestra, sin conexión a Supabase.
               Cualquier credencial funciona.
             </div>
@@ -54,22 +54,23 @@ export default function Login() {
             />
 
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Contraseña</label>
+              <label htmlFor="contrasena" className="text-sm font-medium text-tinta">Contraseña</label>
               <div className="relative">
                 <input
+                  id="contrasena"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-xl border border-linea px-3 min-h-[44px] text-sm text-tinta pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Ocultar la contraseña' : 'Ver la contraseña'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-lg text-tinta-2 hover:text-tinta"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -81,7 +82,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
+          <p className="text-center text-xs text-white/70 mt-6">
             ¿Sin acceso? Contacta a tu administrador.
           </p>
         </div>

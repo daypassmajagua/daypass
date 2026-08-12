@@ -594,7 +594,7 @@ export default function Reserva() {
           )} />
 
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">¿Individual o grupo?</label>
+            <label className="text-sm font-medium text-tinta block mb-2">¿Individual o grupo?</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { valor: 'individual', etiqueta: 'Individual', ayuda: 'Una persona o familia' },
@@ -751,7 +751,7 @@ export default function Reserva() {
           )} />
 
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">Impuestos de puerto</label>
+            <label className="text-sm font-medium text-tinta block mb-2">Impuestos de puerto</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { valor: 'si', etiqueta: 'Ya pagados' },

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Copy, CheckCircle2, RefreshCw, Printer, Lock, Unlock } from 'lucide-react'
+import { Copy, CheckCircle2, ClipboardList, Printer, Lock, Unlock } from 'lucide-react'
 import useAppStore from '../store/useAppStore'
 import { useRegistros } from '../hooks/useRegistros'
-import { EstadoError, Esqueleto } from '../components/patrones'
-import { formatDate, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
+import { EstadoError, Esqueleto, EstadoVacio } from '../components/patrones'
+import { classNames, formatDate, plural, FORMA_PAGO_LABELS, IMPUESTOS_LABELS } from '../lib/utils'
 import DateNav from '../components/ui/DateNav'
 import FranjaDia from '../components/layout/FranjaDia'
 import { useRegistrosEnVivo } from '../hooks/useDiaOperativo'
@@ -96,15 +96,22 @@ export default function Folios() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <FranjaDia />
+      {/**
+        * El título es «Folios» y no «Listado para Folios Zeus».
+        *
+        * Es el trunk test de Krug: quien cae en una página tiene que reconocer
+        * en el título el enlace que tocó. El menú dice «Folios» y la página
+        * decía otra cosa —más larga, con el nombre de otro sistema adentro—,
+        * así que por un segundo no era evidente si había llegado a donde iba.
+        * Que este listado alimente a Zeus se dice en el subtítulo, que es donde
+        * va el contexto.
+        */}
       <PageHeader
-        title="Listado para Folios Zeus"
-        subtitle={formatDate(fechaActiva)}
+        title="Folios"
+        subtitle={`${formatDate(fechaActiva)} · para cargarlos en Zeus`}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <DateNav value={fechaActiva} onChange={setFechaActiva} />
-            <Button variant="secondary" size="sm" onClick={refetch} aria-label="Volver a traer las reservas" title="Volver a traer las reservas">
-              <RefreshCw size={14} />
-            </Button>
             <Button variant="secondary" size="sm" onClick={copiarListado} disabled={activos.length === 0}>
               <Copy size={14} />
               Copiar
@@ -123,39 +130,39 @@ export default function Folios() {
               <Printer size={14} />
               {listadoImpreso ? 'Reimprimir' : 'Imprimir listado'}
             </Button>
-            <div className="relative group">
+            {/* Por qué está bloqueado se dice **debajo del botón y siempre**,
+                no en un globo al pasar el mouse: esta pantalla se usa en iPad y
+                ahí no hay hover — el globo no existía para quien más lo
+                necesitaba. Era además el único tooltip flotante de la app. */}
+            <div className="flex flex-col items-end gap-1">
               <Button
                 size="sm"
                 onClick={marcarCompletados}
                 disabled={activos.length === 0 || !listadoImpreso}
               >
-                {listadoImpreso
-                  ? <><CheckCircle2 size={14} /> Marcar completados</>
-                  : <><Lock size={14} /> Marcar completados</>
-                }
+                {listadoImpreso ? <CheckCircle2 size={14} /> : <Lock size={14} />}
+                Marcar completados
               </Button>
-              {!listadoImpreso && (
-                <div className="absolute right-0 top-full mt-1 z-20 hidden group-hover:block">
-                  <div className="bg-gray-900 text-white text-xs rounded-lg px-3 py-2 w-52 shadow-lg">
-                    Imprime el listado primero para habilitar este botón
-                  </div>
-                </div>
+              {!listadoImpreso && activos.length > 0 && (
+                <span className="text-[13px] text-tinta-2">Primero imprime el listado</span>
               )}
             </div>
           </div>
         }
       />
 
-      {/* Banner de workflow */}
+      {/* En qué va el trabajo. Estaba en esmeralda y ámbar de fábrica —nueve
+          clases fuera del sistema— cuando el sistema ya tiene los dos colores
+          con ese significado exacto: verde es «hecho y guardado», aviso es
+          «algo que revisar». */}
       {!loading && activos.length > 0 && (
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-4 text-sm font-medium transition-all ${
-          listadoImpreso
-            ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-            : 'bg-amber-50 border border-amber-200 text-amber-800'
-        }`}>
+        <div className={classNames(
+          'flex items-center gap-3 px-4 py-3 rounded-xl mb-4 text-sm font-bold',
+          listadoImpreso ? 'bg-verde-50 text-verde-700' : 'bg-aviso-50 text-aviso-700'
+        )}>
           {listadoImpreso
-            ? <><Unlock size={16} className="text-emerald-600 flex-none" /> Listado impreso — puedes ingresar los folios y marcar como completados cuando termines en Zeus.</>
-            : <><Lock size={16} className="text-amber-600 flex-none" /> Imprime el listado antes de entrar a Zeus — el botón <strong>"Marcar completados"</strong> se habilitará automáticamente.</>
+            ? <><Unlock size={16} className="flex-none" /> Listado impreso. Escribe los folios y marca completados cuando termines en Zeus.</>
+            : <><Lock size={16} className="flex-none" /> Imprime el listado antes de entrar a Zeus.</>
           }
         </div>
       )}
@@ -165,8 +172,12 @@ export default function Folios() {
       ) : error ? (
         <EstadoError error={error} onReintentar={refetch} />
       ) : activos.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-tinta-2">No hay reservas activas para este día</p>
+        <Card>
+          <EstadoVacio
+            icono={ClipboardList}
+            titulo="No hay reservas activas este día"
+            detalle="Cuando las haya, aquí se escriben sus folios de Zeus."
+          />
         </Card>
       ) : (
         <div className="flex flex-col gap-6">
@@ -174,42 +185,48 @@ export default function Folios() {
             const pax = regs.reduce((s, r) => s + r.adultos + r.ninos, 0)
             return (
               <Card key={nombreLancha}>
-                <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between rounded-t-xl">
-                  <h2 className="font-bold text-gray-800 uppercase text-sm tracking-wide">{nombreLancha}</h2>
-                  <span className="text-sm text-gray-500">{pax} personas</span>
+                <div className="px-5 py-3 bg-fondo border-b border-linea flex items-center justify-between rounded-t-xl">
+                  <h2 className="font-bold text-tinta uppercase text-sm tracking-wide">{nombreLancha}</h2>
+                  <span className="text-sm text-tinta-2 tabular">{plural(pax, 'persona', 'personas')}</span>
                 </div>
 
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-linea">
                   {regs.map((r, i) => {
                     const folioValue = folios[r.id] !== undefined ? folios[r.id] : (r.folio_zeus || '')
                     return (
                       <div key={r.id} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex-none w-6 text-sm font-bold text-gray-400">{i + 1}</div>
+                        <div className="flex-none w-6 text-sm font-bold text-tinta-3 tabular">{i + 1}</div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 text-sm truncate">
+                          <div className="font-bold text-tinta text-sm truncate">
                             {r.tipo === 'grupo' && (
-                              <span className="text-xs bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded mr-1">GRP</span>
+                              <span className="text-xs bg-arena-100 text-arena-700 px-1.5 py-0.5 rounded mr-1">Grupo</span>
                             )}
                             {r.nombre_pasajero}
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                          {/* Decía «2A 2N», que hay que saberse. Es la columna que
+                              se lee contra reloj mientras se digita en Zeus: dos
+                              abreviaturas ahí cuestan más de lo que ahorran. */}
+                          <div className="text-xs text-tinta-2 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
                             {r.agencia_nombre && <span>{r.agencia_nombre}</span>}
-                            <span>{r.adultos}A{r.ninos > 0 ? ` ${r.ninos}N` : ''}</span>
+                            <span className="tabular">
+                              {plural(r.adultos, 'adulto', 'adultos')}
+                              {r.ninos > 0 && ` · ${plural(r.ninos, 'niño', 'niños')}`}
+                            </span>
                             <span>{r.planes?.nombre}</span>
                             {r.forma_pago && <span>{FORMA_PAGO_LABELS[r.forma_pago]}</span>}
-                            <span className={
-                              r.impuestos_puerto === 'si' ? 'text-green-600' :
-                              r.impuestos_puerto === 'no' ? 'text-red-600 font-semibold' :
-                              'text-gray-400'
-                            }>
+                            {/* Solo «Exento» se distingue, y en gris: es la
+                                excepción. Que alguien pague o no el impuesto es
+                                lo acordado, no un error — pintarlo de rojo le
+                                robaba peso al coral que sí pide algo. */}
+                            <span className={r.impuestos_puerto === 'exe' ? 'text-tinta-3' : ''}>
                               Impuesto: {IMPUESTOS_LABELS[r.impuestos_puerto]}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 sm:w-56">
-                          <label className="text-xs text-gray-500 font-medium flex-none">Folio:</label>
+                          <label className="text-xs text-tinta-2 font-bold flex-none">Folio:</label>
                           <input
                             type="text"
                             value={folioValue}
@@ -225,13 +242,18 @@ export default function Folios() {
                                 e.target.blur()
                               }
                             }}
-                            placeholder="Número Zeus..."
-                            className={`flex-1 text-sm border rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors ${
-                              folioValue ? 'border-emerald-300 bg-emerald-50 text-emerald-800 font-mono' : 'border-gray-300'
-                            }`}
+                            placeholder="Número de Zeus"
+                            aria-label={`Folio de ${r.nombre_pasajero}`}
+                            className={classNames(
+                              'flex-1 text-sm rounded-xl border px-3 min-h-[44px] transition-colors',
+                              'focus:outline-none focus:ring-2 focus:ring-blue-400',
+                              folioValue
+                                ? 'border-verde-500 bg-verde-50 text-verde-700 font-mono'
+                                : 'border-linea'
+                            )}
                           />
                           {saving[r.id] && (
-                            <span className="text-xs text-gray-400">...</span>
+                            <span className="text-xs text-tinta-3">guardando…</span>
                           )}
                         </div>
                       </div>
