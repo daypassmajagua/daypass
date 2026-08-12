@@ -133,7 +133,7 @@ export default function Turnos() {
   const hoy = hoyLocal()
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Turnos"
         subtitle="Quién está en el muelle y en la isla cada día. El turno habilita las acciones de ese día; el rol no cambia."

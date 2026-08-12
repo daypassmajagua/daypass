@@ -88,7 +88,7 @@ export default function Clientes() {
   const abierta = Boolean(id)
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="marco">
       <PageHeader title="Clientes" subtitle="Quién ha venido, y con qué suele venir" />
 
       <div className="relative mb-4">

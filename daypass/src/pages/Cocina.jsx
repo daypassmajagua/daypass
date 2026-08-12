@@ -122,7 +122,7 @@ export default function Cocina() {
   const activos = registros.filter(r => !['cancelada', 'noshow'].includes(r.estado))
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Almuerzos"
         subtitle={`Lo que eligieron en el check-in · ${formatDate(fechaActiva)}`}

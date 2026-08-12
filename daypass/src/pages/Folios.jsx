@@ -94,7 +94,7 @@ export default function Folios() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <FranjaDia />
       {/**
         * El título es «Folios» y no «Listado para Folios Zeus».

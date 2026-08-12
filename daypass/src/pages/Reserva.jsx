@@ -449,7 +449,7 @@ export default function Reserva() {
 
   if (cargandoCatalogos) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="marco-lectura py-6">
         <Esqueleto filas={4} />
       </div>
     )
@@ -457,14 +457,14 @@ export default function Reserva() {
 
   if (falloCatalogos) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="marco-lectura py-6">
         <EstadoError error={falloCatalogos} onReintentar={() => setIntento(n => n + 1)} />
       </div>
     )
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="marco-lectura py-6">
       <PageHeader
         title={isEdit ? 'Editar la reserva' : 'Nueva reserva'}
         subtitle={

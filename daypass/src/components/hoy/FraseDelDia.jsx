@@ -82,7 +82,11 @@ export default function FraseDelDia({ fecha, pax, lanchas, resumen, dia, hayRese
   const cerradoA = hora12(dia?.cerrado_tentativo_at)
 
   return (
-    <div className="flex flex-col gap-2">
+    // La frase no crece con la pantalla. Es la línea que se lee de un vistazo
+    // a las siete de la mañana, y estirada a 1800 px se vuelve un renglón de
+    // ciento diez caracteres: el ojo llega al final y ya no sabe por dónde
+    // volver. El ancho de la oficina es para las tablas, no para el texto.
+    <div className="flex flex-col gap-2 max-w-[68ch]">
       <p className="text-[22px] sm:text-[26px] font-bold tracking-[-.02em] leading-snug text-tinta text-balance">
         <span className="first-letter:uppercase">{fraseFecha(fecha)}</span> van{' '}
         <b className="tabular">{pax}</b> {pax === 1 ? 'persona' : 'personas'} en{' '}

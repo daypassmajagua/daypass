@@ -127,7 +127,7 @@ export default function Usuarios() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Usuarios"
         subtitle="Quién entra y qué ve"

@@ -26,8 +26,22 @@ export default function Pendientes({ lista, fecha }) {
     )
   }
 
+  /**
+   * En dos columnas cuando la pantalla da.
+   *
+   * Al llevar la oficina al ancho completo, esta lista fue lo primero que se
+   * rompió, y no se veía venir leyendo el código: cada tarjeta lleva el
+   * problema a la izquierda y el botón que lo resuelve a la derecha, así que a
+   * 1800 px quedaban **separados por metro y medio de nada**. Había que cruzar
+   * la pantalla con la vista para unir «faltan 28 nombres» con «Agregar los
+   * nombres», que es justo lo que la proximidad existe para evitar.
+   *
+   * Dos columnas resuelven las dos cosas a la vez: se aprovecha el ancho y
+   * cada pendiente vuelve a caber en un golpe de vista. De paso, ocho
+   * pendientes pasan de ocho filas a cuatro.
+   */
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="grid grid-cols-1 xl:grid-cols-2 gap-2">
       {lista.map(p => <TarjetaPendiente key={p.id} pendiente={p} />)}
     </ul>
   )

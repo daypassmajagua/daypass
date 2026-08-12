@@ -98,14 +98,14 @@ export default function Mensajes() {
   useEffect(() => { cargar() }, [cargar])
 
   if (cargando) {
-    return <div className="max-w-3xl mx-auto px-4 py-6"><Esqueleto filas={5} /></div>
+    return <div className="marco-lectura py-6"><Esqueleto filas={5} /></div>
   }
   if (error) {
-    return <div className="max-w-3xl mx-auto px-4 py-6"><EstadoError error={error} onReintentar={cargar} /></div>
+    return <div className="marco-lectura py-6"><EstadoError error={error} onReintentar={cargar} /></div>
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col gap-5">
+    <div className="marco-lectura py-6 flex flex-col gap-5">
       <PageHeader
         title="Destinatarios y mensajes"
         subtitle="Lo que el cliente recibe y a dónde salen los correos del hotel. Se edita aquí, no en el código."

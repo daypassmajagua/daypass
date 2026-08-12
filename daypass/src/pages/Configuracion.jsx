@@ -72,7 +72,7 @@ export default function Configuracion() {
   // sola a Hoy antes de que el perfil alcance a cargar — que fue exactamente
   // lo que pasó la primera vez que se probó.
   if (cargando) {
-    return <div className="max-w-3xl mx-auto px-4 py-6"><Esqueleto filas={4} /></div>
+    return <div className="marco py-6"><Esqueleto filas={4} /></div>
   }
 
   // Sin secciones no hay engranaje: no debería haber llegado hasta aquí, pero
@@ -86,7 +86,7 @@ export default function Configuracion() {
 
     return (
       <div>
-        <div className="max-w-5xl mx-auto px-4 pt-4">
+        <div className="marco pt-4">
           <Link
             to="/config"
             className="inline-flex items-center gap-1 text-[14px] font-bold text-tinta-2 hover:text-blue-700 min-h-[44px]"
@@ -106,7 +106,7 @@ export default function Configuracion() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Configuración"
         subtitle="Lo que se cambia de vez en cuando. Lo de todos los días está arriba."

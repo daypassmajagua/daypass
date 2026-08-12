@@ -256,7 +256,7 @@ export default function ListadoDia() {
     .reduce((s, r) => s + r.adultos + r.ninos, 0)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <FranjaDia />
       <PageHeader
         title="Reservas"

@@ -357,7 +357,7 @@ export default function Informes() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Informes"
         subtitle={

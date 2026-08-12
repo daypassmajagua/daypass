@@ -118,6 +118,29 @@ describe('los objetivos táctiles', () => {
   })
 })
 
+describe('el ancho del contenido', () => {
+  /**
+   * Estaba escrito seis veces con seis valores, y «Hoy» llegaba a usar dos
+   * distintos según su estado. Un ancho por pantalla no es una decisión de
+   * pantalla: es el marco de la app, y vive en `index.css`.
+   */
+  it('ninguna página declara su propio ancho', () => {
+    const propios = []
+    for (const { ruta, texto } of jsx.filter(a => a.ruta.startsWith('pages/'))) {
+      for (const m of texto.matchAll(/max-w-(3xl|4xl|5xl|6xl|7xl)\s+mx-auto/g)) {
+        propios.push(`${ruta}: ${m[0]}`)
+      }
+    }
+    expect(propios).toEqual([])
+  })
+
+  it('los dos marcos siguen definidos', () => {
+    const css = readFileSync(join(SRC, 'index.css'), 'utf8')
+    expect(css).toMatch(/\.marco\s*\{\s*max-width:\s*var\(--ancho-trabajo\)/)
+    expect(css).toMatch(/\.marco-lectura\s*\{\s*max-width:\s*var\(--ancho-lectura\)/)
+  })
+})
+
 describe('los primitivos no se reinventan', () => {
   it('BotonIcono exige etiqueta', () => {
     const p = jsx.find(a => a.ruta.endsWith('components/ui/BotonIcono.jsx'))

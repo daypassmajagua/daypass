@@ -141,15 +141,15 @@ export default function CerrarDia() {
   }
 
   if (loading) {
-    return <p className="max-w-3xl mx-auto px-4 py-10 text-tinta-2">Preparando el cierre…</p>
+    return <p className="marco-lectura py-10 text-tinta-2">Preparando el cierre…</p>
   }
 
   if (error) {
-    return <EstadoError error={error} onReintentar={refetch} className="max-w-3xl mx-auto" />
+    return <EstadoError error={error} onReintentar={refetch} className="marco" />
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="marco-lectura py-6">
       <button
         onClick={() => navigate('/')}
         className="inline-flex items-center gap-1.5 text-sm font-bold text-tinta-2 hover:text-blue-700 min-h-[44px]"

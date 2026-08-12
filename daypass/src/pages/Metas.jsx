@@ -62,7 +62,7 @@ export default function Metas() {
   useEffect(() => { cargar() }, [cargar])
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="marco">
       <PageHeader
         title="Metas y comisiones"
         subtitle="Cómo vamos, y qué se le liquida a cada agencia"

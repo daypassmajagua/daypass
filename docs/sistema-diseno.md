@@ -64,10 +64,29 @@ Una sola estructura para todas las pantallas de oficina, para que nadie invente 
 ├─────────────────────────────────────────────┤
 │ PageHeader  título · acción principal       │
 │                                             │
-│ Contenido   ancho máximo 1200, centrado     │
+│ Contenido   .marco  ·  .marco-lectura       │
 │                                             │
 └─────────────────────────────────────────────┘
 ```
+
+**El ancho vive en dos clases y en ningún otro sitio.** Decía «máximo 1200,
+centrado» y ninguna pantalla lo cumplía: había **seis anchos distintos** —768,
+896, 1024, 1152 y 1280— repartidos entre veinte pantallas, y «Hoy» usaba dos
+según si estaba cargando o ya tenía datos. En un monitor de 1920, Reservas
+dejaba 640 px vacíos y Hoy 1024: más de la mitad de la pantalla sin usar.
+
+- **`.marco`** (1800) — lo que se opera: listas, tablas, tableros, catálogos.
+  Aquí el ancho **sí** es mejor: una tabla de diez columnas apretada se lee en
+  zigzag, y el día de la coordinadora pasa en esa tabla.
+- **`.marco-lectura`** (60rem) — lo que se llena y lo que se lee: el formulario
+  de la reserva, los mensajes, la bitácora. Aquí el ancho **empeora**: una
+  línea de 1800 px hace perder el renglón al volver, y un campo de 1800 px no
+  se llena más rápido.
+
+Y una consecuencia que solo se vio al mirarlo: **lo que se estira hay que
+recomponerlo, no solo ensancharlo.** Los pendientes de «Hoy» quedaron con el
+problema a la izquierda y su botón a metro y medio a la derecha; pasaron a dos
+columnas, que aprovecha el ancho y devuelve cada pendiente a un golpe de vista.
 
 La franja del día es la firma del sistema: dice siempre en qué fecha estás, en qué estado está el
 día y si hay algo sin guardar. Es lo que hace que nadie se pierda.

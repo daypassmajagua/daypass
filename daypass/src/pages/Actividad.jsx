@@ -105,7 +105,7 @@ export default function Actividad() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="marco-lectura py-6">
       <PageHeader
         title="Actividad"
         subtitle="Quién hizo qué. Consultar no deja rastro; cambiar una tarifa, sí."

@@ -98,7 +98,7 @@ export default function Historial() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Historial de reservas"
         subtitle={`${total} reservas en total`}

@@ -98,15 +98,15 @@ export default function Equipo() {
   }
 
   if (cargando) {
-    return <p className="max-w-4xl mx-auto px-4 py-10 text-tinta-2">Cargando el equipo…</p>
+    return <p className="marco py-10 text-tinta-2">Cargando el equipo…</p>
   }
 
   if (error) {
-    return <EstadoError error={error} onReintentar={recargar} className="max-w-4xl mx-auto" />
+    return <EstadoError error={error} onReintentar={recargar} className="marco" />
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <PageHeader
         title="Lanchas y equipo"
         subtitle="Tus lanchas, pilotos y empleados. Nada se borra: se desactiva."

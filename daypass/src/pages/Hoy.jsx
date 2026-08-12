@@ -45,7 +45,7 @@ export default function Hoy() {
   // Gerencia mira el negocio; el resto opera el día.
   if (rol === 'gerencia') {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="marco py-6">
         <FranjaDia />
         <HoyDelPeriodo />
       </div>
@@ -97,7 +97,7 @@ function HoyDeLaOperacion() {
   )
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="marco py-6">
       <FranjaDia />
 
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-7">

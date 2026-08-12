@@ -63,11 +63,11 @@ export default function FichaCatalogo() {
   if (!config) return <Navigate to="/config" replace />
 
   if (cargando) {
-    return <div className="max-w-5xl mx-auto px-4 py-6"><Esqueleto filas={4} /></div>
+    return <div className="marco py-6"><Esqueleto filas={4} /></div>
   }
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="marco py-6">
         <EstadoError error={error} onReintentar={cargar} />
       </div>
     )

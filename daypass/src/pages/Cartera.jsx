@@ -62,7 +62,7 @@ export default function Cartera() {
   const vencido = cartera.reduce((sum, o) => sum + Number(o.mas_de_90 || 0), 0)
 
   return (
-    <div className="max-w-6xl mx-auto px-4">
+    <div className="marco">
       <PageHeader
         title="Cartera"
         subtitle="Quién quedó debiendo, y desde cuándo"

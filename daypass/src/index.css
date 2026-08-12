@@ -124,6 +124,52 @@
 }
 
 /**
+ * El ancho del contenido, decidido una vez.
+ *
+ * Estaba escrito **seis veces con seis valores** —768, 896, 1024, 1152 y 1280—
+ * repartidos sin criterio entre veinte pantallas, y «Hoy» llegaba a usar dos
+ * distintos según si estaba cargando o ya tenía datos. El sistema de diseño
+ * declaraba 1200 y ninguna pantalla lo cumplía.
+ *
+ * Medido en un monitor de 1920: Reservas dejaba **640 px vacíos**, Hoy 1024 y
+ * el formulario de reserva 1152 — más de la mitad de la pantalla sin usar en
+ * las dos pantallas donde más horas se pasan.
+ *
+ * ── Por qué dos y no uno ────────────────────────────────────────────────────
+ *
+ * Porque ancho no siempre es mejor, y decirlo importa más que el número:
+ *
+ * **`.marco`** — lo que se opera: listas, tablas, tableros, catálogos. Aquí el
+ * ancho **sí** es mejor: una tabla de diez columnas apretada obliga a leer en
+ * zigzag, y el día de Daniela pasa en esa tabla.
+ *
+ * **`.marco-lectura`** — lo que se llena y lo que se lee: el formulario de la
+ * reserva, los mensajes, la bitácora. Aquí el ancho **empeora**: una línea de
+ * texto de 1800 px hace perder el renglón al volver, y un campo de 1800 px no
+ * se llena más rápido — se llena peor, porque el ojo tiene que viajar de la
+ * etiqueta al cursor. La medida cómoda de lectura son 65 caracteres, y de eso
+ * salen los 60rem.
+ *
+ * El tope de 1800 no es «casi todo»: en 1920 deja 60 px por lado y en cualquier
+ * portátil es la pantalla entera. Existe solo para el monitor ultra ancho,
+ * donde una fila de 2500 px se vuelve imposible de seguir con la vista.
+ */
+:root {
+  --ancho-trabajo: 1800px;
+  --ancho-lectura: 60rem;
+}
+
+.marco,
+.marco-lectura {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.marco { max-width: var(--ancho-trabajo); }
+.marco-lectura { max-width: var(--ancho-lectura); }
+
+/**
  * El modo del aparato se vuelve tamaño, aquí y no en cada pantalla.
  *
  * `ProveedorModo` marca `<html data-modo="…">`. Estas dos líneas son todo lo

@@ -60,11 +60,11 @@ export default function Estilo() {
   // estilo pueden no estar listas todavía.
   useEffect(() => { setFamilias(coloresPorFamilia()) }, [])
 
-  if (cargando) return <div className="max-w-4xl mx-auto px-4 py-6"><Esqueleto filas={4} /></div>
+  if (cargando) return <div className="marco py-6"><Esqueleto filas={4} /></div>
   if (rol !== 'super_admin') return <Navigate to="/" replace />
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col gap-8">
+    <div className="marco py-6 flex flex-col gap-8">
       <PageHeader
         title="El sistema"
         subtitle="Los tokens, los primitivos y los patrones. Antes de inventar algo, mirar si ya está aquí."
