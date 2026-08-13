@@ -10,6 +10,19 @@ import BotonIcono from './BotonIcono'
  * Las agencias que más reservan aparecen de primeras: la asesora escribe dos
  * letras y ya está. Y acepta un nombre que no esté en la lista, porque
  * siempre entra una agencia nueva antes de que alguien la cree en el catálogo.
+ *
+ * ── `onChange` entrega la organización, no solo su nombre ───────────────────
+ *
+ * Antes entregaba `a.nombre` y **tiraba el `a.id`**, así que la reserva
+ * guardaba un texto y no una referencia. Eso se veía inofensivo y no lo era:
+ * la cartera agrupa a los deudores por ese texto —«Aviatur» y «AVIATUR S.A.»
+ * eran dos—, las comisiones de la 026 se liquidan por `organizacion_id` y no
+ * alcanzaban a una reserva sin él, y las tarifas por tipo de cliente no tienen
+ * de dónde colgarse si la reserva no sabe con qué agencia trata.
+ *
+ * Cuando el nombre se escribe a mano y no existe en el catálogo, `agencia` va
+ * en `null` a propósito: se conserva el texto —una agencia nueva no puede
+ * detener una venta— y queda como pendiente de crear.
  */
 export default function BuscadorAgencia({
   label = 'Agencia',
@@ -42,8 +55,8 @@ export default function BuscadorAgencia({
   const esNueva = textoLimpio &&
     !agencias.some(a => a.nombre.toLowerCase() === textoLimpio.toLowerCase())
 
-  function elegir(nombre) {
-    onChange(nombre)
+  function elegir(nombre, agencia = null) {
+    onChange(nombre, agencia)
     cerrar()
   }
 
@@ -66,7 +79,16 @@ export default function BuscadorAgencia({
             onChange={e => { setTexto(e.target.value); setAbierto(true) }}
             onFocus={() => setAbierto(true)}
             onKeyDown={e => {
-              if (e.key === 'Enter' && textoLimpio) { e.preventDefault(); elegir(textoLimpio) }
+              if (e.key === 'Enter' && textoLimpio) {
+                e.preventDefault()
+                // Enter sobre un nombre que sí existe tiene que enlazar igual
+                // que tocarlo con el mouse: si no, teclear rápido —que es como
+                // trabaja quien carga en tanda— dejaría la reserva sin vínculo.
+                const exacta = agencias.find(
+                  a => a.nombre.toLowerCase() === textoLimpio.toLowerCase()
+                )
+                elegir(exacta ? exacta.nombre : textoLimpio, exacta || null)
+              }
               if (e.key === 'Escape') cerrar()
             }}
             placeholder={placeholder}
@@ -85,7 +107,7 @@ export default function BuscadorAgencia({
                 <button
                   key={a.id}
                   type="button"
-                  onClick={() => elegir(a.nombre)}
+                  onClick={() => elegir(a.nombre, a)}
                   className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 min-h-[44px] text-left text-[15px] text-tinta hover:bg-blue-50 focus:outline-none focus:bg-blue-50"
                 >
                   <span className="truncate">{a.nombre}</span>

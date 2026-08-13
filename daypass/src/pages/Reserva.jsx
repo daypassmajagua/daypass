@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Calculator, Info, RotateCcw } from 'lucide-react'
+import { Calculator, Info, RotateCcw, Wand2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import useAppStore from '../store/useAppStore'
 import { useTemporada } from '../hooks/useTemporada'
@@ -25,11 +25,13 @@ import BuscadorAgencia from '../components/ui/BuscadorAgencia'
 import TarjetasPlan from '../components/reserva/TarjetasPlan'
 import FichasLancha from '../components/reserva/FichasLancha'
 import PrecargaPersona from '../components/reserva/PrecargaPersona'
+import PegarWhatsApp from '../components/reserva/PegarWhatsApp'
 import SeccionPasajeros from '../components/pasajeros/SeccionPasajeros'
 import HistoriaDeLaReserva from '../components/reserva/HistoriaDeLaReserva'
 import PageHeader from '../components/layout/PageHeader'
 import { RESERVA_CON_DINERO } from '../lib/columnas'
 import { opcionesDePais } from '../lib/paisesISO'
+import { loQueSuelePedir, porqueSePropone, RESERVAS_QUE_SE_MIRAN } from '../lib/memoriaAgencia'
 import { InsigniaEstado, Esqueleto, EstadoError } from '../components/patrones'
 
 /**
@@ -72,6 +74,19 @@ const schema = z.object({
   plan_id: z.string().min(1, 'Elige un plan'),
   canal_id: z.string().min(1, 'Falta el canal'),
   agencia_nombre: textoOpcional,
+  /**
+   * La referencia a la organización, que es lo que la reserva no guardaba.
+   *
+   * Existía la columna y la leía media app —cartera, comisiones, la ficha del
+   * cliente— pero **el formulario solo escribía el nombre en texto**. Con eso,
+   * la cartera agrupaba deudores por cómo se hubiera escrito el nombre ese
+   * día, las comisiones de la 026 no encontraban a quién liquidarle, y las
+   * tarifas por tipo de cliente no tendrían de dónde colgarse.
+   *
+   * Sigue siendo opcional: una agencia que todavía no está en el catálogo no
+   * puede detener una venta. En ese caso queda el texto y `agencia_id` en null.
+   */
+  agencia_id: textoOpcional,
   /**
    * El contacto: se pide, pero no se exige.
    *
@@ -186,12 +201,13 @@ export default function Reserva() {
   const [intento, setIntento] = useState(0)
   const [guardando, setGuardando] = useState(false)
   const [borradorRecuperado, setBorradorRecuperado] = useState(false)
+  const [memoria, setMemoria] = useState(null)
   const yaRestaure = useRef(false)
 
   const { pasajeros, setPasajeros, falloCarga: falloPasajeros, recargar: recargarPasajeros } = usePasajeros(id)
 
   const {
-    register, handleSubmit, watch, setValue, control, reset,
+    register, handleSubmit, watch, setValue, getValues, control, reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -334,6 +350,100 @@ export default function Reserva() {
     const pasadia = tiposIngreso.find(t => t.codigo === 'pasadia')
     if (pasadia) setValue('tipo_ingreso_id', pasadia.id)
   }, [cargandoCatalogos, tiposIngreso, valores.tipo_ingreso_id, setValue])
+
+  /**
+   * Al elegir una agencia: se enlaza y se propone lo que suele pedir.
+   *
+   * Dos reglas gobiernan esto y las dos son de la 23:
+   *
+   * **No pisa nada.** Solo rellena campos vacíos. Si la asesora ya eligió el
+   * plan, la agencia no se lo cambia — quien decide es ella, y una deducción
+   * que sobreescribe deja de ser ayuda y pasa a ser pelea.
+   *
+   * **Se puede deshacer.** Lo aplicado se guarda para devolverlo tal cual: la
+   * propuesta tiene que costar lo mismo aceptarla que rechazarla.
+   */
+  const alElegirAgencia = useCallback(async (nombre, agencia) => {
+    setValue('agencia_id', agencia?.id || '')
+    setMemoria(null)
+    if (!agencia?.id || isEdit) return
+
+    const { data } = await supabase
+      .from('registros')
+      .select('canal_id, plan_id, forma_pago, tipo, impuestos_puerto')
+      .eq('agencia_id', agencia.id)
+      .order('created_at', { ascending: false })
+      .limit(RESERVAS_QUE_SE_MIRAN)
+
+    const { campos } = loQueSuelePedir(data || [])
+    const previos = {}
+    const aplicados = {}
+
+    for (const [campo, valor] of Object.entries(campos)) {
+      // `tipo` e `impuestos_puerto` siempre traen valor por defecto, así que
+      // «vacío» para ellos es «sigue en el que trae de fábrica».
+      const actual = getValues(campo)
+      const estaVacio = campo === 'tipo' ? actual === 'individual'
+        : campo === 'impuestos_puerto' ? actual === 'si'
+        : !actual
+      if (!estaVacio) continue
+      previos[campo] = actual
+      aplicados[campo] = valor
+      setValue(campo, valor, { shouldValidate: true })
+    }
+
+    if (!Object.keys(aplicados).length) return
+
+    const frase = porqueSePropone(nombre, aplicados, {
+      plan: planes.find(p => p.id === aplicados.plan_id)?.nombre,
+      canal: canales.find(c => c.id === aplicados.canal_id)?.nombre,
+      formaPago: FORMA_PAGO_LABELS[aplicados.forma_pago],
+    })
+    if (!frase) return
+
+    setMemoria({
+      frase,
+      deshacer: () => {
+        for (const [campo, valor] of Object.entries(previos)) setValue(campo, valor)
+      },
+    })
+  }, [isEdit, setValue, getValues, planes, canales])
+
+  /**
+   * Lo que se entendió del WhatsApp entra al formulario.
+   *
+   * Aquí sí se pisa lo que haya —a diferencia de la memoria de la agencia—
+   * porque el gesto es explícito: alguien pegó un mensaje y tocó «Llenar el
+   * formulario». Lo que no se entendió no se toca, así que un campo ya escrito
+   * a mano sobrevive si el mensaje no hablaba de él.
+   *
+   * Va **después** de `alElegirAgencia` a propósito: la usa, y un `const` no
+   * se puede referenciar antes de existir.
+   */
+  const aplicarPegado = useCallback(async (campos, origen) => {
+    for (const [campo, valor] of Object.entries(campos)) {
+      setValue(campo, valor, { shouldValidate: true })
+    }
+    const cuantos = Object.keys(origen).length
+    toast.success(`${cuantos === 1 ? 'Un dato' : cuantos + ' datos'} del mensaje`, {
+      description: 'Revísalos antes de guardar: lo que no entendí quedó en blanco.',
+    })
+
+    /**
+     * Y si el mensaje nombró una agencia del catálogo, se completa con lo que
+     * esa agencia suele pedir.
+     *
+     * Sin esto el pegado dejaba el **canal vacío** —que es obligatorio— y la
+     * forma de pago sin definir, así que el mensaje ahorraba cinco campos y
+     * cobraba dos de vuelta. Se vio pegando de verdad, no leyendo el código:
+     * las dos automatizaciones sirven de a una, pero encajadas sirven el
+     * doble. `alElegirAgencia` solo llena lo que está vacío, así que nunca
+     * pisa lo que el mensaje sí trajo.
+     */
+    if (campos.agencia_id) {
+      await alElegirAgencia(campos.agencia_nombre, { id: campos.agencia_id })
+    }
+  }, [setValue, alElegirAgencia])
 
   const tipoIngresoElegido = tiposIngreso.find(t => t.id === valores.tipo_ingreso_id)
 
@@ -606,10 +716,35 @@ export default function Reserva() {
 
         {/* 1 · Quién viene */}
         <Seccion numero="1" titulo="¿Quién viene?">
+          {/* Solo al crear: una reserva que ya existe se corrige campo a
+              campo, y ofrecer «pegar» ahí invitaría a repisar lo guardado. */}
+          {!isEdit && (
+            <PegarWhatsApp planes={planes} agencias={agencias} onAplicar={aplicarPegado} />
+          )}
+
           <Controller name="agencia_nombre" control={control} render={({ field }) => (
             <BuscadorAgencia label="Agencia o empresa (opcional)" value={field.value || ''}
-              onChange={field.onChange} agencias={agencias} frecuentes={frecuentes} />
+              onChange={(nombre, agencia) => { field.onChange(nombre); alElegirAgencia(nombre, agencia) }}
+              agencias={agencias} frecuentes={frecuentes} />
           )} />
+
+          {/* Lo deducido se dice, siempre (regla 23). Deducir en silencio
+              convierte la ayuda en un misterio el día que se equivoque. */}
+          {memoria && (
+            <div className="flex items-start justify-between gap-3 rounded-xl bg-blue-50 px-4 py-3">
+              <p className="text-[13px] text-blue-800">
+                <Wand2 size={14} className="inline-block mr-1.5 -mt-0.5" />
+                {memoria.frase} Cámbialo si esta vez es distinto.
+              </p>
+              <button
+                type="button"
+                onClick={() => { memoria.deshacer(); setMemoria(null) }}
+                className="text-[13px] font-bold text-blue-700 hover:underline shrink-0 min-h-[44px] px-1"
+              >
+                Deshacer
+              </button>
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium text-tinta block mb-2">¿Individual o grupo?</label>
